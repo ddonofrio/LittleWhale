@@ -1,0 +1,99 @@
+schemaVersion: 1
+canonicalRepository: https://github.com/deepseek-ai/deepseek-harness.git
+bootstrapRepository: https://github.com/ddonofrio/deepseek-harness.git
+ownership:
+  upstreamMirror:
+    - apps/*
+    - examples/*
+    - native/*
+    - packages/*/*
+    - python/*
+    - vendor/*
+    - website
+  adaptedUpstream:
+    - apps/cli
+    - apps/*
+    - examples/*
+    - native/*
+    - python/*
+    - website
+    - packages/bundle/base
+    - packages/bundle/web-app
+    - packages/boot/app-boot
+    - packages/acp/acp
+    - packages/client/runtime
+    - packages/client/ui-conversation
+    - packages/client/ui-primitives
+    - packages/client/ui-sidebar
+    - packages/client/web
+    - packages/client/ui-settings-models
+    - packages/client/ui-settings-plugins
+    - packages/client/ui-tool
+    - packages/compaction/compaction
+    - packages/compaction/compaction-basic
+    - packages/core/agent
+    - packages/core/agent-loop
+    - packages/core/scope
+    - packages/core/session
+    - packages/core/system-prompt
+    - packages/extensions/cordis-client-runner
+    - packages/extensions/tool-cordis
+    - packages/guard/completion-checker
+    - packages/guard/token-limit-handler
+    - packages/host/apiproxy
+    - packages/interaction/commands
+    - packages/llm/llm
+    - packages/llm/llm-deepseek
+    - packages/llm/llm-pi-ai
+    - packages/session/session-persistence
+    - packages/subagent/subagent
+    - packages/subagent/subagent-acp
+    - packages/subagent/subagent-fork-in-process
+    - packages/subagent/subagent-in-process-driver
+    - packages/subagent/subagent-spawn-in-process
+    - packages/workspace/workspace
+    - packages/little-whale/ui-brand
+    - packages/client/locale
+  littleWhale:
+    - README.md
+    - AGENTS.md
+    - UPSTREAM.md
+    - THIRD_PARTY_NOTICES.md
+    - LICENSE
+    - LICENSES/*
+    - upstream/*
+    - scripts/upstream/*
+    - packages/little-whale/*
+    - apps/web/public/little-whale-*
+    - apps/web/public/favicon.png
+    - apps/web/index.html
+    - apps/web/public/manifest.webmanifest
+    - packages/client/tsdown.client.ts
+    - docs/*
+    - .agents/*
+  excluded:
+    - packages/llm/llm-deepseek
+    - packages/web/web-search-deepseek
+    - packages/client/ui-brand-official
+    - .agents/skills/dsh-translate-docs
+    - docs/i18n
+productOverlays:
+  - packages/little-whale/ui-brand
+  - packages/bundle/web-app/cordis.patch.yml
+  - packages/client/locale
+forbiddenActiveIdentifiers:
+  - deepseek-official
+  - web-search-deepseek
+  - DEEPSEEK_API_KEY
+  - api.deepseek.com
+  - deepseek.com
+  - deepseek.ai
+  - deepseeksvc.com
+allowedMechanicalTransformations:
+  - replace the final web brand row with the Little Whale brand plugin
+  - disable forbidden upstream rows by stable Cordis row id
+  - force the visible locale to English
+englishScanExemptions:
+  - packages/**
+  - vendor/**
+  - third_party/**

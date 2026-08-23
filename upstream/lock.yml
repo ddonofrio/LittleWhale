@@ -1,0 +1,2038 @@
+schemaVersion: 1
+manifestVersion: 1
+canonicalRepository: https://github.com/deepseek-ai/deepseek-harness.git
+canonicalSha: b150a551b8d465e31e418e1b2eaf5e79bbb7d28e
+bootstrapRepository: https://github.com/ddonofrio/deepseek-harness.git
+bootstrapSha: 29672527891b62245a73a4e2745d6274325100bf
+synchronizedAt: '2026-08-23T17:25:53.013Z'
+importedPackages:
+  - packages/acp/acp
+  - packages/api/gateway
+  - packages/api/remotes
+  - packages/attachment/attachment
+  - packages/attachment/attachment-local
+  - packages/boot/app-boot
+  - packages/boot/cmdline
+  - packages/bundle/headless
+  - packages/bundle/web-app
+  - packages/client/connection
+  - packages/client/hmr
+  - packages/client/modules
+  - packages/client/ui-agent-preset
+  - packages/client/ui-attachment
+  - packages/client/ui-brand-official
+  - packages/client/ui-commands
+  - packages/client/ui-deliverables
+  - packages/client/ui-directory-picker-browse
+  - packages/client/ui-directory-picker-native
+  - packages/client/ui-goal
+  - packages/client/ui-input-trigger
+  - packages/client/ui-jobs
+  - packages/client/ui-layout
+  - packages/client/ui-message-feedback
+  - packages/client/ui-model-selection
+  - packages/client/ui-permission-presets
+  - packages/client/ui-plan
+  - packages/client/ui-reference
+  - packages/client/ui-renderer
+  - packages/client/ui-settings
+  - packages/client/ui-settings-general
+  - packages/client/ui-settings-plugin-inventory
+  - packages/client/ui-sidebar
+  - packages/client/ui-skill
+  - packages/client/ui-slots
+  - packages/client/ui-subagent
+  - packages/client/ui-theme
+  - packages/client/ui-trajectory
+  - packages/client/ui-user-questions
+  - packages/client/ui-workflow-run
+  - packages/client/ui-workspace
+  - packages/client/web
+  - packages/code-runtime/code-runtime
+  - packages/code-runtime/code-runtime-python
+  - packages/code-runtime/code-runtime-worker-thread
+  - packages/compaction/command-compact
+  - packages/compaction/compaction-tool-result-pruner
+  - packages/context/agent-instructions
+  - packages/context/file-reference
+  - packages/context/file-reference-local
+  - packages/context/session-reference
+  - packages/context/time-context
+  - packages/context/tmux-context
+  - packages/core/agent-default-model
+  - packages/core/agent-tool-presentation
+  - packages/core/system-prompt
+  - packages/core/tools
+  - packages/credentials/authorization
+  - packages/credentials/credentials
+  - packages/credentials/credentials-local
+  - packages/e2b/e2b
+  - packages/e2b/fs-e2b
+  - packages/e2b/subprocess-e2b
+  - packages/examples/acp-demo
+  - packages/examples/agent-spine-demo
+  - packages/examples/jsonrpc-demo
+  - packages/experimental/agent-team
+  - packages/experimental/tool-agent-team
+  - packages/extensions/cordis-host-runner
+  - packages/extensions/ui-cordis
+  - packages/feedback/command-feedback
+  - packages/feedback/message-feedback
+  - packages/fs/fs
+  - packages/fs/fs-local
+  - packages/fs/fs-observation-policy
+  - packages/fs/fs-sandbox
+  - packages/fs/tool-fs
+  - packages/fs/tool-fs-search
+  - packages/fs/tool-str-replace-editor
+  - packages/goal/command-goal
+  - packages/goal/goal
+  - packages/goal/goal-round-driver
+  - packages/goal/tool-goal
+  - packages/guard/repeat-tool-reminder
+  - packages/guard/timeout-policy
+  - packages/hooks/hook-protocol
+  - packages/hooks/hooks-claude-code
+  - packages/hooks/hooks-codex
+  - packages/host/directory-picker
+  - packages/host/directory-picker-auto
+  - packages/host/directory-picker-browse
+  - packages/host/directory-picker-native
+  - packages/host/frontend-static
+  - packages/host/plugin-inventory
+  - packages/host/webserver
+  - packages/identity/anonymous-user-id
+  - packages/interaction/permission-presets
+  - packages/interaction/tool-ask-user
+  - packages/interaction/user-approval
+  - packages/interaction/user-questions
+  - packages/jobs/jobs
+  - packages/jobs/jobs-local
+  - packages/jobs/tool-jobs
+  - packages/llm/llm-deepseek
+  - packages/llm/llm-retry
+  - packages/llm/token-meter
+  - packages/lsp/lsp
+  - packages/lsp/lsp-stdio
+  - packages/lsp/tool-lsp
+  - packages/mcp/mcp-client
+  - packages/plan/plan-mode
+  - packages/preset/agent-presets
+  - packages/preset/persona
+  - packages/runtime-diagnostics/invariants
+  - packages/sandbox/sandbox
+  - packages/sandbox/sandbox-local
+  - packages/sandbox/sandbox-policy
+  - packages/sandbox/sandbox-windows-acl
+  - packages/schedule/schedule
+  - packages/sdk/client
+  - packages/sdk/protocol
+  - packages/sdk/server
+  - packages/session-query/session-log-export
+  - packages/session-query/session-query
+  - packages/session-query/session-query-sqlite
+  - packages/session-query/tool-session-query
+  - packages/session/session-checkpoint-policy
+  - packages/session/session-persistence-jsonl
+  - packages/session/session-persistence-sqlite
+  - packages/session/session-projection
+  - packages/session/session-projection-cache
+  - packages/session/session-stats
+  - packages/session/session-telemetry
+  - packages/session/session-telemetry-otel
+  - packages/session/session-title
+  - packages/session/session-title-all-prompts-llm
+  - packages/session/session-title-first-prompt-llm
+  - packages/session/session-title-llm
+  - packages/settings/settings
+  - packages/settings/settings-file
+  - packages/shell/bash-local
+  - packages/shell/bash-sandbox
+  - packages/shell/pwsh-local
+  - packages/shell/pwsh-sandbox
+  - packages/shell/shell
+  - packages/shell/shell-env
+  - packages/shell/tool-bash
+  - packages/shell/tool-bash-persistent
+  - packages/shell/tool-pwsh
+  - packages/shell/tool-pwsh-persistent
+  - packages/skill/skill
+  - packages/skill/skill-badge
+  - packages/skill/skill-filesystem
+  - packages/skill/tool-skill
+  - packages/spill/spill
+  - packages/spill/spill-local
+  - packages/spill/spill-policy
+  - packages/storage/storage
+  - packages/storage/storage-domain
+  - packages/storage/storage-json
+  - packages/storage/storage-sqlite
+  - packages/subagent/subagent-claude-code
+  - packages/subagent/subagent-codex
+  - packages/subagent/subagent-dsh-sdk
+  - packages/subagent/tool-subagent
+  - packages/subagent/tool-subagent-control
+  - packages/subagent/tool-subagent-report
+  - packages/subprocess/subprocess
+  - packages/subprocess/subprocess-local
+  - packages/terminal/terminal
+  - packages/terminal/terminal-bash
+  - packages/terminal/tool-terminal
+  - packages/test-support/acp-snapshot
+  - packages/test-support/agent-loop-testkit
+  - packages/test-support/client-runtime
+  - packages/test-support/llm-mock-server
+  - packages/test-support/llm-replay
+  - packages/test-support/loader-smoke
+  - packages/todo/tool-todo
+  - packages/typert/generator
+  - packages/typert/loader
+  - packages/typert/protocol
+  - packages/typert/registry
+  - packages/util/atomic-write
+  - packages/util/brand
+  - packages/util/home-paths
+  - packages/util/launch-environment
+  - packages/util/native-command
+  - packages/util/output-retention
+  - packages/util/timeout
+  - packages/web/tool-web
+  - packages/web/web
+  - packages/web/web-fetch-http
+  - packages/web/web-search-deepseek
+  - packages/web/web-search-exa
+  - packages/web/web-search-perplexity
+  - packages/workflow/tool-ralph
+  - packages/workflow/tool-workflow
+  - packages/workflow/workflow
+  - packages/workflow/workflow-worker-thread
+  - packages/workspace/workspace
+  - vendor/cordis
+  - vendor/cosmokit
+  - vendor/group
+  - vendor/hmr
+  - vendor/include
+  - vendor/loader
+  - vendor/logger-console
+  - vendor/schemastery
+  - vendor/timer
+adaptedPackages:
+  - packages/bundle/base
+  - packages/client/locale
+  - packages/client/runtime
+  - packages/client/ui-conversation
+  - packages/client/ui-primitives
+  - packages/client/ui-settings-models
+  - packages/client/ui-settings-plugins
+  - packages/client/ui-tool
+  - packages/compaction/compaction
+  - packages/compaction/compaction-basic
+  - packages/core/agent
+  - packages/core/agent-loop
+  - packages/core/scope
+  - packages/core/session
+  - packages/extensions/cordis-client-runner
+  - packages/extensions/tool-cordis
+  - packages/guard/completion-checker
+  - packages/guard/token-limit-handler
+  - packages/host/apiproxy
+  - packages/interaction/commands
+  - packages/llm/llm
+  - packages/llm/llm-pi-ai
+  - packages/session/session-persistence
+  - packages/subagent/subagent
+  - packages/subagent/subagent-acp
+  - packages/subagent/subagent-fork-in-process
+  - packages/subagent/subagent-in-process-driver
+  - packages/subagent/subagent-spawn-in-process
+packageHashes:
+  packages/acp/acp: a5678739ac24c316e2ae62cadf4a2702122bc6f9a4ccb9aefe2454f8730fb92a
+  packages/api/gateway: 0ba133613273f53d8b594f1d31f22f6401a390a0b7a66537ec058b7f1de53d06
+  packages/api/remotes: ee2bcd5003111cba38674458391263a69b986fb6620565528dc4ef6b80b11f73
+  packages/attachment/attachment: bfd7bf79cf54615aac40ebc51d698439217c98fe7ec96b67e43d7dac28c06c34
+  packages/attachment/attachment-local: e4e3673ba52984ba9e296e3c292b978e885c38b70ffeb53ae648782d1c686ede
+  packages/boot/app-boot: ef695b8d073e3987de98c90c1f5da5981da807bb202e1e5287e0892b551314a8
+  packages/boot/cmdline: 06c889d4baacce6c59c9275bea444b67577240f0b4032f86ad39659203b91917
+  packages/bundle/headless: e2d991e14f01c76bf4d22cbf3b058af0bd15fb858a630ece04524be6d8d34bd2
+  packages/bundle/web-app: 5f564bebfbc8823bbf100d569822fe9d400bc56043cc07978a3a647394bcdfaa
+  packages/client/connection: d78cf49f52fbe11a32e42a80769f67bf68f3764d447eca4095828d41f6a1ea19
+  packages/client/hmr: b7c27e78aa7a4ce394481a2fb6b018fba71d75948b6d08c6def55e85134b946c
+  packages/client/modules: ae9abc3b170c826d701d8fdc190a7c108a4f24822c1898b2a3f0e9d36b39c327
+  packages/client/ui-agent-preset: 3443e7ccddd2f742ba8dc592a135e7460386bb86d2766091def6682f9769252d
+  packages/client/ui-attachment: 62f4e2e986726ef4288039af9abbe0f390121b95c80491e74f7a6d4cb5fe995b
+  packages/client/ui-brand-official: 70d1ebe8c9745450b57ee5f8e254fdda0cb740258a07447dcbdbbd4b00996a96
+  packages/client/ui-commands: 2f56bb958a717e36e7f7939cd66eff7bbb713ae353a78a2b3ef16e61e1149a7a
+  packages/client/ui-deliverables: 06ce16fc693b5fd688bfeae88851d52fce7714356a33c939862fb8231bb1d305
+  packages/client/ui-directory-picker-browse: 4e947bdcb3cdd44fbacb9a8bc85b9e05f895d2b61871706483a73ccc76b62cbc
+  packages/client/ui-directory-picker-native: 322e98e86513ca1c6ad50f8f129bacec18d98182eebe41de44eb82865ca12b60
+  packages/client/ui-goal: ffec6ff5854ef753a9176ded33355eb0e9305d00a41f49175f4f3321ab754d4f
+  packages/client/ui-input-trigger: f4fc8aa9929414f6c95b2a75a7f0c6941393f012c87687e470993c6c84562683
+  packages/client/ui-jobs: e616cfd7f48a67f565dd744a1fa62b005f3962bdb508fa0134e3b76966276092
+  packages/client/ui-layout: 835ce15292c83bc2d9927256f5c124bba83c0f1e928517428b13f7735b841122
+  packages/client/ui-message-feedback: 4950dbc3697ea40089177944d85b3cc69bf198bc216d2e473a2c8e6409c0a4da
+  packages/client/ui-model-selection: d688872e3c43b32d0810a5cc00d4226035058475dcf9788606f4d49448a5b6a6
+  packages/client/ui-permission-presets: e0595ddc14f51786c6d04dbabd9005f0b0c488e90679376272eada95db62f56e
+  packages/client/ui-plan: d6322b337e4ba2f495e8e963a295e248e0496dd45026d2bb0335df5f9d56c246
+  packages/client/ui-reference: 3bc9e5bae4ca296b60ded66da141ee5b2c0e2bf74833f1ef58d4dbb61841406b
+  packages/client/ui-renderer: c10a7e6cdb92de0be389c452378af204135d7cdd9c285313b54eeaad29f21206
+  packages/client/ui-settings: 74cd28e322a1e1bcf287c8a05830b23e580796c50974f0e66d61ec30a21d5cc6
+  packages/client/ui-settings-general: e9ce5fc566c074a011155cac925eef47924567126b203db34c5214aee25a88e5
+  packages/client/ui-settings-plugin-inventory: f00f9c175cc0106a42043678beadf34afdd6b9127ed122ffdd56600f0e6a207e
+  packages/client/ui-sidebar: dbf25c0f93da33c04e9970bdacd199743dc5cf59cacfdabd5cb37f7453296841
+  packages/client/ui-skill: 136305853f023e094088204873543ff66e7887746eb4b540d06cb6c9cfa443f3
+  packages/client/ui-slots: 29f89b8a86e09c651dbd8113b6ad9900c51352e750da99b88709eaa299a265a2
+  packages/client/ui-subagent: 6e48ff304ecbafc722cab01d2bdfb8f0f2e920a5e668688bbf6c5597677b2171
+  packages/client/ui-theme: b9d0f792522dfa31dbca8d5a7113303324dc9e44c3dc7b73d06f46e74a01385e
+  packages/client/ui-trajectory: 76d63ec51433a24546019b22d8df89b5d8e82b52dee70837176cf183728b2947
+  packages/client/ui-user-questions: 625f33643cdcbccc813d92695cde867e92f80f0731e8bd31689f9b8fa3b886dd
+  packages/client/ui-workflow-run: cca7c45590fc004f149353b378e701d865e9319e4c009be95f5eec50eabc4fa4
+  packages/client/ui-workspace: 344b18add6d2fb79ddd5b318a1053ec37050b560f73feeec8e8cb1bdea87feb5
+  packages/client/web: 49b3be8c6cca5e0cad302aa99b380659dcf9df5d5ab42c2e2d9f9d558cbfdc93
+  packages/code-runtime/code-runtime: ca40c76eb93393e27b52c3aaecdbc3ec8029610349e4f68c86d8a565aed88867
+  packages/code-runtime/code-runtime-python: 44bcdaa3821f8b62676f77b9340044e7068bb1be313ad57f627dd98567733a19
+  packages/code-runtime/code-runtime-worker-thread: 6a86a06ea31066ba8c9d8fca579a49108c34dfd30fcdd4e89115f12bf4d5624d
+  packages/compaction/command-compact: 5004f346b6f968a048bccb81daf7d62294e1f03f4eba08218ce57b55ccc2a903
+  packages/compaction/compaction-tool-result-pruner: 366b554e61749d5e8ce559f5a4f29a8ef82c4a2b9888c54e4538984ff26bf373
+  packages/context/agent-instructions: 5038906bc15fe96d06e6280af034589aaa7634aba56a503697fe4f80191db952
+  packages/context/file-reference: e4d41c5d44439834a67417b1acbbed6c2c4b6f82461cc8b48d84e6d14dd84c7e
+  packages/context/file-reference-local: da1acafea19a60716620987479f3f8839d5ea439d4cc1ffaf32aab8f397e646f
+  packages/context/session-reference: 6ed39dfc59b1d3153d0a45db6ba8b11fb7fd7d5574daf36bf53743eb127a0e88
+  packages/context/time-context: dc15ae15ae5523e24e2d5634e51600dfda111d64797e7cc1850d0755f6e3d3c7
+  packages/context/tmux-context: c560a6c5eb28093f4ab56d17c3264a35079a1f687e85d56d4ae8c8eff8f93899
+  packages/core/agent-default-model: 4ec3427aa4d8b65a8b97ef6f3b907203cd3ede69ce1876de520fc25e3b6a72d7
+  packages/core/agent-tool-presentation: 6e539051037dc803466f2781c04879fd8a4759f55050c82cad67080c232318ed
+  packages/core/system-prompt: adb6718bc9b358328cf1ba6a3dde8ae333a1bb68ca1f78c5d14e4cc078a5df17
+  packages/core/tools: a6e6b6140490fb51ef68c1a00e6ad1bb9be1c104a2da7c5bc9d2908b418ef100
+  packages/credentials/authorization: 5507f065c944896e9ac01b4e995aa4e3155bf14b256f78869b0234ec4e9f960b
+  packages/credentials/credentials: 7772306565ccf2463baf42533e3dc91fcea823abad92dfb4bd99892c54185cff
+  packages/credentials/credentials-local: 67d5a89ff1256921767e44cead673f62871b97267d6427f46fc19fbb68eec4f9
+  packages/e2b/e2b: 5bfa222bca1af0e59df5f4740226c868c2a0f9b932cdf3904dc1b15a9ced930c
+  packages/e2b/fs-e2b: 9d5600305edf4b13969aa3de7eaa79d6bc38107f1438ee0b61c1b20c1102adc2
+  packages/e2b/subprocess-e2b: 79a7cc534937f87643a1453b2972c8f75367798c2382b4a3202e3bd3e66690a1
+  packages/examples/acp-demo: 8473a8eedfa0ddc098b13e97c969b73aa246955b5813d9f25d1a91c6cb6e350c
+  packages/examples/agent-spine-demo: 4fbc95103871e34f1e9686e29d117731c19ab9e86b0bd064f0c9a23b27b174de
+  packages/examples/jsonrpc-demo: 427739b4462c7e8de170b63aa18ecdaac89c29e34bb1c7346b1abc66c501c781
+  packages/experimental/agent-team: ab88ce99cf8757d8e6673b0f445e6af6df4eaa7c5e1efe26ed6567a98eaf2c5d
+  packages/experimental/tool-agent-team: 24f9ea2f0b81d4ece934fda388ef9649e1721b513661d70ec8fd1ac4d3e8216c
+  packages/extensions/cordis-host-runner: 1fa3d32e260646f37a2a4fe890c6d2cf3fc8865ef48ae324254c168425f5dbc9
+  packages/extensions/ui-cordis: 57b4f7bc67f52e05dfd2cfed8af1deb0a3d62e8307b528786acf9b0d9d661faa
+  packages/feedback/command-feedback: b10c0db3d8e49eb3e631dad2f325510c4f4e3814042c6b277032a5eb2811d798
+  packages/feedback/message-feedback: 6259d68a730c9b8e13bb8bacb6072522f2c7bdffbc42ccf94c255bab23e5dea9
+  packages/fs/fs: dd2f779845947f0e5f3e46209f7d1b7202597d71cf4ed0e5d20de3ec29fd4535
+  packages/fs/fs-local: 463f29891720dff983cb32deaf3e2bc0be120b6fc4599d14f1bd7cfdaf92d046
+  packages/fs/fs-observation-policy: 109d5814ab04ecc2bb06954797d9d5aa9825f3b2d790b5ee31cb5b0d7aab442a
+  packages/fs/fs-sandbox: 0ee59658bbc1456d7ba0374b6568ffc54c1cc1a006888f74cc1069e1f1793d45
+  packages/fs/tool-fs: dcaab3e2bdd608f8c73b5f13d90ff3e7cd0eefa5e0ed3c664269e871aa0b5aff
+  packages/fs/tool-fs-search: 8a33cb946f8946e13bfaf1182e85d3c2e0423f8fcb7bc5defc8ec1e464e84b35
+  packages/fs/tool-str-replace-editor: becb4d7a9fcf86d8109281c550c4299defaa2941d6512f0268a4fb70fbd2596e
+  packages/goal/command-goal: 4c2e915a7107359665605a4a00b769665f6ccb3c950cf5fb7bf45102cc6e2d06
+  packages/goal/goal: ecd344ec086899402ceb9448a262503f35a3da1dac3d7f4804fb4f0587ff8cd1
+  packages/goal/goal-round-driver: bd0e6fe4b8248d98438e4d18723a32d856676e56640e6c290133bc6e513c2d25
+  packages/goal/tool-goal: 52d6e0248272ec4239d9cadfac596e1202a39a66d07b789358cf9e47e039ef63
+  packages/guard/repeat-tool-reminder: 3be3165f83441455acd15d0631f5141b83dd8c5b917eaa5656d0b94d69c4cd0e
+  packages/guard/timeout-policy: c714036767f9487f9458eac9ced86d2ff8a288524b693e9f0e6feea1992b9003
+  packages/hooks/hook-protocol: eca6d90db557c51ffaa7c71f04ac0a21c405d4daf6ab7f0b9e52d720a970975e
+  packages/hooks/hooks-claude-code: b6b49ed704413576649c3e6eaf9629af17e3833aa194105407316ce1d291fcee
+  packages/hooks/hooks-codex: 36c2cf3b3a1394ba9d3c0221c621729ab6dbb9ca581704178088912cc54931c8
+  packages/host/directory-picker: 6051413ee02e3c9586d598a90d8ef029ae374874d20bd2b8856cdf0b1bc5aa55
+  packages/host/directory-picker-auto: d8e85cebf6b0d92c1a652aa59537b6fe5ffdb3c2308df1627e1550dbd163759c
+  packages/host/directory-picker-browse: 47ab6ccd4ce181a9182ffd9f2a8ddd9bef9471b2eeb30f046e50dcfd385febea
+  packages/host/directory-picker-native: 474d2da8869cdd8cee6c893acd0cb51698b21dcddc6d241d9fa7f0a9b1dc3675
+  packages/host/frontend-static: b4089fbb59123fdb1ae9d1f4e4957217b1182ec126348ea9a0b1d2f22237c68c
+  packages/host/plugin-inventory: 52d62f7798bfb7fce2beb6890cb9d339c13087949b555b7d8ecb9ac1202515bb
+  packages/host/webserver: f61a51604f8dc1179584bc07c306dd46664e239049de50676e292de575115db0
+  packages/identity/anonymous-user-id: e21b192cc9fdd405ba72f42fe524751a0e3fc3dbd36ee4cea03163efc76c6e78
+  packages/interaction/permission-presets: fdc4a357af4a567d697a5b7806021c1d50cad34181c25c2e10afcee81a0024b9
+  packages/interaction/tool-ask-user: 4b919cf2cf0dc60d76fd45bfdb1f91abc97ba0cd1ffc4966a875d80da554e5ce
+  packages/interaction/user-approval: 5c947768d5ac1853c19829c61a17ca75afd1c122405ba1625988df22bac534a6
+  packages/interaction/user-questions: 5eeff8fd3c7d6c0edc50388eded0172165152e4831041b2aa4d11e6a1c3aed52
+  packages/jobs/jobs: ffb3b2ad9ce56cf8feb2d30ab58d9d211b67a45e02dca942317553482f632a20
+  packages/jobs/jobs-local: e6e0bd289bf6beeff7d93295909d149c93420316171c9dcdcb78be2eae9e8dae
+  packages/jobs/tool-jobs: 057978ae731c331c6c216430b123bf362d2accb11708a40ab20a9f3ab74d93c7
+  packages/llm/llm-deepseek: f669645bdfd396f5943b02b669e057a6843bd86f1eb61641707252a07085c108
+  packages/llm/llm-retry: 62d732cd98feeb16c967d28e77f54d660eaee4f9f800c6b7f6ceed5692d6a101
+  packages/llm/token-meter: eda7d9a5e899a67f4e21eb0c92b93f32b12dfbee4e16f4c7a11c5d9130f06e3e
+  packages/lsp/lsp: 4930190ddd8203dd9e1c115cf2e1f1739f5ba5fa34aea3be9b3052d03ba70d21
+  packages/lsp/lsp-stdio: 46163c290015652a19d7ac82ccc6c9e09d0a71debd25ea0ac980df4b2891225a
+  packages/lsp/tool-lsp: c7fa259e2798ddf54acbf83cd6499ce76d35fafe1bff6bd1589ac87709f59a24
+  packages/mcp/mcp-client: f2c96eae1b175b05de24db7f8aa7db386e1957f2b06213e211886e317d6d8baa
+  packages/plan/plan-mode: c1f40e9305f8ff8487149caf2c3cedcf31d3835ac5bd05d735e92ae505d7f9c5
+  packages/preset/agent-presets: 58fcef9048cf8a91f40328f595189027a31aab17198560ccd1b0a6de7ac0f809
+  packages/preset/persona: 857d98464cdda535b7b19f8a968dc6d3ae68bfaa18ff155164d62def541cf3f7
+  packages/runtime-diagnostics/invariants: 55c041ebf63a2e683a1e444aa404ae1266398cfb950f8021933503a358176c3c
+  packages/sandbox/sandbox: 7aad12a749f858dd92edceecd8f25584ffb294f89ec3ead65c1b21641ed219fb
+  packages/sandbox/sandbox-local: fa5c3a6eec34a441f816282f90bda646c7739a55b565b8a1aa8371644631a842
+  packages/sandbox/sandbox-policy: eed7f0094c1bfb8c202f006e4d5313fc07aba7d4fb44cb8811c424371038ab22
+  packages/sandbox/sandbox-windows-acl: f729499e36ab64d6309f1e14cedd2c9d8db8c0361c64644f2d967c07c806b37e
+  packages/schedule/schedule: 73edf40712d6760d6117584b46ca996cddf126d6c3d1004677e446549dee51ea
+  packages/sdk/client: 909a06a4049a79458ca6f687501f20de9ba94b008ca5e1105df7573a25189eed
+  packages/sdk/protocol: 74d4ab88bfeaf6d3f3b64c147beb4f5ed1ef640da0ffea82aa3204ca68cf94dd
+  packages/sdk/server: 75ec64172eeed7c46b9cbb86425e49a3330d5276022a3d671c2ace8e15e28129
+  packages/session-query/session-log-export: 7b511e5b0202ac9c194cf9640c3809395138079551f82c3d26276345b464c45e
+  packages/session-query/session-query: 61382defeed371f9755d102e7d6fafee4235c0c21c64e4e9f3cd863b95f61c3a
+  packages/session-query/session-query-sqlite: 128f70cb46224633605bd42388b110cddf31ca8d86a24641b4408cfc15dcede9
+  packages/session-query/tool-session-query: 72a3a5132c928b95653005a27aa0be8251f24bef5ea3aa164f80d6eebc268bd3
+  packages/session/session-checkpoint-policy: 288e94429901dfe32c3261d74dfc0afefab2ac783926b4648cf936052adc510a
+  packages/session/session-persistence-jsonl: 929b04b9522a2c3805772e6ad4f4749c4431e0dee7951ea9ab91ccf70e788210
+  packages/session/session-persistence-sqlite: 86a0e82262dca192108ba5b695cd95efc24989ccfdce78392976e15abd21d448
+  packages/session/session-projection: 46151443a3dcf33e4c514a34bad8b3985c5ec976227911258d809aeca3b71ad7
+  packages/session/session-projection-cache: 124d23121aaaec496e72e9c961612f276d7d1807b3c208eb3a97d928e9bcb747
+  packages/session/session-stats: 1d424f35aec507c1d56f8387473b6daefc8a444cd5c69910adeb940d1618601f
+  packages/session/session-telemetry: 8018d32c1ad8df6819d0417709e126231162c66dfb95c2b0e004512f18377dd6
+  packages/session/session-telemetry-otel: 36b87e01037c593d293c2d7d75056eb651fad32b555638119fcd67e9a9d1bcf3
+  packages/session/session-title: 1611a4750f0da7421dc1221b897d0857ebd2407ac39084ed1d42cbf097721a8d
+  packages/session/session-title-all-prompts-llm: 8475cdb5ec7d23545d1e03a7e6b7cda56e22cf2ee3296871f517056566507a43
+  packages/session/session-title-first-prompt-llm: f39157c41b8050f6b7fa0a7b57108f019711e39b4eb180d7c3bed5393455f08b
+  packages/session/session-title-llm: 13f22811146b0ed42762413abf9b2a295106b8ada5ed798aa85a2c064cbfc9d2
+  packages/settings/settings: e5813a6e9bb4975b5584e0e957b8e7d0e60ca8dc06a9db6ba78c01d809c17f5f
+  packages/settings/settings-file: 0bef9ebc9d033b88f1707e293dbd0cc7ff83ea86726f05ae77f46197cdf992a3
+  packages/shell/bash-local: 90ddefa7f547b86f363afcadc2d60d56905033c1cd06403076c6835510614a18
+  packages/shell/bash-sandbox: 7746808c15f2ac290b08871ff44a6a46618aa784af75d327a947ad5efde44a2c
+  packages/shell/pwsh-local: 6bde5649e14b08155fb810d02e4d3f31fc5ad0d41d7b6fef8a663dce2bc2bf6f
+  packages/shell/pwsh-sandbox: 24524ec99177f91ddd9243e04cd352041b52d0423577644c7c50950247177a77
+  packages/shell/shell: cedcda2d3ebfcc49a1697226630403de851d00b04e4d070e4cd4b3055efb5fd5
+  packages/shell/shell-env: 75838748a469ab51bb42d21b62aa5d4f052ad0679b51b39be760bc2e57a355ea
+  packages/shell/tool-bash: 21e9b7055989ab679b032b7fe8d2fda46712667eb5b6b56ff6ca7142de3f9ce8
+  packages/shell/tool-bash-persistent: 076d3b732932f98e343915d42ecefeeffe5df0d35409877ce86bff6675248826
+  packages/shell/tool-pwsh: 69a12c288687a65d9f16953a77873a156581c3573de54aabece6902d966c780f
+  packages/shell/tool-pwsh-persistent: 02a8192edd196420adc5072057f7cd045f12cacb6fe529c827ef88a75b7cbe76
+  packages/skill/skill: 745f6918b0bb84b462b55e0ac0479bea25358f7d1eb2fae369ba9f8b5b516af0
+  packages/skill/skill-badge: 9b07e7573d1597e8575aa67f3d6c59c2c553bcac6a0e9e8f8c2c19e02c2c2ad2
+  packages/skill/skill-filesystem: cd352ba79d93e92aee9532c4bd76f5652e9a96c741928bef65104344dbdb2868
+  packages/skill/tool-skill: d5d454035c8d6860a9250967d424643a2a2d0546e274128c7c45db249c6a50aa
+  packages/spill/spill: 3f95b09e01552365341088daf6621273fadb6a55cec077a042971d7b98f80d87
+  packages/spill/spill-local: 8bb645497deea1546c86f695a75c5490ea844dfbe649dae3591f552bb1994e91
+  packages/spill/spill-policy: f37fd50eff9d708c45dfbf345d21aeaad4fdabe880beca4f60bd93ce68b158d7
+  packages/storage/storage: a49929a87299a79c99d86f5a129a740d63bc13c3657c0e54a5363380f741b049
+  packages/storage/storage-domain: 422b191dc5349079ee39a2c033d9003b66f8e23fd81cc2ea98216a896ba2598b
+  packages/storage/storage-json: e2ce47a69539abd0ca73925fbe362cf846db30f70dc7058b2973024867f07806
+  packages/storage/storage-sqlite: 2476eed0736f214e591f84490e49ce2c7572f89eb1d9341e58093f0b521ff62e
+  packages/subagent/subagent-claude-code: 83adc1b1a885699720625b271b51ccf0969d2480a200ee30f8429bdadadf05d3
+  packages/subagent/subagent-codex: 52ae5de17fd1f2c257c61714a4429c3adb9a67c428feb207fef59dadbe48a221
+  packages/subagent/subagent-dsh-sdk: f28d558e5f97f6dbb6e0e016db5686a86daffc0e7d26e11bfc19cea566f20bcf
+  packages/subagent/tool-subagent: 72d8c55fbda15137ddedab41cf4a67946446ae2dbec3afa4a4a86b3d034839c5
+  packages/subagent/tool-subagent-control: fce2c03a69d0551442e2dab2d40aeefa0608513bf3c8c0beec73360f44a54aa5
+  packages/subagent/tool-subagent-report: d2b4f16a554a803c828ae799d7b0f5ab4f2f927ef540e4f3caf0dffea11f2d83
+  packages/subprocess/subprocess: 5b58dc10e1da73b1350225d354e71279567a5fd5d18f448d88343be1485e1c4a
+  packages/subprocess/subprocess-local: ec25e7324d404359f6d2ed681a208999d34a0184210b3ad650a65b54caf35000
+  packages/terminal/terminal: 421166dd40ece8fc133fa4e2c3250a26e1b0ccb9ef797ef91156f100b108cb74
+  packages/terminal/terminal-bash: 87fdb264c0996deb27dbd9d6a79c79f68b019d9a2d1831f2e943691cf607b0fb
+  packages/terminal/tool-terminal: c7097c90e7e85c16bbac2bf8158b884c860218c417b8240548b55030fdeb427a
+  packages/test-support/acp-snapshot: aaa314a500c9c218b399f3fa87e55eda876b077487fd3dbe691482482d37cb57
+  packages/test-support/agent-loop-testkit: 0087690d59ef3438d027b5775b75faeacd15eb0fa46ab209eb204acb773543aa
+  packages/test-support/client-runtime: 6d32e3fa9a39f40f63056b6a8a5be7fe1ff7211fb2858085e7f52bd2e5cb261a
+  packages/test-support/llm-mock-server: e0b8b47ebc0985eafb73e4e9b2ea3001aeebbb8f5f5c3f5c66d5c7c72775043e
+  packages/test-support/llm-replay: b89e169f2cece14222fc1571811739924c173c631070b9513729cd70e9e7abfb
+  packages/test-support/loader-smoke: dbc1711e090c782179940728946bdaa4ce6a4f8b2ad4d10dcd2c5a6ee0124c0a
+  packages/todo/tool-todo: 70650bcf32f50c53be695f17785ad4daa86a0e001155d98e0ca05e036d6e0e56
+  packages/typert/generator: cc99ef974c348b783ca13e334be3c10182064dd33a1886f52319d7a016a30a72
+  packages/typert/loader: 2659355031a78615c1974934774787789351b3a83e72bf6cf730e70ab41c1289
+  packages/typert/protocol: 1474becf5a7d0a97425162592e8896fab7a482b95595cec39de59b24c62a9689
+  packages/typert/registry: e6e8f9c2631836dbaf37ce7b58282d4c0f4e14248763e13387f08c6b8aa55857
+  packages/util/atomic-write: 2434b3e3df0426ca075a04caddd0426e4ede4f29497d4a9a862868f15d6aa1f1
+  packages/util/brand: cf7a017d9bf907ad33653db31010781c68f3ec054485b3e22834c265f09d4c33
+  packages/util/home-paths: ff04df0cce6d6d83781a7285a54ed8693900d0d6847fe2cc37d59bbe12005d8f
+  packages/util/launch-environment: 8ef0ad427eb6436723d23845838fd7f341e3a27b36a8ed0b7fd8d9623e1c35e8
+  packages/util/native-command: 77f7e4eb31428a26d614da8a02c5a018e99c2759450e46e57f2e2bdf310e58a7
+  packages/util/output-retention: f38e416c1806616820e753e03d2b20d4602249af44fe19695a5d144db3b91941
+  packages/util/timeout: cd68ef24dacc91788df275f6534e36c091f2a618fbafc70a20eed579818204ce
+  packages/web/tool-web: c925c4c7e581b14f622950b2b7d84711083c08d963ace709f4ad34a7bda16141
+  packages/web/web: c2b996886283dee677338e0547d2842619db81ebc07c80554946d1eb5cf6b6f4
+  packages/web/web-fetch-http: a174e4a78ad7a65e0c28462f2be399e673c3e1ec3e747d8a65677b384d145200
+  packages/web/web-search-deepseek: f554b20adb643f7edfd8b9b91bc04dadd69b9b24a2d051e1f07077dc8ead4188
+  packages/web/web-search-exa: 6142b95d965e7b275a25d8fb5de5fbb3602a15f8a40d0785558723dd7206d69d
+  packages/web/web-search-perplexity: a18af921992ca947938c28d5a05af15aeab37a5fda086fc1d442d25fb94da2da
+  packages/workflow/tool-ralph: 8289f664193c031ad5d16f7888bddfc0e8668d2bd3f9e30af413057723e494e1
+  packages/workflow/tool-workflow: 0e0361520eca546e0d117e7761d5f95cca6187c00e659a2b16578dd25b19a272
+  packages/workflow/workflow: a1f371266e5d4d30b89d987e8fa10113815c099118856c2192329bea734aa9dc
+  packages/workflow/workflow-worker-thread: fc0891b75c58d9fc6fb02fa24ddc4518462131d6b06c21cecad3ac5905400bb4
+  packages/workspace/workspace: 708fef0fb24fc5304f78db6cc74e062a2c2d3b6fbd24dd1ad0989935039ddcff
+  vendor/cordis: 0c5b6c968f146147974b5c1c816797c8c540f44ad85d8f74d81d8881ce6ced01
+  vendor/cosmokit: 17113fe3c64ef9b836fe299cd9c34bab1f568124143d1e3836f2973ba19757cc
+  vendor/group: 45c2e751250683bbe0af153f0f07901028a328098582f837ec6c6395774c5db0
+  vendor/hmr: 9c4652c7517ac9c2b997d6dd7dd35523802ad19bac3353e8696dc570ef5f96f1
+  vendor/include: 2d3efee1bf6a5516cb60acca93d2da54b5d9b9ebb60536d4bba2c5c4d14fe120
+  vendor/loader: 27ededd9db52354fb21563f2de8a80f3000260346e1289fa8dd83bdb47ed1290
+  vendor/logger-console: bd628d3d59de94733a4f03976776dc2e7fd6c079a1aabb5e57bd529e296ce937
+  vendor/schemastery: 4a2f620b5fea842c92632ece31fb91e825a0d25330c0f42ff182742dadd8e9d1
+  vendor/timer: 9fd24160dcae644a2f4083fe53d477e5ccb797ec1ac2b79319134241bcc37c64
+dependencyClosure:
+  packages/acp/acp:
+    - '@deepseek-ai/cordis'
+    - '@deepseek-ai/dsh-agent'
+    - '@deepseek-ai/dsh-attachment'
+    - '@deepseek-ai/dsh-invariants'
+    - '@deepseek-ai/dsh-llm'
+    - '@deepseek-ai/dsh-session'
+    - '@deepseek-ai/dsh-user-approval'
+    - '@deepseek-ai/schemastery'
+  packages/api/gateway:
+    - '@deepseek-ai/cordis'
+    - '@deepseek-ai/dsh-client-connection'
+    - '@deepseek-ai/dsh-invariants'
+    - '@deepseek-ai/dsh-typert-protocol'
+    - '@deepseek-ai/dsh-typert-registry'
+  packages/api/remotes:
+    - '@deepseek-ai/cordis'
+    - '@deepseek-ai/dsh-agent'
+    - '@deepseek-ai/dsh-agent-presets'
+    - '@deepseek-ai/dsh-api-gateway'
+    - '@deepseek-ai/dsh-commands'
+    - '@deepseek-ai/dsh-cordis-host-runner'
+    - '@deepseek-ai/dsh-credentials'
+    - '@deepseek-ai/dsh-file-reference'
+    - '@deepseek-ai/dsh-goal'
+    - '@deepseek-ai/dsh-host-plugin-inventory'
+    - '@deepseek-ai/dsh-invariants'
+    - '@deepseek-ai/dsh-llm'
+    - '@deepseek-ai/dsh-message-feedback'
+    - '@deepseek-ai/dsh-session'
+    - '@deepseek-ai/dsh-session-persistence'
+    - '@deepseek-ai/dsh-session-reference'
+    - '@deepseek-ai/dsh-settings'
+    - '@deepseek-ai/dsh-typert-protocol'
+    - '@deepseek-ai/dsh-typert-registry'
+  packages/attachment/attachment:
+    - '@deepseek-ai/cordis'
+    - '@deepseek-ai/dsh-brand'
+    - '@deepseek-ai/dsh-invariants'
+  packages/attachment/attachment-local:
+    - '@deepseek-ai/cordis'
+    - '@deepseek-ai/dsh-attachment'
+    - '@deepseek-ai/dsh-home-paths'
+    - '@deepseek-ai/dsh-invariants'
+    - '@deepseek-ai/schemastery'
+  packages/boot/app-boot:
+    - '@deepseek-ai/cordis'
+    - '@deepseek-ai/cordis-plugin-group'
+    - '@deepseek-ai/cordis-plugin-hmr'
+    - '@deepseek-ai/cordis-plugin-include'
+    - '@deepseek-ai/cordis-plugin-loader'
+    - '@deepseek-ai/dsh-home-paths'
+    - '@deepseek-ai/dsh-invariants'
+    - '@deepseek-ai/dsh-launch-environment'
+    - '@deepseek-ai/dsh-system-prompt'
+  packages/boot/cmdline:
+    - '@deepseek-ai/cordis'
+    - '@deepseek-ai/cordis-plugin-loader'
+    - '@deepseek-ai/dsh-invariants'
+  packages/bundle/headless:
+    - '@deepseek-ai/cordis'
+    - '@deepseek-ai/cordis-plugin-loader'
+    - '@deepseek-ai/dsh-agent'
+    - '@deepseek-ai/dsh-agent-default-model'
+    - '@deepseek-ai/dsh-cmdline'
+    - '@deepseek-ai/dsh-code-runtime-worker-thread'
+    - '@deepseek-ai/dsh-invariants'
+    - '@deepseek-ai/dsh-llm'
+    - '@deepseek-ai/dsh-session'
+    - '@deepseek-ai/schemastery'
+  packages/bundle/web-app:
+    - '@deepseek-ai/cordis'
+    - '@deepseek-ai/cordis-plugin-loader'
+    - '@deepseek-ai/dsh-agent-presets'
+    - '@deepseek-ai/dsh-api-remotes'
+    - '@deepseek-ai/dsh-app-boot'
+    - '@deepseek-ai/dsh-client-connection'
+    - '@deepseek-ai/dsh-client-hmr'
+    - '@deepseek-ai/dsh-client-locale'
+    - '@deepseek-ai/dsh-client-modules'
+    - '@deepseek-ai/dsh-client-runtime'
+    - '@deepseek-ai/dsh-client-ui-agent-preset'
+    - '@deepseek-ai/dsh-client-ui-attachment'
+    - '@deepseek-ai/dsh-client-ui-brand-official'
+    - '@deepseek-ai/dsh-client-ui-commands'
+    - '@deepseek-ai/dsh-client-ui-conversation'
+    - '@deepseek-ai/dsh-client-ui-cordis'
+    - '@deepseek-ai/dsh-client-ui-deliverables'
+    - '@deepseek-ai/dsh-client-ui-directory-picker-browse'
+    - '@deepseek-ai/dsh-client-ui-directory-picker-native'
+    - '@deepseek-ai/dsh-client-ui-goal'
+    - '@deepseek-ai/dsh-client-ui-input-trigger'
+    - '@deepseek-ai/dsh-client-ui-jobs'
+    - '@deepseek-ai/dsh-client-ui-layout'
+    - '@deepseek-ai/dsh-client-ui-message-feedback'
+    - '@deepseek-ai/dsh-client-ui-model-selection'
+    - '@deepseek-ai/dsh-client-ui-permission-presets'
+    - '@deepseek-ai/dsh-client-ui-plan'
+    - '@deepseek-ai/dsh-client-ui-reference'
+    - '@deepseek-ai/dsh-client-ui-renderer'
+    - '@deepseek-ai/dsh-client-ui-settings'
+    - '@deepseek-ai/dsh-client-ui-settings-general'
+    - '@deepseek-ai/dsh-client-ui-settings-models'
+    - '@deepseek-ai/dsh-client-ui-settings-plugin-inventory'
+    - '@deepseek-ai/dsh-client-ui-settings-plugins'
+    - '@deepseek-ai/dsh-client-ui-sidebar'
+    - '@deepseek-ai/dsh-client-ui-skill'
+    - '@deepseek-ai/dsh-client-ui-subagent'
+    - '@deepseek-ai/dsh-client-ui-theme'
+    - '@deepseek-ai/dsh-client-ui-tool'
+    - '@deepseek-ai/dsh-client-ui-trajectory'
+    - '@deepseek-ai/dsh-client-ui-user-questions'
+    - '@deepseek-ai/dsh-client-ui-workflow-run'
+    - '@deepseek-ai/dsh-client-ui-workspace'
+    - '@deepseek-ai/dsh-cmdline'
+    - '@deepseek-ai/dsh-code-runtime-worker-thread'
+    - '@deepseek-ai/dsh-cordis-client-runner'
+    - '@deepseek-ai/dsh-cordis-host-runner'
+    - '@deepseek-ai/dsh-file-reference'
+    - '@deepseek-ai/dsh-file-reference-local'
+    - '@deepseek-ai/dsh-host-apiproxy'
+    - '@deepseek-ai/dsh-host-directory-picker-auto'
+    - '@deepseek-ai/dsh-host-directory-picker-browse'
+    - '@deepseek-ai/dsh-host-directory-picker-native'
+    - '@deepseek-ai/dsh-host-frontend-static'
+    - '@deepseek-ai/dsh-host-plugin-inventory'
+    - '@deepseek-ai/dsh-host-webserver'
+    - '@deepseek-ai/dsh-invariants'
+    - '@deepseek-ai/dsh-launch-environment'
+    - '@deepseek-ai/dsh-message-feedback'
+    - '@deepseek-ai/dsh-session-log-export'
+    - '@deepseek-ai/dsh-session-projection-cache'
+    - '@deepseek-ai/dsh-session-reference'
+    - '@deepseek-ai/dsh-session-stats'
+    - '@deepseek-ai/dsh-shell-env'
+    - '@deepseek-ai/dsh-storage'
+    - '@deepseek-ai/dsh-storage-domain'
+    - '@deepseek-ai/dsh-storage-json'
+    - '@deepseek-ai/dsh-subprocess'
+    - '@deepseek-ai/dsh-system-prompt'
+    - '@deepseek-ai/dsh-web-frontend'
+    - '@deepseek-ai/dsh-workspace'
+    - '@deepseek-ai/schemastery'
+  packages/client/connection:
+    - '@deepseek-ai/cordis'
+    - '@deepseek-ai/dsh-attachment'
+    - '@deepseek-ai/dsh-commands'
+    - '@deepseek-ai/dsh-host-apiproxy'
+    - '@deepseek-ai/dsh-host-webserver'
+    - '@deepseek-ai/dsh-invariants'
+    - '@deepseek-ai/dsh-llm'
+    - '@deepseek-ai/dsh-session'
+    - '@deepseek-ai/dsh-tools'
+    - '@deepseek-ai/schemastery'
+  packages/client/hmr:
+    - '@deepseek-ai/cordis'
+    - '@deepseek-ai/cordis-plugin-loader'
+    - '@deepseek-ai/dsh-client-modules'
+    - '@deepseek-ai/dsh-host-webserver'
+    - '@deepseek-ai/dsh-invariants'
+    - '@deepseek-ai/schemastery'
+  packages/client/modules:
+    - '@deepseek-ai/cordis'
+    - '@deepseek-ai/cordis-plugin-loader'
+    - '@deepseek-ai/dsh-host-webserver'
+    - '@deepseek-ai/dsh-invariants'
+  packages/client/ui-agent-preset:
+    - '@deepseek-ai/cordis'
+    - '@deepseek-ai/dsh-api-remotes'
+    - '@deepseek-ai/dsh-client-connection'
+    - '@deepseek-ai/dsh-client-locale'
+    - '@deepseek-ai/dsh-client-runtime'
+    - '@deepseek-ai/dsh-client-ui-conversation'
+    - '@deepseek-ai/dsh-client-ui-settings'
+    - '@deepseek-ai/dsh-invariants'
+  packages/client/ui-attachment:
+    - '@deepseek-ai/cordis'
+    - '@deepseek-ai/dsh-attachment'
+    - '@deepseek-ai/dsh-client-runtime'
+    - '@deepseek-ai/dsh-client-ui-conversation'
+    - '@deepseek-ai/dsh-invariants'
+  packages/client/ui-brand-official:
+    - '@deepseek-ai/cordis'
+    - '@deepseek-ai/dsh-client-runtime'
+    - '@deepseek-ai/dsh-client-ui-conversation'
+    - '@deepseek-ai/dsh-client-ui-sidebar'
+    - '@deepseek-ai/dsh-invariants'
+  packages/client/ui-commands:
+    - '@deepseek-ai/cordis'
+    - '@deepseek-ai/dsh-api-remotes'
+    - '@deepseek-ai/dsh-client-locale'
+    - '@deepseek-ai/dsh-client-runtime'
+    - '@deepseek-ai/dsh-client-ui-conversation'
+    - '@deepseek-ai/dsh-client-ui-input-trigger'
+    - '@deepseek-ai/dsh-commands'
+    - '@deepseek-ai/dsh-invariants'
+  packages/client/ui-deliverables:
+    - '@deepseek-ai/cordis'
+    - '@deepseek-ai/dsh-client-connection'
+    - '@deepseek-ai/dsh-client-locale'
+    - '@deepseek-ai/dsh-client-runtime'
+    - '@deepseek-ai/dsh-client-ui-conversation'
+    - '@deepseek-ai/dsh-invariants'
+    - '@deepseek-ai/dsh-system-prompt'
+  packages/client/ui-directory-picker-browse:
+    - '@deepseek-ai/cordis'
+    - '@deepseek-ai/dsh-client-locale'
+    - '@deepseek-ai/dsh-client-runtime'
+    - '@deepseek-ai/dsh-client-ui-workspace'
+    - '@deepseek-ai/dsh-invariants'
+  packages/client/ui-directory-picker-native:
+    - '@deepseek-ai/cordis'
+    - '@deepseek-ai/dsh-client-runtime'
+    - '@deepseek-ai/dsh-client-ui-workspace'
+    - '@deepseek-ai/dsh-invariants'
+  packages/client/ui-goal:
+    - '@deepseek-ai/cordis'
+    - '@deepseek-ai/dsh-api-remotes'
+    - '@deepseek-ai/dsh-client-locale'
+    - '@deepseek-ai/dsh-client-runtime'
+    - '@deepseek-ai/dsh-client-ui-conversation'
+    - '@deepseek-ai/dsh-commands'
+    - '@deepseek-ai/dsh-goal'
+    - '@deepseek-ai/dsh-invariants'
+    - '@deepseek-ai/dsh-session'
+    - '@deepseek-ai/dsh-typert-protocol'
+  packages/client/ui-input-trigger:
+    - '@deepseek-ai/cordis'
+    - '@deepseek-ai/dsh-client-locale'
+    - '@deepseek-ai/dsh-client-runtime'
+    - '@deepseek-ai/dsh-file-reference'
+    - '@deepseek-ai/dsh-invariants'
+  packages/client/ui-jobs:
+    - '@deepseek-ai/cordis'
+    - '@deepseek-ai/dsh-client-locale'
+    - '@deepseek-ai/dsh-client-runtime'
+    - '@deepseek-ai/dsh-client-ui-conversation'
+    - '@deepseek-ai/dsh-invariants'
+  packages/client/ui-layout:
+    - '@deepseek-ai/cordis'
+    - '@deepseek-ai/dsh-client-runtime'
+    - '@deepseek-ai/dsh-client-ui-theme'
+    - '@deepseek-ai/dsh-invariants'
+  packages/client/ui-message-feedback:
+    - '@deepseek-ai/cordis'
+    - '@deepseek-ai/dsh-api-remotes'
+    - '@deepseek-ai/dsh-client-connection'
+    - '@deepseek-ai/dsh-client-locale'
+    - '@deepseek-ai/dsh-client-runtime'
+    - '@deepseek-ai/dsh-client-ui-conversation'
+    - '@deepseek-ai/dsh-invariants'
+    - '@deepseek-ai/dsh-message-feedback'
+    - '@deepseek-ai/dsh-typert-protocol'
+  packages/client/ui-model-selection:
+    - '@deepseek-ai/cordis'
+    - '@deepseek-ai/dsh-api-remotes'
+    - '@deepseek-ai/dsh-client-connection'
+    - '@deepseek-ai/dsh-client-locale'
+    - '@deepseek-ai/dsh-client-runtime'
+    - '@deepseek-ai/dsh-client-ui-commands'
+    - '@deepseek-ai/dsh-client-ui-conversation'
+    - '@deepseek-ai/dsh-client-ui-input-trigger'
+    - '@deepseek-ai/dsh-invariants'
+  packages/client/ui-permission-presets:
+    - '@deepseek-ai/cordis'
+    - '@deepseek-ai/dsh-api-remotes'
+    - '@deepseek-ai/dsh-client-connection'
+    - '@deepseek-ai/dsh-client-locale'
+    - '@deepseek-ai/dsh-client-runtime'
+    - '@deepseek-ai/dsh-client-ui-commands'
+    - '@deepseek-ai/dsh-client-ui-input-trigger'
+    - '@deepseek-ai/dsh-client-ui-settings'
+    - '@deepseek-ai/dsh-invariants'
+    - '@deepseek-ai/dsh-permission-presets'
+  packages/client/ui-plan:
+    - '@deepseek-ai/cordis'
+    - '@deepseek-ai/dsh-api-remotes'
+    - '@deepseek-ai/dsh-client-locale'
+    - '@deepseek-ai/dsh-client-runtime'
+    - '@deepseek-ai/dsh-client-ui-conversation'
+    - '@deepseek-ai/dsh-invariants'
+    - '@deepseek-ai/dsh-plan-mode'
+  packages/client/ui-reference:
+    - '@deepseek-ai/cordis'
+    - '@deepseek-ai/dsh-api-remotes'
+    - '@deepseek-ai/dsh-client-locale'
+    - '@deepseek-ai/dsh-client-runtime'
+    - '@deepseek-ai/dsh-client-ui-input-trigger'
+    - '@deepseek-ai/dsh-file-reference'
+    - '@deepseek-ai/dsh-invariants'
+    - '@deepseek-ai/dsh-session-reference'
+    - '@deepseek-ai/dsh-typert-protocol'
+  packages/client/ui-renderer:
+    - '@deepseek-ai/cordis'
+    - '@deepseek-ai/dsh-client-runtime'
+    - '@deepseek-ai/dsh-invariants'
+  packages/client/ui-settings:
+    - '@deepseek-ai/cordis'
+    - '@deepseek-ai/dsh-api-remotes'
+    - '@deepseek-ai/dsh-client-connection'
+    - '@deepseek-ai/dsh-client-runtime'
+    - '@deepseek-ai/dsh-invariants'
+    - '@deepseek-ai/dsh-settings'
+    - '@deepseek-ai/schemastery'
+  packages/client/ui-settings-general:
+    - '@deepseek-ai/cordis'
+    - '@deepseek-ai/dsh-api-remotes'
+    - '@deepseek-ai/dsh-client-connection'
+    - '@deepseek-ai/dsh-client-locale'
+    - '@deepseek-ai/dsh-client-runtime'
+    - '@deepseek-ai/dsh-client-ui-settings'
+    - '@deepseek-ai/dsh-client-ui-sidebar'
+    - '@deepseek-ai/dsh-invariants'
+    - '@deepseek-ai/dsh-settings'
+    - '@deepseek-ai/schemastery'
+  packages/client/ui-settings-plugin-inventory:
+    - '@deepseek-ai/cordis'
+    - '@deepseek-ai/dsh-api-remotes'
+    - '@deepseek-ai/dsh-client-locale'
+    - '@deepseek-ai/dsh-client-runtime'
+    - '@deepseek-ai/dsh-client-ui-settings'
+    - '@deepseek-ai/dsh-invariants'
+  packages/client/ui-sidebar:
+    - '@deepseek-ai/cordis'
+    - '@deepseek-ai/dsh-client-locale'
+    - '@deepseek-ai/dsh-client-runtime'
+    - '@deepseek-ai/dsh-client-ui-layout'
+    - '@deepseek-ai/dsh-invariants'
+  packages/client/ui-skill:
+    - '@deepseek-ai/cordis'
+    - '@deepseek-ai/dsh-api-remotes'
+    - '@deepseek-ai/dsh-client-connection'
+    - '@deepseek-ai/dsh-client-locale'
+    - '@deepseek-ai/dsh-client-runtime'
+    - '@deepseek-ai/dsh-client-ui-input-trigger'
+    - '@deepseek-ai/dsh-client-ui-tool'
+    - '@deepseek-ai/dsh-invariants'
+  packages/client/ui-slots:
+    - '@deepseek-ai/cordis'
+    - '@deepseek-ai/dsh-invariants'
+  packages/client/ui-subagent:
+    - '@deepseek-ai/cordis'
+    - '@deepseek-ai/dsh-client-locale'
+    - '@deepseek-ai/dsh-client-runtime'
+    - '@deepseek-ai/dsh-client-ui-conversation'
+    - '@deepseek-ai/dsh-client-ui-input-trigger'
+    - '@deepseek-ai/dsh-invariants'
+    - '@deepseek-ai/dsh-subagent'
+    - '@deepseek-ai/dsh-token-meter'
+  packages/client/ui-theme:
+    - '@deepseek-ai/cordis'
+    - '@deepseek-ai/dsh-api-remotes'
+    - '@deepseek-ai/dsh-client-connection'
+    - '@deepseek-ai/dsh-client-locale'
+    - '@deepseek-ai/dsh-client-runtime'
+    - '@deepseek-ai/dsh-client-ui-settings'
+    - '@deepseek-ai/dsh-host-webserver'
+    - '@deepseek-ai/dsh-invariants'
+    - '@deepseek-ai/dsh-settings'
+    - '@deepseek-ai/schemastery'
+  packages/client/ui-trajectory:
+    - '@deepseek-ai/cordis'
+    - '@deepseek-ai/dsh-agent'
+    - '@deepseek-ai/dsh-client-locale'
+    - '@deepseek-ai/dsh-client-runtime'
+    - '@deepseek-ai/dsh-client-ui-conversation'
+    - '@deepseek-ai/dsh-compaction'
+    - '@deepseek-ai/dsh-invariants'
+    - '@deepseek-ai/dsh-tools'
+  packages/client/ui-user-questions:
+    - '@deepseek-ai/cordis'
+    - '@deepseek-ai/dsh-api-remotes'
+    - '@deepseek-ai/dsh-client-locale'
+    - '@deepseek-ai/dsh-client-runtime'
+    - '@deepseek-ai/dsh-client-ui-conversation'
+    - '@deepseek-ai/dsh-invariants'
+  packages/client/ui-workflow-run:
+    - '@deepseek-ai/cordis'
+    - '@deepseek-ai/dsh-client-locale'
+    - '@deepseek-ai/dsh-client-runtime'
+    - '@deepseek-ai/dsh-client-ui-conversation'
+    - '@deepseek-ai/dsh-invariants'
+    - '@deepseek-ai/dsh-session'
+    - '@deepseek-ai/dsh-tool-workflow'
+    - '@deepseek-ai/dsh-workflow'
+  packages/client/ui-workspace:
+    - '@deepseek-ai/cordis'
+    - '@deepseek-ai/dsh-client-connection'
+    - '@deepseek-ai/dsh-client-locale'
+    - '@deepseek-ai/dsh-client-runtime'
+    - '@deepseek-ai/dsh-client-ui-conversation'
+    - '@deepseek-ai/dsh-client-ui-sidebar'
+    - '@deepseek-ai/dsh-invariants'
+  packages/client/web:
+    - '@deepseek-ai/cordis'
+    - '@deepseek-ai/dsh-invariants'
+  packages/code-runtime/code-runtime:
+    - '@deepseek-ai/cordis'
+    - '@deepseek-ai/dsh-invariants'
+  packages/code-runtime/code-runtime-python:
+    - '@deepseek-ai/cordis'
+    - '@deepseek-ai/dsh-invariants'
+  packages/code-runtime/code-runtime-worker-thread:
+    - '@deepseek-ai/cordis'
+    - '@deepseek-ai/dsh-code-runtime'
+    - '@deepseek-ai/dsh-invariants'
+    - '@deepseek-ai/dsh-session'
+    - '@deepseek-ai/dsh-timeout'
+    - '@deepseek-ai/schemastery'
+  packages/compaction/command-compact:
+    - '@deepseek-ai/cordis'
+    - '@deepseek-ai/dsh-commands'
+    - '@deepseek-ai/dsh-compaction'
+    - '@deepseek-ai/dsh-invariants'
+  packages/compaction/compaction-tool-result-pruner:
+    - '@deepseek-ai/cordis'
+    - '@deepseek-ai/dsh-compaction'
+    - '@deepseek-ai/dsh-invariants'
+    - '@deepseek-ai/dsh-llm'
+    - '@deepseek-ai/dsh-session'
+    - '@deepseek-ai/dsh-token-meter'
+    - '@deepseek-ai/schemastery'
+  packages/context/agent-instructions:
+    - '@deepseek-ai/cordis'
+    - '@deepseek-ai/dsh-agent'
+    - '@deepseek-ai/dsh-fs'
+    - '@deepseek-ai/dsh-home-paths'
+    - '@deepseek-ai/dsh-invariants'
+    - '@deepseek-ai/dsh-llm'
+    - '@deepseek-ai/dsh-session'
+    - '@deepseek-ai/dsh-tools'
+    - '@deepseek-ai/schemastery'
+  packages/context/file-reference:
+    - '@deepseek-ai/cordis'
+    - '@deepseek-ai/dsh-agent'
+    - '@deepseek-ai/dsh-invariants'
+    - '@deepseek-ai/dsh-typert-protocol'
+  packages/context/file-reference-local:
+    - '@deepseek-ai/cordis'
+    - '@deepseek-ai/dsh-agent'
+    - '@deepseek-ai/dsh-file-reference'
+    - '@deepseek-ai/dsh-invariants'
+    - '@deepseek-ai/dsh-system-prompt'
+    - '@deepseek-ai/dsh-tools'
+    - '@deepseek-ai/schemastery'
+  packages/context/session-reference:
+    - '@deepseek-ai/cordis'
+    - '@deepseek-ai/dsh-agent'
+    - '@deepseek-ai/dsh-compaction'
+    - '@deepseek-ai/dsh-invariants'
+    - '@deepseek-ai/dsh-llm'
+    - '@deepseek-ai/dsh-output-retention'
+    - '@deepseek-ai/dsh-session'
+    - '@deepseek-ai/dsh-session-query'
+    - '@deepseek-ai/dsh-typert-protocol'
+    - '@deepseek-ai/schemastery'
+  packages/context/time-context:
+    - '@deepseek-ai/cordis'
+    - '@deepseek-ai/dsh-agent'
+    - '@deepseek-ai/dsh-invariants'
+    - '@deepseek-ai/dsh-session'
+    - '@deepseek-ai/schemastery'
+  packages/context/tmux-context:
+    - '@deepseek-ai/cordis'
+    - '@deepseek-ai/dsh-agent'
+    - '@deepseek-ai/dsh-invariants'
+    - '@deepseek-ai/dsh-session'
+    - '@deepseek-ai/dsh-shell'
+    - '@deepseek-ai/schemastery'
+  packages/core/agent-default-model:
+    - '@deepseek-ai/cordis'
+    - '@deepseek-ai/dsh-agent'
+    - '@deepseek-ai/dsh-invariants'
+    - '@deepseek-ai/dsh-llm'
+    - '@deepseek-ai/dsh-settings'
+    - '@deepseek-ai/schemastery'
+  packages/core/agent-tool-presentation:
+    - '@deepseek-ai/cordis'
+    - '@deepseek-ai/dsh-invariants'
+    - '@deepseek-ai/dsh-tools'
+    - '@deepseek-ai/schemastery'
+  packages/core/system-prompt:
+    - '@deepseek-ai/cordis'
+    - '@deepseek-ai/dsh-invariants'
+    - '@deepseek-ai/dsh-llm'
+    - '@deepseek-ai/dsh-scope'
+    - '@deepseek-ai/schemastery'
+  packages/core/tools:
+    - '@deepseek-ai/cordis'
+    - '@deepseek-ai/dsh-agent'
+    - '@deepseek-ai/dsh-code-runtime'
+    - '@deepseek-ai/dsh-invariants'
+    - '@deepseek-ai/dsh-llm'
+    - '@deepseek-ai/dsh-scope'
+    - '@deepseek-ai/dsh-session'
+    - '@deepseek-ai/dsh-system-prompt'
+    - '@deepseek-ai/dsh-user-approval'
+    - '@deepseek-ai/schemastery'
+  packages/credentials/authorization:
+    - '@deepseek-ai/cordis'
+    - '@deepseek-ai/dsh-credentials'
+    - '@deepseek-ai/dsh-invariants'
+    - '@deepseek-ai/dsh-llm'
+  packages/credentials/credentials:
+    - '@deepseek-ai/cordis'
+    - '@deepseek-ai/dsh-brand'
+    - '@deepseek-ai/dsh-invariants'
+  packages/credentials/credentials-local:
+    - '@deepseek-ai/cordis'
+    - '@deepseek-ai/dsh-atomic-write'
+    - '@deepseek-ai/dsh-credentials'
+    - '@deepseek-ai/dsh-home-paths'
+    - '@deepseek-ai/dsh-invariants'
+    - '@deepseek-ai/dsh-launch-environment'
+    - '@deepseek-ai/schemastery'
+  packages/e2b/e2b:
+    - '@deepseek-ai/cordis'
+    - '@deepseek-ai/dsh-invariants'
+    - '@deepseek-ai/schemastery'
+  packages/e2b/fs-e2b:
+    - '@deepseek-ai/cordis'
+    - '@deepseek-ai/dsh-e2b'
+    - '@deepseek-ai/dsh-fs'
+    - '@deepseek-ai/dsh-invariants'
+  packages/e2b/subprocess-e2b:
+    - '@deepseek-ai/cordis'
+    - '@deepseek-ai/dsh-e2b'
+    - '@deepseek-ai/dsh-invariants'
+    - '@deepseek-ai/dsh-subprocess'
+    - '@deepseek-ai/dsh-timeout'
+    - '@deepseek-ai/schemastery'
+  packages/examples/acp-demo:
+    - '@deepseek-ai/cordis'
+    - '@deepseek-ai/cordis-plugin-include'
+    - '@deepseek-ai/cordis-plugin-loader'
+    - '@deepseek-ai/dsh-acp'
+    - '@deepseek-ai/dsh-agent-instructions'
+    - '@deepseek-ai/dsh-agent-spine-demo'
+    - '@deepseek-ai/dsh-app-boot'
+    - '@deepseek-ai/dsh-invariants'
+    - '@deepseek-ai/dsh-session-checkpoint-policy'
+    - '@deepseek-ai/dsh-session-persistence-jsonl'
+    - '@deepseek-ai/dsh-session-query'
+    - '@deepseek-ai/dsh-session-query-sqlite'
+    - '@deepseek-ai/dsh-tools'
+    - '@deepseek-ai/schemastery'
+  packages/examples/agent-spine-demo:
+    - '@deepseek-ai/cordis'
+    - '@deepseek-ai/cordis-plugin-timer'
+    - '@deepseek-ai/dsh-agent'
+    - '@deepseek-ai/dsh-agent-instructions'
+    - '@deepseek-ai/dsh-agent-loop'
+    - '@deepseek-ai/dsh-goal'
+    - '@deepseek-ai/dsh-goal-round-driver'
+    - '@deepseek-ai/dsh-home-paths'
+    - '@deepseek-ai/dsh-invariants'
+    - '@deepseek-ai/dsh-jobs-local'
+    - '@deepseek-ai/dsh-llm'
+    - '@deepseek-ai/dsh-llm-retry'
+    - '@deepseek-ai/dsh-scope'
+    - '@deepseek-ai/dsh-session'
+    - '@deepseek-ai/dsh-session-title'
+    - '@deepseek-ai/dsh-shell-env'
+    - '@deepseek-ai/dsh-skill'
+    - '@deepseek-ai/dsh-skill-filesystem'
+    - '@deepseek-ai/dsh-system-prompt'
+    - '@deepseek-ai/dsh-tool-bash'
+    - '@deepseek-ai/dsh-tool-goal'
+    - '@deepseek-ai/dsh-tool-jobs'
+    - '@deepseek-ai/dsh-tool-skill'
+    - '@deepseek-ai/dsh-tools'
+    - '@deepseek-ai/schemastery'
+  packages/examples/jsonrpc-demo:
+    - '@deepseek-ai/cordis'
+    - '@deepseek-ai/dsh-app-boot'
+    - '@deepseek-ai/dsh-invariants'
+  packages/experimental/agent-team:
+    - '@deepseek-ai/cordis'
+    - '@deepseek-ai/dsh-agent'
+    - '@deepseek-ai/dsh-brand'
+    - '@deepseek-ai/dsh-invariants'
+    - '@deepseek-ai/dsh-llm'
+    - '@deepseek-ai/dsh-session'
+    - '@deepseek-ai/dsh-session-persistence'
+    - '@deepseek-ai/dsh-subagent'
+    - '@deepseek-ai/schemastery'
+  packages/experimental/tool-agent-team:
+    - '@deepseek-ai/cordis'
+    - '@deepseek-ai/dsh-agent'
+    - '@deepseek-ai/dsh-experimental-agent-team'
+    - '@deepseek-ai/dsh-invariants'
+    - '@deepseek-ai/dsh-session'
+    - '@deepseek-ai/dsh-system-prompt'
+    - '@deepseek-ai/dsh-tools'
+    - '@deepseek-ai/schemastery'
+  packages/extensions/cordis-host-runner:
+    - '@deepseek-ai/cordis'
+    - '@deepseek-ai/dsh-agent'
+    - '@deepseek-ai/dsh-brand'
+    - '@deepseek-ai/dsh-invariants'
+    - '@deepseek-ai/dsh-llm'
+    - '@deepseek-ai/dsh-scope'
+    - '@deepseek-ai/dsh-session'
+    - '@deepseek-ai/dsh-tools'
+    - '@deepseek-ai/dsh-typert-protocol'
+    - '@deepseek-ai/schemastery'
+  packages/extensions/ui-cordis:
+    - '@deepseek-ai/cordis'
+    - '@deepseek-ai/dsh-api-remotes'
+    - '@deepseek-ai/dsh-client-connection'
+    - '@deepseek-ai/dsh-client-locale'
+    - '@deepseek-ai/dsh-client-runtime'
+    - '@deepseek-ai/dsh-client-ui-input-trigger'
+    - '@deepseek-ai/dsh-client-ui-sidebar'
+    - '@deepseek-ai/dsh-client-ui-tool'
+    - '@deepseek-ai/dsh-cordis-client-runner'
+    - '@deepseek-ai/dsh-invariants'
+  packages/feedback/command-feedback:
+    - '@deepseek-ai/cordis'
+    - '@deepseek-ai/dsh-anonymous-user-id'
+    - '@deepseek-ai/dsh-commands'
+    - '@deepseek-ai/dsh-invariants'
+    - '@deepseek-ai/dsh-session'
+    - '@deepseek-ai/dsh-session-telemetry'
+  packages/feedback/message-feedback:
+    - '@deepseek-ai/cordis'
+    - '@deepseek-ai/dsh-brand'
+    - '@deepseek-ai/dsh-invariants'
+    - '@deepseek-ai/dsh-llm'
+    - '@deepseek-ai/dsh-session'
+    - '@deepseek-ai/dsh-session-persistence'
+    - '@deepseek-ai/dsh-storage-domain'
+    - '@deepseek-ai/dsh-typert-protocol'
+    - '@deepseek-ai/schemastery'
+  packages/fs/fs:
+    - '@deepseek-ai/cordis'
+    - '@deepseek-ai/dsh-brand'
+    - '@deepseek-ai/dsh-invariants'
+    - '@deepseek-ai/dsh-llm'
+    - '@deepseek-ai/dsh-sandbox'
+  packages/fs/fs-local:
+    - '@deepseek-ai/cordis'
+    - '@deepseek-ai/dsh-fs'
+    - '@deepseek-ai/dsh-invariants'
+    - '@deepseek-ai/schemastery'
+  packages/fs/fs-observation-policy:
+    - '@deepseek-ai/cordis'
+    - '@deepseek-ai/dsh-fs'
+    - '@deepseek-ai/dsh-invariants'
+  packages/fs/fs-sandbox:
+    - '@deepseek-ai/cordis'
+    - '@deepseek-ai/dsh-fs'
+    - '@deepseek-ai/dsh-fs-local'
+    - '@deepseek-ai/dsh-invariants'
+    - '@deepseek-ai/dsh-sandbox'
+    - '@deepseek-ai/dsh-sandbox-policy'
+  packages/fs/tool-fs:
+    - '@deepseek-ai/cordis'
+    - '@deepseek-ai/dsh-attachment'
+    - '@deepseek-ai/dsh-fs'
+    - '@deepseek-ai/dsh-invariants'
+    - '@deepseek-ai/dsh-llm'
+    - '@deepseek-ai/dsh-sandbox'
+    - '@deepseek-ai/dsh-sandbox-policy'
+    - '@deepseek-ai/dsh-session'
+    - '@deepseek-ai/dsh-system-prompt'
+    - '@deepseek-ai/dsh-tools'
+    - '@deepseek-ai/dsh-user-approval'
+    - '@deepseek-ai/schemastery'
+  packages/fs/tool-fs-search:
+    - '@deepseek-ai/cordis'
+    - '@deepseek-ai/dsh-invariants'
+    - '@deepseek-ai/dsh-llm'
+    - '@deepseek-ai/dsh-output-retention'
+    - '@deepseek-ai/dsh-session'
+    - '@deepseek-ai/dsh-spill'
+    - '@deepseek-ai/dsh-subprocess'
+    - '@deepseek-ai/dsh-system-prompt'
+    - '@deepseek-ai/dsh-timeout'
+    - '@deepseek-ai/dsh-tools'
+    - '@deepseek-ai/schemastery'
+  packages/fs/tool-str-replace-editor:
+    - '@deepseek-ai/cordis'
+    - '@deepseek-ai/dsh-fs'
+    - '@deepseek-ai/dsh-invariants'
+    - '@deepseek-ai/dsh-sandbox'
+    - '@deepseek-ai/dsh-sandbox-policy'
+    - '@deepseek-ai/dsh-tools'
+    - '@deepseek-ai/schemastery'
+  packages/goal/command-goal:
+    - '@deepseek-ai/cordis'
+    - '@deepseek-ai/dsh-commands'
+    - '@deepseek-ai/dsh-goal'
+    - '@deepseek-ai/dsh-invariants'
+    - '@deepseek-ai/dsh-llm'
+  packages/goal/goal:
+    - '@deepseek-ai/cordis'
+    - '@deepseek-ai/dsh-agent'
+    - '@deepseek-ai/dsh-brand'
+    - '@deepseek-ai/dsh-invariants'
+    - '@deepseek-ai/dsh-llm'
+    - '@deepseek-ai/dsh-scope'
+    - '@deepseek-ai/dsh-session'
+    - '@deepseek-ai/dsh-session-projection'
+    - '@deepseek-ai/dsh-typert-protocol'
+    - '@deepseek-ai/schemastery'
+  packages/goal/goal-round-driver:
+    - '@deepseek-ai/cordis'
+    - '@deepseek-ai/dsh-agent'
+    - '@deepseek-ai/dsh-goal'
+    - '@deepseek-ai/dsh-invariants'
+    - '@deepseek-ai/dsh-llm'
+    - '@deepseek-ai/dsh-session'
+  packages/goal/tool-goal:
+    - '@deepseek-ai/cordis'
+    - '@deepseek-ai/dsh-agent'
+    - '@deepseek-ai/dsh-goal'
+    - '@deepseek-ai/dsh-invariants'
+    - '@deepseek-ai/dsh-llm'
+    - '@deepseek-ai/dsh-session'
+    - '@deepseek-ai/dsh-system-prompt'
+    - '@deepseek-ai/dsh-tools'
+    - '@deepseek-ai/schemastery'
+  packages/guard/repeat-tool-reminder:
+    - '@deepseek-ai/cordis'
+    - '@deepseek-ai/dsh-agent'
+    - '@deepseek-ai/dsh-invariants'
+    - '@deepseek-ai/dsh-tools'
+    - '@deepseek-ai/schemastery'
+  packages/guard/timeout-policy:
+    - '@deepseek-ai/cordis'
+    - '@deepseek-ai/dsh-invariants'
+    - '@deepseek-ai/dsh-llm'
+    - '@deepseek-ai/dsh-timeout'
+    - '@deepseek-ai/dsh-tools'
+  packages/hooks/hook-protocol:
+    - '@deepseek-ai/cordis'
+    - '@deepseek-ai/dsh-invariants'
+    - '@deepseek-ai/dsh-session'
+    - '@deepseek-ai/dsh-shell'
+  packages/hooks/hooks-claude-code:
+    - '@deepseek-ai/cordis'
+    - '@deepseek-ai/dsh-agent'
+    - '@deepseek-ai/dsh-hook-protocol'
+    - '@deepseek-ai/dsh-invariants'
+    - '@deepseek-ai/dsh-llm'
+    - '@deepseek-ai/dsh-session'
+    - '@deepseek-ai/dsh-session-persistence'
+    - '@deepseek-ai/dsh-subagent'
+    - '@deepseek-ai/dsh-tools'
+    - '@deepseek-ai/schemastery'
+  packages/hooks/hooks-codex:
+    - '@deepseek-ai/cordis'
+    - '@deepseek-ai/dsh-agent'
+    - '@deepseek-ai/dsh-hook-protocol'
+    - '@deepseek-ai/dsh-invariants'
+    - '@deepseek-ai/dsh-llm'
+    - '@deepseek-ai/dsh-session'
+    - '@deepseek-ai/dsh-session-persistence'
+    - '@deepseek-ai/dsh-tools'
+    - '@deepseek-ai/schemastery'
+  packages/host/directory-picker:
+    - '@deepseek-ai/cordis'
+    - '@deepseek-ai/dsh-invariants'
+  packages/host/directory-picker-auto:
+    - '@deepseek-ai/cordis'
+    - '@deepseek-ai/cordis-plugin-loader'
+    - '@deepseek-ai/dsh-client-ui-directory-picker-browse'
+    - '@deepseek-ai/dsh-client-ui-directory-picker-native'
+    - '@deepseek-ai/dsh-host-directory-picker-browse'
+    - '@deepseek-ai/dsh-host-directory-picker-native'
+    - '@deepseek-ai/dsh-host-webserver'
+    - '@deepseek-ai/dsh-invariants'
+  packages/host/directory-picker-browse:
+    - '@deepseek-ai/cordis'
+    - '@deepseek-ai/dsh-host-directory-picker'
+    - '@deepseek-ai/dsh-invariants'
+    - '@deepseek-ai/schemastery'
+  packages/host/directory-picker-native:
+    - '@deepseek-ai/cordis'
+    - '@deepseek-ai/dsh-host-directory-picker'
+    - '@deepseek-ai/dsh-invariants'
+    - '@deepseek-ai/dsh-native-command'
+  packages/host/frontend-static:
+    - '@deepseek-ai/cordis'
+    - '@deepseek-ai/dsh-host-webserver'
+    - '@deepseek-ai/dsh-invariants'
+    - '@deepseek-ai/schemastery'
+  packages/host/plugin-inventory:
+    - '@deepseek-ai/cordis'
+    - '@deepseek-ai/cordis-plugin-loader'
+    - '@deepseek-ai/dsh-brand'
+    - '@deepseek-ai/dsh-invariants'
+    - '@deepseek-ai/dsh-typert-protocol'
+  packages/host/webserver:
+    - '@deepseek-ai/cordis'
+    - '@deepseek-ai/dsh-invariants'
+    - '@deepseek-ai/schemastery'
+  packages/identity/anonymous-user-id:
+    - '@deepseek-ai/cordis'
+    - '@deepseek-ai/dsh-brand'
+    - '@deepseek-ai/dsh-home-paths'
+    - '@deepseek-ai/dsh-invariants'
+  packages/interaction/permission-presets:
+    - '@deepseek-ai/cordis'
+    - '@deepseek-ai/dsh-commands'
+    - '@deepseek-ai/dsh-invariants'
+    - '@deepseek-ai/dsh-sandbox'
+    - '@deepseek-ai/dsh-sandbox-policy'
+    - '@deepseek-ai/dsh-session'
+    - '@deepseek-ai/dsh-session-projection'
+    - '@deepseek-ai/dsh-settings'
+    - '@deepseek-ai/dsh-shell'
+    - '@deepseek-ai/dsh-user-approval'
+    - '@deepseek-ai/schemastery'
+  packages/interaction/tool-ask-user:
+    - '@deepseek-ai/cordis'
+    - '@deepseek-ai/dsh-agent'
+    - '@deepseek-ai/dsh-invariants'
+    - '@deepseek-ai/dsh-tools'
+    - '@deepseek-ai/dsh-user-questions'
+  packages/interaction/user-approval:
+    - '@deepseek-ai/cordis'
+    - '@deepseek-ai/dsh-agent'
+    - '@deepseek-ai/dsh-brand'
+    - '@deepseek-ai/dsh-invariants'
+    - '@deepseek-ai/dsh-llm'
+    - '@deepseek-ai/dsh-scope'
+    - '@deepseek-ai/dsh-session'
+    - '@deepseek-ai/dsh-system-prompt'
+    - '@deepseek-ai/schemastery'
+  packages/interaction/user-questions:
+    - '@deepseek-ai/cordis'
+    - '@deepseek-ai/dsh-agent'
+    - '@deepseek-ai/dsh-invariants'
+    - '@deepseek-ai/dsh-llm'
+  packages/jobs/jobs:
+    - '@deepseek-ai/cordis'
+    - '@deepseek-ai/dsh-agent'
+    - '@deepseek-ai/dsh-brand'
+    - '@deepseek-ai/dsh-invariants'
+    - '@deepseek-ai/dsh-session'
+  packages/jobs/jobs-local:
+    - '@deepseek-ai/cordis'
+    - '@deepseek-ai/dsh-agent'
+    - '@deepseek-ai/dsh-invariants'
+    - '@deepseek-ai/dsh-jobs'
+    - '@deepseek-ai/dsh-scope'
+    - '@deepseek-ai/dsh-timeout'
+    - '@deepseek-ai/schemastery'
+  packages/jobs/tool-jobs:
+    - '@deepseek-ai/cordis'
+    - '@deepseek-ai/dsh-agent'
+    - '@deepseek-ai/dsh-invariants'
+    - '@deepseek-ai/dsh-jobs'
+    - '@deepseek-ai/dsh-llm'
+    - '@deepseek-ai/dsh-output-retention'
+    - '@deepseek-ai/dsh-system-prompt'
+    - '@deepseek-ai/dsh-tools'
+    - '@deepseek-ai/schemastery'
+  packages/llm/llm-deepseek:
+    - '@deepseek-ai/cordis'
+    - '@deepseek-ai/dsh-anonymous-user-id'
+    - '@deepseek-ai/dsh-atomic-write'
+    - '@deepseek-ai/dsh-attachment'
+    - '@deepseek-ai/dsh-brand'
+    - '@deepseek-ai/dsh-credentials'
+    - '@deepseek-ai/dsh-home-paths'
+    - '@deepseek-ai/dsh-invariants'
+    - '@deepseek-ai/dsh-launch-environment'
+    - '@deepseek-ai/dsh-llm'
+    - '@deepseek-ai/dsh-settings'
+    - '@deepseek-ai/dsh-timeout'
+    - '@deepseek-ai/schemastery'
+  packages/llm/llm-retry:
+    - '@deepseek-ai/cordis'
+    - '@deepseek-ai/dsh-agent'
+    - '@deepseek-ai/dsh-brand'
+    - '@deepseek-ai/dsh-invariants'
+    - '@deepseek-ai/dsh-llm'
+    - '@deepseek-ai/dsh-session'
+    - '@deepseek-ai/dsh-timeout'
+    - '@deepseek-ai/schemastery'
+  packages/llm/token-meter:
+    - '@deepseek-ai/cordis'
+    - '@deepseek-ai/dsh-compaction'
+    - '@deepseek-ai/dsh-invariants'
+    - '@deepseek-ai/dsh-llm'
+    - '@deepseek-ai/dsh-session'
+    - '@deepseek-ai/dsh-session-projection'
+    - '@deepseek-ai/schemastery'
+  packages/lsp/lsp:
+    - '@deepseek-ai/cordis'
+    - '@deepseek-ai/dsh-brand'
+    - '@deepseek-ai/dsh-invariants'
+    - '@deepseek-ai/dsh-llm'
+  packages/lsp/lsp-stdio:
+    - '@deepseek-ai/cordis'
+    - '@deepseek-ai/dsh-brand'
+    - '@deepseek-ai/dsh-fs'
+    - '@deepseek-ai/dsh-invariants'
+    - '@deepseek-ai/dsh-llm'
+    - '@deepseek-ai/dsh-lsp'
+    - '@deepseek-ai/dsh-subprocess'
+    - '@deepseek-ai/dsh-timeout'
+    - '@deepseek-ai/schemastery'
+  packages/lsp/tool-lsp:
+    - '@deepseek-ai/cordis'
+    - '@deepseek-ai/dsh-invariants'
+    - '@deepseek-ai/dsh-llm'
+    - '@deepseek-ai/dsh-lsp'
+    - '@deepseek-ai/dsh-system-prompt'
+    - '@deepseek-ai/dsh-timeout'
+    - '@deepseek-ai/dsh-tools'
+    - '@deepseek-ai/schemastery'
+  packages/mcp/mcp-client:
+    - '@deepseek-ai/cordis'
+    - '@deepseek-ai/dsh-attachment'
+    - '@deepseek-ai/dsh-invariants'
+    - '@deepseek-ai/dsh-llm'
+    - '@deepseek-ai/dsh-subprocess'
+    - '@deepseek-ai/dsh-timeout'
+    - '@deepseek-ai/dsh-tools'
+    - '@deepseek-ai/schemastery'
+  packages/plan/plan-mode:
+    - '@deepseek-ai/cordis'
+    - '@deepseek-ai/dsh-agent'
+    - '@deepseek-ai/dsh-commands'
+    - '@deepseek-ai/dsh-invariants'
+    - '@deepseek-ai/dsh-llm'
+    - '@deepseek-ai/dsh-session'
+    - '@deepseek-ai/dsh-session-projection'
+    - '@deepseek-ai/dsh-system-prompt'
+    - '@deepseek-ai/dsh-tools'
+    - '@deepseek-ai/dsh-user-questions'
+  packages/preset/agent-presets:
+    - '@deepseek-ai/cordis'
+    - '@deepseek-ai/cordis-plugin-include'
+    - '@deepseek-ai/cordis-plugin-loader'
+    - '@deepseek-ai/dsh-agent'
+    - '@deepseek-ai/dsh-atomic-write'
+    - '@deepseek-ai/dsh-home-paths'
+    - '@deepseek-ai/dsh-invariants'
+    - '@deepseek-ai/dsh-scope'
+    - '@deepseek-ai/dsh-session'
+    - '@deepseek-ai/dsh-settings'
+    - '@deepseek-ai/dsh-system-prompt'
+    - '@deepseek-ai/schemastery'
+  packages/preset/persona:
+    - '@deepseek-ai/cordis'
+    - '@deepseek-ai/dsh-invariants'
+    - '@deepseek-ai/dsh-system-prompt'
+    - '@deepseek-ai/schemastery'
+  packages/runtime-diagnostics/invariants:
+    - '@deepseek-ai/cordis'
+    - '@deepseek-ai/schemastery'
+  packages/sandbox/sandbox:
+    - '@deepseek-ai/cordis'
+    - '@deepseek-ai/dsh-invariants'
+    - '@deepseek-ai/dsh-llm'
+    - '@deepseek-ai/dsh-session'
+  packages/sandbox/sandbox-local:
+    - '@deepseek-ai/cordis'
+    - '@deepseek-ai/dsh-invariants'
+    - '@deepseek-ai/dsh-llm'
+    - '@deepseek-ai/dsh-sandbox'
+    - '@deepseek-ai/dsh-sandbox-windows-acl'
+    - '@deepseek-ai/dsh-session'
+    - '@deepseek-ai/node-addon-landlock-run'
+    - '@deepseek-ai/schemastery'
+  packages/sandbox/sandbox-policy:
+    - '@deepseek-ai/cordis'
+    - '@deepseek-ai/dsh-agent'
+    - '@deepseek-ai/dsh-invariants'
+    - '@deepseek-ai/dsh-sandbox'
+    - '@deepseek-ai/dsh-session'
+    - '@deepseek-ai/dsh-system-prompt'
+    - '@deepseek-ai/schemastery'
+  packages/sandbox/sandbox-windows-acl:
+    - '@deepseek-ai/cordis'
+    - '@deepseek-ai/dsh-invariants'
+  packages/schedule/schedule:
+    - '@deepseek-ai/cordis'
+    - '@deepseek-ai/dsh-agent'
+    - '@deepseek-ai/dsh-brand'
+    - '@deepseek-ai/dsh-invariants'
+    - '@deepseek-ai/dsh-llm'
+    - '@deepseek-ai/dsh-session'
+    - '@deepseek-ai/dsh-session-persistence'
+    - '@deepseek-ai/dsh-tools'
+  packages/sdk/client:
+    - '@deepseek-ai/cordis'
+    - '@deepseek-ai/dsh-invariants'
+    - '@deepseek-ai/dsh-llm'
+    - '@deepseek-ai/dsh-sdk-protocol'
+    - '@deepseek-ai/dsh-session'
+  packages/sdk/protocol:
+    - '@deepseek-ai/cordis'
+    - '@deepseek-ai/dsh-invariants'
+    - '@deepseek-ai/dsh-llm'
+    - '@deepseek-ai/dsh-session'
+    - '@deepseek-ai/dsh-subagent'
+  packages/sdk/server:
+    - '@deepseek-ai/cordis'
+    - '@deepseek-ai/dsh-agent'
+    - '@deepseek-ai/dsh-invariants'
+    - '@deepseek-ai/dsh-llm'
+    - '@deepseek-ai/dsh-llm-deepseek'
+    - '@deepseek-ai/dsh-scope'
+    - '@deepseek-ai/dsh-sdk-protocol'
+    - '@deepseek-ai/dsh-session'
+    - '@deepseek-ai/dsh-subagent'
+    - '@deepseek-ai/schemastery'
+  packages/session-query/session-log-export:
+    - '@deepseek-ai/cordis'
+    - '@deepseek-ai/dsh-client-locale'
+    - '@deepseek-ai/dsh-client-runtime'
+    - '@deepseek-ai/dsh-client-ui-commands'
+    - '@deepseek-ai/dsh-client-ui-conversation'
+    - '@deepseek-ai/dsh-commands'
+    - '@deepseek-ai/dsh-invariants'
+  packages/session-query/session-query:
+    - '@deepseek-ai/cordis'
+    - '@deepseek-ai/dsh-brand'
+    - '@deepseek-ai/dsh-invariants'
+    - '@deepseek-ai/dsh-llm'
+    - '@deepseek-ai/dsh-session'
+    - '@deepseek-ai/dsh-session-persistence'
+    - '@deepseek-ai/dsh-session-title'
+  packages/session-query/session-query-sqlite:
+    - '@deepseek-ai/cordis'
+    - '@deepseek-ai/dsh-invariants'
+    - '@deepseek-ai/dsh-session'
+    - '@deepseek-ai/dsh-session-persistence'
+    - '@deepseek-ai/dsh-session-query'
+    - '@deepseek-ai/schemastery'
+  packages/session-query/tool-session-query:
+    - '@deepseek-ai/cordis'
+    - '@deepseek-ai/dsh-invariants'
+    - '@deepseek-ai/dsh-llm'
+    - '@deepseek-ai/dsh-session'
+    - '@deepseek-ai/dsh-session-query'
+    - '@deepseek-ai/dsh-system-prompt'
+    - '@deepseek-ai/dsh-timeout'
+    - '@deepseek-ai/dsh-tools'
+    - '@deepseek-ai/schemastery'
+  packages/session/session-checkpoint-policy:
+    - '@deepseek-ai/cordis'
+    - '@deepseek-ai/dsh-agent'
+    - '@deepseek-ai/dsh-invariants'
+    - '@deepseek-ai/dsh-llm'
+    - '@deepseek-ai/dsh-session'
+    - '@deepseek-ai/dsh-session-persistence'
+    - '@deepseek-ai/dsh-tools'
+  packages/session/session-persistence-jsonl:
+    - '@deepseek-ai/cordis'
+    - '@deepseek-ai/dsh-invariants'
+    - '@deepseek-ai/dsh-session'
+    - '@deepseek-ai/dsh-session-persistence'
+    - '@deepseek-ai/schemastery'
+  packages/session/session-persistence-sqlite:
+    - '@deepseek-ai/cordis'
+    - '@deepseek-ai/dsh-invariants'
+    - '@deepseek-ai/dsh-llm'
+    - '@deepseek-ai/dsh-session'
+    - '@deepseek-ai/dsh-session-persistence'
+    - '@deepseek-ai/schemastery'
+  packages/session/session-projection:
+    - '@deepseek-ai/cordis'
+    - '@deepseek-ai/dsh-invariants'
+    - '@deepseek-ai/dsh-session'
+  packages/session/session-projection-cache:
+    - '@deepseek-ai/cordis'
+    - '@deepseek-ai/dsh-invariants'
+    - '@deepseek-ai/dsh-session'
+    - '@deepseek-ai/dsh-session-persistence'
+    - '@deepseek-ai/dsh-session-projection'
+    - '@deepseek-ai/dsh-storage-domain'
+    - '@deepseek-ai/schemastery'
+  packages/session/session-stats:
+    - '@deepseek-ai/cordis'
+    - '@deepseek-ai/dsh-invariants'
+    - '@deepseek-ai/dsh-llm'
+    - '@deepseek-ai/dsh-session'
+    - '@deepseek-ai/dsh-session-projection'
+  packages/session/session-telemetry:
+    - '@deepseek-ai/cordis'
+    - '@deepseek-ai/dsh-agent'
+    - '@deepseek-ai/dsh-invariants'
+    - '@deepseek-ai/dsh-session'
+  packages/session/session-telemetry-otel:
+    - '@deepseek-ai/cordis'
+    - '@deepseek-ai/dsh-anonymous-user-id'
+    - '@deepseek-ai/dsh-command-feedback'
+    - '@deepseek-ai/dsh-invariants'
+    - '@deepseek-ai/dsh-llm'
+    - '@deepseek-ai/dsh-session'
+    - '@deepseek-ai/dsh-session-telemetry'
+    - '@deepseek-ai/schemastery'
+  packages/session/session-title:
+    - '@deepseek-ai/cordis'
+    - '@deepseek-ai/dsh-brand'
+    - '@deepseek-ai/dsh-invariants'
+    - '@deepseek-ai/dsh-llm'
+    - '@deepseek-ai/dsh-session'
+    - '@deepseek-ai/dsh-session-projection'
+    - '@deepseek-ai/schemastery'
+  packages/session/session-title-all-prompts-llm:
+    - '@deepseek-ai/cordis'
+    - '@deepseek-ai/dsh-invariants'
+    - '@deepseek-ai/dsh-llm'
+    - '@deepseek-ai/dsh-session'
+    - '@deepseek-ai/dsh-session-title'
+    - '@deepseek-ai/dsh-session-title-llm'
+    - '@deepseek-ai/schemastery'
+  packages/session/session-title-first-prompt-llm:
+    - '@deepseek-ai/cordis'
+    - '@deepseek-ai/dsh-invariants'
+    - '@deepseek-ai/dsh-llm'
+    - '@deepseek-ai/dsh-session'
+    - '@deepseek-ai/dsh-session-title'
+    - '@deepseek-ai/dsh-session-title-llm'
+    - '@deepseek-ai/schemastery'
+  packages/session/session-title-llm:
+    - '@deepseek-ai/cordis'
+    - '@deepseek-ai/dsh-invariants'
+    - '@deepseek-ai/dsh-llm'
+    - '@deepseek-ai/dsh-session'
+    - '@deepseek-ai/dsh-session-title'
+    - '@deepseek-ai/dsh-timeout'
+    - '@deepseek-ai/schemastery'
+  packages/settings/settings:
+    - '@deepseek-ai/cordis'
+    - '@deepseek-ai/dsh-brand'
+    - '@deepseek-ai/dsh-invariants'
+    - '@deepseek-ai/schemastery'
+  packages/settings/settings-file:
+    - '@deepseek-ai/cordis'
+    - '@deepseek-ai/dsh-atomic-write'
+    - '@deepseek-ai/dsh-home-paths'
+    - '@deepseek-ai/dsh-invariants'
+    - '@deepseek-ai/dsh-settings'
+    - '@deepseek-ai/schemastery'
+  packages/shell/bash-local:
+    - '@deepseek-ai/cordis'
+    - '@deepseek-ai/dsh-invariants'
+    - '@deepseek-ai/dsh-settings'
+    - '@deepseek-ai/dsh-shell'
+    - '@deepseek-ai/dsh-subprocess'
+    - '@deepseek-ai/dsh-timeout'
+    - '@deepseek-ai/schemastery'
+  packages/shell/bash-sandbox:
+    - '@deepseek-ai/cordis'
+    - '@deepseek-ai/dsh-bash-local'
+    - '@deepseek-ai/dsh-invariants'
+    - '@deepseek-ai/dsh-sandbox'
+    - '@deepseek-ai/dsh-sandbox-policy'
+    - '@deepseek-ai/dsh-shell'
+  packages/shell/pwsh-local:
+    - '@deepseek-ai/cordis'
+    - '@deepseek-ai/dsh-invariants'
+    - '@deepseek-ai/dsh-settings'
+    - '@deepseek-ai/dsh-shell'
+    - '@deepseek-ai/dsh-subprocess'
+    - '@deepseek-ai/dsh-timeout'
+    - '@deepseek-ai/schemastery'
+  packages/shell/pwsh-sandbox:
+    - '@deepseek-ai/cordis'
+    - '@deepseek-ai/dsh-invariants'
+    - '@deepseek-ai/dsh-pwsh-local'
+    - '@deepseek-ai/dsh-sandbox'
+    - '@deepseek-ai/dsh-sandbox-policy'
+    - '@deepseek-ai/dsh-shell'
+  packages/shell/shell:
+    - '@deepseek-ai/cordis'
+    - '@deepseek-ai/dsh-invariants'
+    - '@deepseek-ai/dsh-sandbox'
+    - '@deepseek-ai/dsh-settings'
+    - '@deepseek-ai/dsh-subprocess'
+  packages/shell/shell-env:
+    - '@deepseek-ai/cordis'
+    - '@deepseek-ai/dsh-home-paths'
+    - '@deepseek-ai/dsh-invariants'
+    - '@deepseek-ai/dsh-session-persistence'
+    - '@deepseek-ai/dsh-shell'
+    - '@deepseek-ai/dsh-tools'
+    - '@deepseek-ai/schemastery'
+  packages/shell/tool-bash:
+    - '@deepseek-ai/cordis'
+    - '@deepseek-ai/dsh-agent'
+    - '@deepseek-ai/dsh-invariants'
+    - '@deepseek-ai/dsh-jobs'
+    - '@deepseek-ai/dsh-llm'
+    - '@deepseek-ai/dsh-sandbox'
+    - '@deepseek-ai/dsh-sandbox-policy'
+    - '@deepseek-ai/dsh-shell'
+    - '@deepseek-ai/dsh-shell-env'
+    - '@deepseek-ai/dsh-system-prompt'
+    - '@deepseek-ai/dsh-tools'
+    - '@deepseek-ai/dsh-user-approval'
+    - '@deepseek-ai/schemastery'
+  packages/shell/tool-bash-persistent:
+    - '@deepseek-ai/cordis'
+    - '@deepseek-ai/dsh-agent'
+    - '@deepseek-ai/dsh-invariants'
+    - '@deepseek-ai/dsh-terminal'
+    - '@deepseek-ai/dsh-timeout'
+    - '@deepseek-ai/dsh-tools'
+    - '@deepseek-ai/schemastery'
+  packages/shell/tool-pwsh:
+    - '@deepseek-ai/cordis'
+    - '@deepseek-ai/dsh-agent'
+    - '@deepseek-ai/dsh-invariants'
+    - '@deepseek-ai/dsh-jobs'
+    - '@deepseek-ai/dsh-llm'
+    - '@deepseek-ai/dsh-sandbox'
+    - '@deepseek-ai/dsh-sandbox-policy'
+    - '@deepseek-ai/dsh-shell'
+    - '@deepseek-ai/dsh-shell-env'
+    - '@deepseek-ai/dsh-system-prompt'
+    - '@deepseek-ai/dsh-tools'
+    - '@deepseek-ai/dsh-user-approval'
+    - '@deepseek-ai/schemastery'
+  packages/shell/tool-pwsh-persistent:
+    - '@deepseek-ai/cordis'
+    - '@deepseek-ai/dsh-agent'
+    - '@deepseek-ai/dsh-invariants'
+    - '@deepseek-ai/dsh-terminal'
+    - '@deepseek-ai/dsh-timeout'
+    - '@deepseek-ai/dsh-tools'
+    - '@deepseek-ai/schemastery'
+  packages/skill/skill:
+    - '@deepseek-ai/cordis'
+    - '@deepseek-ai/dsh-invariants'
+    - '@deepseek-ai/dsh-llm'
+    - '@deepseek-ai/dsh-scope'
+    - '@deepseek-ai/schemastery'
+  packages/skill/skill-badge:
+    - '@deepseek-ai/cordis'
+    - '@deepseek-ai/dsh-invariants'
+    - '@deepseek-ai/dsh-skill'
+  packages/skill/skill-filesystem:
+    - '@deepseek-ai/cordis'
+    - '@deepseek-ai/dsh-fs'
+    - '@deepseek-ai/dsh-home-paths'
+    - '@deepseek-ai/dsh-invariants'
+    - '@deepseek-ai/dsh-skill'
+    - '@deepseek-ai/schemastery'
+  packages/skill/tool-skill:
+    - '@deepseek-ai/cordis'
+    - '@deepseek-ai/dsh-agent'
+    - '@deepseek-ai/dsh-invariants'
+    - '@deepseek-ai/dsh-llm'
+    - '@deepseek-ai/dsh-skill'
+    - '@deepseek-ai/dsh-tools'
+    - '@deepseek-ai/schemastery'
+  packages/spill/spill:
+    - '@deepseek-ai/cordis'
+    - '@deepseek-ai/dsh-brand'
+    - '@deepseek-ai/dsh-invariants'
+    - '@deepseek-ai/dsh-llm'
+    - '@deepseek-ai/dsh-session'
+  packages/spill/spill-local:
+    - '@deepseek-ai/cordis'
+    - '@deepseek-ai/dsh-invariants'
+    - '@deepseek-ai/dsh-spill'
+    - '@deepseek-ai/schemastery'
+  packages/spill/spill-policy:
+    - '@deepseek-ai/cordis'
+    - '@deepseek-ai/dsh-invariants'
+    - '@deepseek-ai/dsh-llm'
+    - '@deepseek-ai/dsh-output-retention'
+    - '@deepseek-ai/dsh-session'
+    - '@deepseek-ai/dsh-spill'
+    - '@deepseek-ai/dsh-tools'
+    - '@deepseek-ai/schemastery'
+  packages/storage/storage:
+    - '@deepseek-ai/cordis'
+    - '@deepseek-ai/dsh-invariants'
+  packages/storage/storage-domain:
+    - '@deepseek-ai/cordis'
+    - '@deepseek-ai/dsh-invariants'
+    - '@deepseek-ai/dsh-storage'
+    - '@deepseek-ai/schemastery'
+  packages/storage/storage-json:
+    - '@deepseek-ai/cordis'
+    - '@deepseek-ai/dsh-invariants'
+    - '@deepseek-ai/dsh-storage'
+    - '@deepseek-ai/schemastery'
+  packages/storage/storage-sqlite:
+    - '@deepseek-ai/cordis'
+    - '@deepseek-ai/dsh-invariants'
+    - '@deepseek-ai/dsh-storage'
+    - '@deepseek-ai/schemastery'
+  packages/subagent/subagent-claude-code:
+    - '@deepseek-ai/cordis'
+    - '@deepseek-ai/dsh-invariants'
+    - '@deepseek-ai/dsh-llm'
+    - '@deepseek-ai/dsh-session'
+    - '@deepseek-ai/dsh-subagent'
+    - '@deepseek-ai/dsh-subprocess'
+    - '@deepseek-ai/dsh-timeout'
+    - '@deepseek-ai/schemastery'
+  packages/subagent/subagent-codex:
+    - '@deepseek-ai/cordis'
+    - '@deepseek-ai/dsh-invariants'
+    - '@deepseek-ai/dsh-llm'
+    - '@deepseek-ai/dsh-sdk-protocol'
+    - '@deepseek-ai/dsh-session'
+    - '@deepseek-ai/dsh-subagent'
+    - '@deepseek-ai/dsh-subprocess'
+    - '@deepseek-ai/dsh-timeout'
+    - '@deepseek-ai/schemastery'
+  packages/subagent/subagent-dsh-sdk:
+    - '@deepseek-ai/cordis'
+    - '@deepseek-ai/dsh-agent'
+    - '@deepseek-ai/dsh-invariants'
+    - '@deepseek-ai/dsh-llm'
+    - '@deepseek-ai/dsh-sdk-client'
+    - '@deepseek-ai/dsh-session'
+    - '@deepseek-ai/dsh-subagent'
+    - '@deepseek-ai/dsh-subprocess'
+    - '@deepseek-ai/schemastery'
+  packages/subagent/tool-subagent:
+    - '@deepseek-ai/cordis'
+    - '@deepseek-ai/dsh-agent'
+    - '@deepseek-ai/dsh-invariants'
+    - '@deepseek-ai/dsh-jobs'
+    - '@deepseek-ai/dsh-llm'
+    - '@deepseek-ai/dsh-subagent'
+    - '@deepseek-ai/dsh-system-prompt'
+    - '@deepseek-ai/dsh-tools'
+    - '@deepseek-ai/schemastery'
+  packages/subagent/tool-subagent-control:
+    - '@deepseek-ai/cordis'
+    - '@deepseek-ai/dsh-invariants'
+    - '@deepseek-ai/dsh-llm'
+    - '@deepseek-ai/dsh-session'
+    - '@deepseek-ai/dsh-subagent'
+    - '@deepseek-ai/dsh-tools'
+  packages/subagent/tool-subagent-report:
+    - '@deepseek-ai/cordis'
+    - '@deepseek-ai/dsh-invariants'
+    - '@deepseek-ai/dsh-llm'
+    - '@deepseek-ai/dsh-subagent'
+    - '@deepseek-ai/dsh-system-prompt'
+    - '@deepseek-ai/dsh-tools'
+    - '@deepseek-ai/schemastery'
+  packages/subprocess/subprocess:
+    - '@deepseek-ai/cordis'
+    - '@deepseek-ai/dsh-invariants'
+  packages/subprocess/subprocess-local:
+    - '@deepseek-ai/cordis'
+    - '@deepseek-ai/dsh-invariants'
+    - '@deepseek-ai/dsh-subprocess'
+    - '@deepseek-ai/dsh-timeout'
+  packages/terminal/terminal:
+    - '@deepseek-ai/cordis'
+    - '@deepseek-ai/dsh-agent'
+    - '@deepseek-ai/dsh-brand'
+    - '@deepseek-ai/dsh-invariants'
+  packages/terminal/terminal-bash:
+    - '@deepseek-ai/cordis'
+    - '@deepseek-ai/dsh-agent'
+    - '@deepseek-ai/dsh-invariants'
+    - '@deepseek-ai/dsh-pwsh-local'
+    - '@deepseek-ai/dsh-sandbox'
+    - '@deepseek-ai/dsh-sandbox-policy'
+    - '@deepseek-ai/dsh-session'
+    - '@deepseek-ai/dsh-subprocess'
+    - '@deepseek-ai/dsh-terminal'
+    - '@deepseek-ai/schemastery'
+  packages/terminal/tool-terminal:
+    - '@deepseek-ai/cordis'
+    - '@deepseek-ai/dsh-agent'
+    - '@deepseek-ai/dsh-invariants'
+    - '@deepseek-ai/dsh-jobs'
+    - '@deepseek-ai/dsh-llm'
+    - '@deepseek-ai/dsh-output-retention'
+    - '@deepseek-ai/dsh-system-prompt'
+    - '@deepseek-ai/dsh-terminal'
+    - '@deepseek-ai/dsh-tools'
+    - '@deepseek-ai/schemastery'
+  packages/test-support/acp-snapshot:
+    - '@deepseek-ai/cordis'
+    - '@deepseek-ai/dsh-invariants'
+    - '@deepseek-ai/dsh-loader-smoke'
+    - '@deepseek-ai/dsh-session'
+  packages/test-support/agent-loop-testkit:
+    - '@deepseek-ai/cordis'
+    - '@deepseek-ai/dsh-agent'
+    - '@deepseek-ai/dsh-invariants'
+    - '@deepseek-ai/dsh-llm'
+    - '@deepseek-ai/dsh-session'
+    - '@deepseek-ai/dsh-system-prompt'
+    - '@deepseek-ai/dsh-tools'
+  packages/test-support/client-runtime:
+    - '@deepseek-ai/cordis'
+    - '@deepseek-ai/dsh-client-runtime'
+    - '@deepseek-ai/dsh-client-ui-renderer'
+    - '@deepseek-ai/dsh-client-ui-slots'
+    - '@deepseek-ai/dsh-host-apiproxy'
+    - '@deepseek-ai/dsh-invariants'
+  packages/test-support/llm-mock-server:
+    - '@deepseek-ai/cordis'
+    - '@deepseek-ai/dsh-invariants'
+  packages/test-support/llm-replay:
+    - '@deepseek-ai/cordis'
+    - '@deepseek-ai/dsh-compaction'
+    - '@deepseek-ai/dsh-invariants'
+    - '@deepseek-ai/dsh-llm'
+    - '@deepseek-ai/dsh-session'
+  packages/test-support/loader-smoke:
+    - '@deepseek-ai/cordis'
+    - '@deepseek-ai/dsh-agent'
+    - '@deepseek-ai/dsh-invariants'
+    - '@deepseek-ai/dsh-llm'
+    - '@deepseek-ai/dsh-session'
+  packages/todo/tool-todo:
+    - '@deepseek-ai/cordis'
+    - '@deepseek-ai/dsh-agent'
+    - '@deepseek-ai/dsh-invariants'
+    - '@deepseek-ai/dsh-session'
+    - '@deepseek-ai/dsh-session-projection'
+    - '@deepseek-ai/dsh-tools'
+    - '@deepseek-ai/schemastery'
+  packages/typert/generator:
+    - '@deepseek-ai/cordis'
+    - '@deepseek-ai/dsh-invariants'
+  packages/typert/loader:
+    - '@deepseek-ai/cordis'
+    - '@deepseek-ai/cordis-plugin-loader'
+    - '@deepseek-ai/dsh-invariants'
+    - '@deepseek-ai/dsh-typert-registry'
+    - '@deepseek-ai/schemastery'
+  packages/typert/protocol:
+    - '@deepseek-ai/cordis'
+    - '@deepseek-ai/dsh-invariants'
+  packages/typert/registry:
+    - '@deepseek-ai/cordis'
+    - '@deepseek-ai/dsh-invariants'
+    - '@deepseek-ai/dsh-typert-protocol'
+  packages/util/atomic-write:
+    - '@deepseek-ai/cordis'
+    - '@deepseek-ai/dsh-invariants'
+  packages/util/brand:
+    - '@deepseek-ai/cordis'
+    - '@deepseek-ai/dsh-invariants'
+  packages/util/home-paths:
+    - '@deepseek-ai/cordis'
+    - '@deepseek-ai/dsh-invariants'
+  packages/util/launch-environment:
+    - '@deepseek-ai/cordis'
+    - '@deepseek-ai/dsh-invariants'
+  packages/util/native-command:
+    - '@deepseek-ai/cordis'
+    - '@deepseek-ai/dsh-invariants'
+  packages/util/output-retention:
+    - '@deepseek-ai/cordis'
+    - '@deepseek-ai/dsh-invariants'
+  packages/util/timeout:
+    - '@deepseek-ai/cordis'
+    - '@deepseek-ai/dsh-invariants'
+  packages/web/tool-web:
+    - '@deepseek-ai/cordis'
+    - '@deepseek-ai/dsh-invariants'
+    - '@deepseek-ai/dsh-llm'
+    - '@deepseek-ai/dsh-system-prompt'
+    - '@deepseek-ai/dsh-tools'
+    - '@deepseek-ai/dsh-web'
+    - '@deepseek-ai/schemastery'
+  packages/web/web:
+    - '@deepseek-ai/cordis'
+    - '@deepseek-ai/dsh-invariants'
+    - '@deepseek-ai/dsh-llm'
+    - '@deepseek-ai/schemastery'
+  packages/web/web-fetch-http:
+    - '@deepseek-ai/cordis'
+    - '@deepseek-ai/dsh-invariants'
+    - '@deepseek-ai/dsh-timeout'
+    - '@deepseek-ai/dsh-web'
+    - '@deepseek-ai/schemastery'
+  packages/web/web-search-deepseek:
+    - '@deepseek-ai/cordis'
+    - '@deepseek-ai/dsh-agent'
+    - '@deepseek-ai/dsh-credentials'
+    - '@deepseek-ai/dsh-invariants'
+    - '@deepseek-ai/dsh-launch-environment'
+    - '@deepseek-ai/dsh-session'
+    - '@deepseek-ai/dsh-settings'
+    - '@deepseek-ai/dsh-web'
+    - '@deepseek-ai/schemastery'
+  packages/web/web-search-exa:
+    - '@deepseek-ai/cordis'
+    - '@deepseek-ai/dsh-invariants'
+    - '@deepseek-ai/dsh-launch-environment'
+    - '@deepseek-ai/dsh-web'
+    - '@deepseek-ai/schemastery'
+  packages/web/web-search-perplexity:
+    - '@deepseek-ai/cordis'
+    - '@deepseek-ai/dsh-invariants'
+    - '@deepseek-ai/dsh-launch-environment'
+    - '@deepseek-ai/dsh-web'
+    - '@deepseek-ai/schemastery'
+  packages/workflow/tool-ralph:
+    - '@deepseek-ai/cordis'
+    - '@deepseek-ai/dsh-agent'
+    - '@deepseek-ai/dsh-invariants'
+    - '@deepseek-ai/dsh-llm'
+    - '@deepseek-ai/dsh-subagent'
+    - '@deepseek-ai/dsh-system-prompt'
+    - '@deepseek-ai/dsh-tools'
+    - '@deepseek-ai/dsh-workflow'
+    - '@deepseek-ai/schemastery'
+  packages/workflow/tool-workflow:
+    - '@deepseek-ai/cordis'
+    - '@deepseek-ai/dsh-agent'
+    - '@deepseek-ai/dsh-invariants'
+    - '@deepseek-ai/dsh-llm'
+    - '@deepseek-ai/dsh-session'
+    - '@deepseek-ai/dsh-system-prompt'
+    - '@deepseek-ai/dsh-tools'
+    - '@deepseek-ai/dsh-workflow'
+    - '@deepseek-ai/schemastery'
+  packages/workflow/workflow:
+    - '@deepseek-ai/cordis'
+    - '@deepseek-ai/dsh-agent'
+    - '@deepseek-ai/dsh-brand'
+    - '@deepseek-ai/dsh-invariants'
+    - '@deepseek-ai/dsh-llm'
+    - '@deepseek-ai/dsh-session'
+  packages/workflow/workflow-worker-thread:
+    - '@deepseek-ai/cordis'
+    - '@deepseek-ai/dsh-agent'
+    - '@deepseek-ai/dsh-brand'
+    - '@deepseek-ai/dsh-invariants'
+    - '@deepseek-ai/dsh-llm'
+    - '@deepseek-ai/dsh-session'
+    - '@deepseek-ai/dsh-subagent'
+    - '@deepseek-ai/dsh-tools'
+    - '@deepseek-ai/dsh-workflow'
+    - '@deepseek-ai/schemastery'
+  packages/workspace/workspace:
+    - '@deepseek-ai/cordis'
+    - '@deepseek-ai/dsh-brand'
+    - '@deepseek-ai/dsh-invariants'
+    - '@deepseek-ai/dsh-session'
+    - '@deepseek-ai/dsh-session-persistence'
+    - '@deepseek-ai/dsh-storage'
+    - '@deepseek-ai/dsh-storage-domain'
+  vendor/cordis:
+    - '@deepseek-ai/cordis-plugin-include'
+    - '@deepseek-ai/cordis-plugin-loader'
+    - '@deepseek-ai/cosmokit'
+  vendor/cosmokit: []
+  vendor/group:
+    - '@deepseek-ai/cordis'
+    - '@deepseek-ai/cordis-plugin-loader'
+  vendor/hmr:
+    - '@deepseek-ai/cordis'
+    - '@deepseek-ai/cordis-plugin-timer'
+    - '@deepseek-ai/cosmokit'
+    - '@deepseek-ai/schemastery'
+  vendor/include:
+    - '@deepseek-ai/cordis'
+    - '@deepseek-ai/cordis-plugin-loader'
+    - '@deepseek-ai/cosmokit'
+  vendor/loader:
+    - '@deepseek-ai/cordis'
+    - '@deepseek-ai/cosmokit'
+  vendor/logger-console:
+    - '@deepseek-ai/cordis'
+    - '@deepseek-ai/cosmokit'
+    - '@deepseek-ai/schemastery'
+  vendor/schemastery:
+    - '@deepseek-ai/cosmokit'
+  vendor/timer:
+    - '@deepseek-ai/cordis'
+    - '@deepseek-ai/cosmokit'
