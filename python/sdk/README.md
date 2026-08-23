@@ -1,7 +1,7 @@
-# DeepSeek Harness Python SDK
+# Little Whale Python SDK
 
-Python subprocess SDK for driving DeepSeek Harness over JSON-RPC stdio. The
-runtime inherits normal DeepSeek Harness environment variables such as
+Python subprocess SDK for driving Little Whale over JSON-RPC stdio. The
+runtime inherits normal Little Whale environment variables such as
 `DEEPSEEK_BASE_URL` and `DEEPSEEK_API_KEY`, so callers can use real model
 endpoints directly or point those variables at a local proxy.
 
