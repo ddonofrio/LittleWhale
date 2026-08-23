@@ -126,6 +126,9 @@ importers:
 
   apps/cli:
     dependencies:
+      '@ddonofrio/littlewhale-plan-goal':
+        specifier: workspace:^
+        version: link:../../packages/core/plan-goal
       '@ddonofrio/littlewhale-plan-mode':
         specifier: workspace:^
         version: link:../../packages/plan/plan-mode
@@ -1000,6 +1003,9 @@ importers:
       '@ddonofrio/littlewhale':
         specifier: workspace:^
         version: link:../../core/system-prompt
+      '@ddonofrio/littlewhale-plan-goal':
+        specifier: workspace:^
+        version: link:../../core/plan-goal
       '@ddonofrio/littlewhale-plan-mode':
         specifier: workspace:^
         version: link:../../plan/plan-mode
@@ -3730,6 +3736,48 @@ importers:
       '@deepseek-ai/dsh-session':
         specifier: workspace:^
         version: link:../session
+      '@deepseek-ai/dsh-tools':
+        specifier: workspace:^
+        version: link:../tools
+
+  packages/core/plan-goal:
+    devDependencies:
+      '@ddonofrio/littlewhale':
+        specifier: workspace:^
+        version: link:../system-prompt
+      '@ddonofrio/littlewhale-plan-mode':
+        specifier: workspace:^
+        version: link:../../plan/plan-mode
+      '@deepseek-ai/cordis':
+        specifier: workspace:^
+        version: link:../../../vendor/cordis
+      '@deepseek-ai/dsh-agent':
+        specifier: workspace:^
+        version: link:../agent
+      '@deepseek-ai/dsh-agent-loop':
+        specifier: workspace:^
+        version: link:../agent-loop
+      '@deepseek-ai/dsh-agent-loop-testkit':
+        specifier: workspace:^
+        version: link:../../test-support/agent-loop-testkit
+      '@deepseek-ai/dsh-goal':
+        specifier: workspace:^
+        version: link:../../goal/goal
+      '@deepseek-ai/dsh-invariants':
+        specifier: workspace:^
+        version: link:../../runtime-diagnostics/invariants
+      '@deepseek-ai/dsh-llm':
+        specifier: workspace:^
+        version: link:../../llm/llm
+      '@deepseek-ai/dsh-session':
+        specifier: workspace:^
+        version: link:../session
+      '@deepseek-ai/dsh-subagent':
+        specifier: workspace:^
+        version: link:../../subagent/subagent
+      '@deepseek-ai/dsh-subagent-spawn-in-process':
+        specifier: workspace:^
+        version: link:../../subagent/subagent-spawn-in-process
       '@deepseek-ai/dsh-tools':
         specifier: workspace:^
         version: link:../tools

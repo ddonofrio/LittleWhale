@@ -29,6 +29,7 @@
     // under its own tsconfig boundary.
     "paths": {
       "@ddonofrio/littlewhale": ["./packages/core/system-prompt/src/index.ts"],
+      "@ddonofrio/littlewhale-plan-goal": ["./packages/core/plan-goal/src/index.ts"],
       "@ddonofrio/littlewhale-plan-mode": ["./packages/plan/plan-mode/src/index.ts"],
       "@deepseek-ai/cordis": ["./vendor/cordis/src"],
       "@deepseek-ai/cosmokit": ["./vendor/cosmokit/src"],
