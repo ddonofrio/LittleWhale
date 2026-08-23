@@ -78,14 +78,22 @@ function start(agent: Agent, text: string): void {
 }
 
 describe('plan-goal', () => {
-  it('uses the first direct request as the initial goal without starting a planner', async () => {
-    const { ctx, agent, starts } = await harness('unused')
-    start(agent, 'Build a small house')
+  it('always starts a planner and defines a goal, including for a greeting', async () => {
+    const { ctx, agent, starts } = await harness('Reply to the user with a friendly greeting.')
+    start(agent, 'Hi there')
     await waitForIdle(ctx, agent)
 
-    expect(starts).toHaveLength(0)
+    expect(starts).toHaveLength(1)
+    expect(starts[0]?.outputSchema).toMatchObject({
+      type: 'object',
+      required: ['goal'],
+    })
+    const prompt = (starts[0]?.prompt[0] as { type: 'text'; text: string }).text
+    expect(prompt).toContain('Always define a goal')
+    expect(prompt).toContain('For a greeting, the goal is to reply appropriately')
+    expect(prompt).toContain('fix typos and spelling')
     expect(ctx.goals.get(agent)).toMatchObject({
-      objective: 'Build a small house',
+      objective: 'Reply to the user with a friendly greeting.',
       phase: 'active',
     })
   })
@@ -97,12 +105,12 @@ describe('plan-goal', () => {
     start(agent, 'Now add a garage')
     await waitForIdle(ctx, agent)
 
-    expect(starts).toHaveLength(1)
-    expect(starts[0]?.outputSchema).toMatchObject({
+    expect(starts).toHaveLength(2)
+    expect(starts[1]?.outputSchema).toMatchObject({
       type: 'object',
       required: ['goal'],
     })
-    const prompt = (starts[0]?.prompt[0] as { type: 'text'; text: string }).text
+    const prompt = (starts[1]?.prompt[0] as { type: 'text'; text: string }).text
     expect(prompt).toContain('Clean conversation transcript:')
     expect(prompt).toContain('User:\nBuild a small house')
     expect(prompt).toContain('Agent:\nparent answer 1')

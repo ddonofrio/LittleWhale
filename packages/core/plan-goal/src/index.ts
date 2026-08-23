@@ -1,8 +1,8 @@
 /**
  * Establish the next durable goal before a user request reaches a plan-mode
- * agent. The first request becomes its own goal; later requests are given to
- * a fresh structured-output subagent together with the same clean transcript
- * used by the completion checker.
+ * agent. Every direct user request is given to a fresh structured-output
+ * subagent together with the same clean transcript used by the completion
+ * checker.
  *
  * @module @ddonofrio/littlewhale-plan-goal
  */
@@ -119,10 +119,6 @@ function cleanConversation(agent: Agent): string {
   return entries.length === 0 ? '[No user-visible conversation was recorded.]' : entries.join('\n\n')
 }
 
-function hasUserMessage(agent: Agent): boolean {
-  return agent.session.events.some(event => event.type === 'user/message' && event.data.source.kind === 'user')
-}
-
 function currentRequest(messages: readonly UserMessage[]): string {
   const text = messages
     .filter(message => message.source.kind === 'user')
@@ -149,6 +145,8 @@ function plannerPrompt(agent: Agent, messages: readonly UserMessage[]): string {
   return [
     'Understand the conversation and the latest user request below.',
     'Define the next goal that the current agent should pursue.',
+    'Always define a goal, even when the user only greets, acknowledges, makes small talk, or asks for a simple reply. For a greeting, the goal is to reply appropriately to the user.',
+    'Rewrite the goal before returning it when needed: fix typos and spelling, and make it clearer and more concise without changing the user’s intent or constraints.',
     'Return exactly one concise paragraph describing that goal, with no plan, analysis, preamble, or extra goals.',
     'You must report it by calling the structured_output tool with the required goal field.',
     'Do not modify files, execute tasks, or call tools for any other purpose.',
@@ -232,9 +230,7 @@ export function apply(ctx: Context, config: Config = {}): void {
       return decision
     }
 
-    const objective = hasUserMessage(agent)
-      ? await deriveGoal(ctx, state, agent, messages, signal) ?? currentRequest(messages)
-      : currentRequest(messages)
+    const objective = await deriveGoal(ctx, state, agent, messages, signal) ?? currentRequest(messages)
     if (signal.aborted || objective.trim() === '') return decision
 
     try {

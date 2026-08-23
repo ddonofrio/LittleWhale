@@ -1,8 +1,8 @@
 # @ddonofrio/littlewhale-plan-goal
 
-The plan-goal core module turns direct user requests received while plan mode is active into durable goals before the request reaches the current agent.
+The plan-goal core module turns every direct user request received while plan mode is active into a durable goal before the request reaches the current agent.
 
-The first direct user request becomes the initial goal without an extra model call. Once the session already contains a direct user request, the module starts a fresh one-shot subagent with the clean, user-visible conversation transcript used by `completion_check` plus the newly claimed request. The subagent must call the provider's child-scoped `structured_output` tool with one concise paragraph in `goal`. The returned objective is persisted through `ctx.goals`, using the same create/edit domain operations as `/goal`.
+For every request, the module starts a fresh one-shot subagent with the clean, user-visible conversation transcript used by `completion_check` plus the newly claimed request. The prompt requires a goal even for greetings or other requests that only need a reply, and asks the planner to fix spelling, improve clarity, and make the wording concise without changing intent. The subagent must call the provider's child-scoped `structured_output` tool with one concise paragraph in `goal`. The returned objective is persisted through `ctx.goals`, using the same create/edit domain operations as `/goal`.
 
 The planner is skipped for inactive plan mode, nested agents, plugin messages, and disabled configurations. If the configured provider is unavailable or cannot produce structured output, the current user request is used as a fail-open fallback and the parent request still proceeds.
 
