@@ -72,7 +72,7 @@ The `import type {} from '@deepseek-ai/dsh-tools'` line pulls in the package's d
 ## Compose and run
 
 ```yaml
-- name: '@deepseek-ai/dsh-system-prompt'
+- name: '@ddonofrio/littlewhale'
 - name: '@deepseek-ai/dsh-tools'
 - name: './tool-logger.ts'
 - name: './greet-tool.ts'

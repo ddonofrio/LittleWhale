@@ -36,7 +36,7 @@
     "@deepseek-ai/dsh-agent": "workspace:^",
     "@deepseek-ai/dsh-invariants": "workspace:^",
     "@deepseek-ai/dsh-session": "workspace:^",
-    "@deepseek-ai/dsh-system-prompt": "workspace:^",
+    "@ddonofrio/littlewhale": "workspace:^",
     "@deepseek-ai/dsh-experimental-agent-team": "workspace:^",
     "@deepseek-ai/dsh-tools": "workspace:^",
     "@deepseek-ai/cordis": "workspace:^"
@@ -53,7 +53,7 @@
     "@deepseek-ai/dsh-subagent-fork-in-process": "workspace:^",
     "@deepseek-ai/dsh-subagent-spawn-in-process": "workspace:^",
     "@deepseek-ai/dsh-tool-subagent-control": "workspace:^",
-    "@deepseek-ai/dsh-system-prompt": "workspace:^",
+    "@ddonofrio/littlewhale": "workspace:^",
     "@deepseek-ai/dsh-experimental-agent-team": "workspace:^",
     "@deepseek-ai/dsh-tools": "workspace:^",
     "@deepseek-ai/cordis": "workspace:^"

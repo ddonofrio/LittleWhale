@@ -13,7 +13,7 @@ import { CallId } from '@deepseek-ai/dsh-llm'
 import { Session, SessionId } from '@deepseek-ai/dsh-session'
 import AgentRegistry, { Inbox } from '@deepseek-ai/dsh-agent'
 import type { Agent } from '@deepseek-ai/dsh-agent'
-import SystemPrompt from '@deepseek-ai/dsh-system-prompt'
+import SystemPrompt from '@ddonofrio/littlewhale'
 import ToolRuntime from '@deepseek-ai/dsh-tools'
 import * as ToolTodo from '@deepseek-ai/dsh-tool-todo'
 
@@ -56,7 +56,7 @@ async function boot(configLines: readonly string[]): Promise<Context> {
   const configPath = join(root, 'cordis.yml')
   await writeFile(configPath, [
     "- name: '@deepseek-ai/dsh-agent'",
-    "- name: '@deepseek-ai/dsh-system-prompt'",
+    "- name: '@ddonofrio/littlewhale'",
     "- name: '@deepseek-ai/dsh-tools'",
     "- name: '@deepseek-ai/dsh-tool-todo'",
     ...configLines.length > 0 ? ['  config:', ...configLines] : [],
@@ -70,7 +70,7 @@ async function boot(configLines: readonly string[]): Promise<Context> {
   ctx.loader.builtins.include = Include
   const modules = new Map<string, unknown>([
     ['@deepseek-ai/dsh-agent', AgentRegistry],
-    ['@deepseek-ai/dsh-system-prompt', SystemPrompt],
+    ['@ddonofrio/littlewhale', SystemPrompt],
     ['@deepseek-ai/dsh-tools', ToolRuntime],
     ['@deepseek-ai/dsh-tool-todo', ToolTodo],
   ])

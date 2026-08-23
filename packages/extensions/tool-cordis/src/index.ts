@@ -14,7 +14,7 @@ import type { JsonValue } from '@deepseek-ai/dsh-session'
 import type { UserMessage } from '@deepseek-ai/dsh-session'
 import { defineTool } from '@deepseek-ai/dsh-tools'
 import type { ToolExecution } from '@deepseek-ai/dsh-tools'
-import type {} from '@deepseek-ai/dsh-system-prompt'
+import type {} from '@ddonofrio/littlewhale'
 import { missingServices, providedServices } from './inspect.ts'
 import {
   presentDefineCall, presentInspectListCall, presentInspectQueryCall, presentInspectSelfCall, presentRunCall,

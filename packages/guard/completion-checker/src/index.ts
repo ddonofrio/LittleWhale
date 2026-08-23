@@ -15,7 +15,7 @@ import type { SessionEvent, TurnEndReason } from '@deepseek-ai/dsh-session'
 import type { SubagentResult, SubagentRun } from '@deepseek-ai/dsh-subagent'
 import { installSettingsSection, settingsNamespace } from '@deepseek-ai/dsh-settings'
 import type { ObjectJsonSchema, ToolDefinition } from '@deepseek-ai/dsh-tools'
-import type {} from '@deepseek-ai/dsh-system-prompt'
+import type {} from '@ddonofrio/littlewhale'
 
 /** User-selectable completion-review settings. */
 export interface CompletionCheckerSettings {

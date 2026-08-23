@@ -3,7 +3,7 @@ import { Context } from '@deepseek-ai/cordis'
 import LlmRuntime, { createUserMessage, CallId, LlmError, StreamChunk, errorChain  } from '@deepseek-ai/dsh-llm'
 import SessionStore, { SessionId, TurnEndReason } from '@deepseek-ai/dsh-session'
 import type { SessionEvent } from '@deepseek-ai/dsh-session'
-import SystemPrompt from '@deepseek-ai/dsh-system-prompt'
+import SystemPrompt from '@ddonofrio/littlewhale'
 import ToolRuntime, { defineContentToolFixture } from '@deepseek-ai/dsh-tools'
 import AgentRegistry, { type Agent } from '@deepseek-ai/dsh-agent'
 

@@ -18,7 +18,7 @@ import type { ConfinedArgv, SandboxPolicy } from '@deepseek-ai/dsh-sandbox'
 import SandboxPolicyService from '@deepseek-ai/dsh-sandbox-policy'
 import LocalSubprocessService from '@deepseek-ai/dsh-subprocess-local'
 import { resolvePwshPath } from '@deepseek-ai/dsh-pwsh-local/src/resolve.ts'
-import SystemPrompt from '@deepseek-ai/dsh-system-prompt'
+import SystemPrompt from '@ddonofrio/littlewhale'
 import ToolRegistry from '@deepseek-ai/dsh-tools'
 import * as ToolPwshPersistent from '@deepseek-ai/dsh-tool-pwsh-persistent'
 
@@ -76,7 +76,7 @@ describe.skipIf(!hasPwsh)('persistent pwsh through a real cordis.yml Loader comp
     const configPath = join(root, 'cordis.yml')
     await writeFile(configPath, [
       "- name: '@deepseek-ai/dsh-agent'",
-      "- name: '@deepseek-ai/dsh-system-prompt'",
+      "- name: '@ddonofrio/littlewhale'",
       "- name: '@deepseek-ai/dsh-tools'",
       "- name: '@deepseek-ai/dsh-terminal'",
       "- name: '@deepseek-ai/dsh-test-sandbox'",
@@ -107,7 +107,7 @@ describe.skipIf(!hasPwsh)('persistent pwsh through a real cordis.yml Loader comp
     context.loader.builtins.include = Include
     const modules = new Map<string, unknown>([
       ['@deepseek-ai/dsh-agent', AgentRegistry],
-      ['@deepseek-ai/dsh-system-prompt', SystemPrompt],
+      ['@ddonofrio/littlewhale', SystemPrompt],
       ['@deepseek-ai/dsh-tools', ToolRegistry],
       ['@deepseek-ai/dsh-terminal', TerminalSessionService],
       ['@deepseek-ai/dsh-test-sandbox', PassthroughSandbox],

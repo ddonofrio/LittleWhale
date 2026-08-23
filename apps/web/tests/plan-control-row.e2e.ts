@@ -28,7 +28,7 @@ import { chromium } from 'playwright'
 import { afterAll, beforeAll, describe, expect, it, onTestFailed } from 'vitest'
 // Type-only: pulls the plan/mode SessionEventMap merge so the discriminant
 // filter below types as the plan-mode event in the host aggregate.
-import type {} from '@deepseek-ai/dsh-plan-mode'
+import type {} from '@ddonofrio/littlewhale-plan-mode'
 import type { SessionEvent } from '@deepseek-ai/dsh-session'
 import {
   assertFixtureInventory, compareOrRefreshGolden,

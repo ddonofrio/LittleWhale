@@ -5,7 +5,7 @@ import AgentLoop from '@deepseek-ai/dsh-agent-loop'
 import LlmRuntime, { createUserMessage, LlmError  } from '@deepseek-ai/dsh-llm'
 import type { LlmFailure, ResolvedRetryPolicy } from '@deepseek-ai/dsh-llm'
 import SessionStore, { SessionId } from '@deepseek-ai/dsh-session'
-import SystemPrompt from '@deepseek-ai/dsh-system-prompt'
+import SystemPrompt from '@ddonofrio/littlewhale'
 import ToolRuntime from '@deepseek-ai/dsh-tools'
 import { MockAdapter, textResponse } from './mock-adapter.ts'
 

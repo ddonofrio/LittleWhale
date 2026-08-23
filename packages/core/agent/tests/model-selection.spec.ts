@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest'
 import { Context } from '@deepseek-ai/cordis'
-import SystemPrompt from '@deepseek-ai/dsh-system-prompt'
+import SystemPrompt from '@ddonofrio/littlewhale'
 import {
   agentEvents,
   installModelSelection,

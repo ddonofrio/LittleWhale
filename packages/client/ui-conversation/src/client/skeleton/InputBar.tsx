@@ -14,7 +14,7 @@ import {
 } from '@deepseek-ai/dsh-client-ui-primitives'
 // Type-only: the `plan` projection key merge (the TodoDock posture — the
 // composer reads a host-computed value; the domain owns the key).
-import type {} from '@deepseek-ai/dsh-plan-mode/client'
+import type {} from '@ddonofrio/littlewhale-plan-mode/client'
 // Type-only: the `goal` projection key merge (hint disambiguation).
 import type {} from '@deepseek-ai/dsh-goal/client'
 // The `imageLimits` projection key merge (intake pre-check) arrives with the

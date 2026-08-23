@@ -16,7 +16,7 @@ import { defineTool } from '@deepseek-ai/dsh-tools'
 import { assertNever } from '@deepseek-ai/dsh-llm'
 import { LspError } from '@deepseek-ai/dsh-lsp'
 import type {} from '@deepseek-ai/dsh-lsp'
-import type {} from '@deepseek-ai/dsh-system-prompt'
+import type {} from '@ddonofrio/littlewhale'
 import { MAX_TIMER_DELAY_MS } from '@deepseek-ai/dsh-timeout'
 import {
   DEFAULT_MAX_LOCATIONS,

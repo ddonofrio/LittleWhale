@@ -19,7 +19,7 @@ import { dshHomePath, resolveDshHome } from '@deepseek-ai/dsh-home-paths'
 import { createLaunchEnvironmentSnapshot, type LaunchEnvironmentSnapshot } from '@deepseek-ai/dsh-launch-environment'
 import type {} from '@deepseek-ai/cordis-plugin-hmr'
 // Side-effect type import: resolves `ctx.get('systemPrompt')` to the service.
-import type {} from '@deepseek-ai/dsh-system-prompt'
+import type {} from '@ddonofrio/littlewhale'
 
 declare module '@deepseek-ai/cordis' {
   interface Context {

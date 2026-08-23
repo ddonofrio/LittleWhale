@@ -18,7 +18,7 @@ import type {} from '@deepseek-ai/dsh-user-approval'
 import type {} from '@deepseek-ai/dsh-permission-presets'
 import type {} from '@deepseek-ai/dsh-agent-presets'
 import type {} from '@deepseek-ai/dsh-commands'
-import type {} from '@deepseek-ai/dsh-system-prompt'
+import type {} from '@ddonofrio/littlewhale'
 import { launchWebScaffold, type WebScaffold } from './scaffold.ts'
 
 const FILE_REFERENCE_PROMPT = fileURLToPath(new URL(

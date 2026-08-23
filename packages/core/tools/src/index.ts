@@ -13,7 +13,7 @@ import { assertNever, deepFreeze, HarnessError } from '@deepseek-ai/dsh-llm'
 import type { Agent } from '@deepseek-ai/dsh-agent'
 import { snapshotJsonValue } from '@deepseek-ai/dsh-session'
 import type { JsonValue, UserMessage } from '@deepseek-ai/dsh-session'
-import type { ToolProviderResult } from '@deepseek-ai/dsh-system-prompt'
+import type { ToolProviderResult } from '@ddonofrio/littlewhale'
 import type { CodeRuntime } from '@deepseek-ai/dsh-code-runtime'
 // Type-only: makes `ctx.get('approval')` resolve to the ApprovalService
 // augmentation. The seam stays optional at runtime — see `serviceAsk`.

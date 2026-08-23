@@ -3,7 +3,7 @@ import { describe, expect, it } from 'vitest'
 import { Context, symbols, type EffectMeta, type Fiber } from '@deepseek-ai/cordis'
 import LlmRuntime from '@deepseek-ai/dsh-llm'
 import SessionStore, { SessionId, type SessionEvent } from '@deepseek-ai/dsh-session'
-import SystemPrompt from '@deepseek-ai/dsh-system-prompt'
+import SystemPrompt from '@ddonofrio/littlewhale'
 import ToolRuntime, { defineContentToolFixture } from '@deepseek-ai/dsh-tools'
 import AgentRegistry, { agentEvents, assembleContextFor } from '@deepseek-ai/dsh-agent'
 

@@ -12,10 +12,10 @@
 - text: Use web_search once with queries ["Little Whale snapshot search","Little Whale multi-query search"]. Then reply exactly SEARCH_DONE and stop. {{clock}}
 - button "Copy":
   - img
-- button "Context injection @deepseek-ai/dsh-system-prompt":
+- button "Context injection @ddonofrio/littlewhale":
   - img
   - img
-  - text: Context injection @deepseek-ai/dsh-system-prompt
+  - text: Context injection @ddonofrio/littlewhale
 - button "Search Little Whale snapshot search, Little Whale multi-query search":
   - img
   - img

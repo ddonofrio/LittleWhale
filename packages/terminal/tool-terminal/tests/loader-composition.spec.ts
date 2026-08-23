@@ -10,7 +10,7 @@ import { CallId } from '@deepseek-ai/dsh-llm'
 import { Session, SessionId } from '@deepseek-ai/dsh-session'
 import AgentRegistry, { Inbox } from '@deepseek-ai/dsh-agent'
 import type { Agent } from '@deepseek-ai/dsh-agent'
-import SystemPrompt from '@deepseek-ai/dsh-system-prompt'
+import SystemPrompt from '@ddonofrio/littlewhale'
 import ToolRuntime from '@deepseek-ai/dsh-tools'
 import TerminalSessionService from '@deepseek-ai/dsh-terminal'
 import SandboxProvider from '@deepseek-ai/dsh-sandbox'
@@ -65,7 +65,7 @@ suite('terminal real Loader composition through cordis.yml', () => {
     const configPath = join(root, 'cordis.yml')
     await writeFile(configPath, [
       "- name: '@deepseek-ai/dsh-agent'",
-      "- name: '@deepseek-ai/dsh-system-prompt'",
+      "- name: '@ddonofrio/littlewhale'",
       "- name: '@deepseek-ai/dsh-tools'",
       "- name: '@deepseek-ai/dsh-terminal'",
       "- name: '@deepseek-ai/dsh-test-sandbox'",
@@ -92,7 +92,7 @@ suite('terminal real Loader composition through cordis.yml', () => {
     context.loader.builtins.include = Include
     const modules = new Map<string, unknown>([
       ['@deepseek-ai/dsh-agent', AgentRegistry],
-      ['@deepseek-ai/dsh-system-prompt', SystemPrompt],
+      ['@ddonofrio/littlewhale', SystemPrompt],
       ['@deepseek-ai/dsh-tools', ToolRuntime],
       ['@deepseek-ai/dsh-terminal', TerminalSessionService],
       ['@deepseek-ai/dsh-test-sandbox', PassthroughSandbox],

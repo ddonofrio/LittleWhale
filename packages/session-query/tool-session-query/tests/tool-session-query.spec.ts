@@ -24,7 +24,7 @@ import SessionQueryEngine, {
   type SessionSearchRequest,
   type SessionTitleObservationResult,
 } from '@deepseek-ai/dsh-session-query'
-import SystemPrompt from '@deepseek-ai/dsh-system-prompt'
+import SystemPrompt from '@ddonofrio/littlewhale'
 import ToolRuntime, { type ToolExecutionResult } from '@deepseek-ai/dsh-tools'
 import * as ToolSessionQuery from '@deepseek-ai/dsh-tool-session-query'
 

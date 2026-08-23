@@ -13,7 +13,7 @@ Read this package for the whole plugin tree and its composition order.
 @deepseek-ai/dsh-llm              abstract LLM service + content-block vocabulary
 @deepseek-ai/dsh-session          event-sourced session log + store
 @deepseek-ai/dsh-session-title    log-backed title service + deterministic fallback
-@deepseek-ai/dsh-system-prompt    prompt-section + tool-schema assembly
+@ddonofrio/littlewhale    prompt-section + tool-schema assembly
 @deepseek-ai/dsh-tools            registry + guarded pre/around/post/final-result pipeline
 @deepseek-ai/dsh-skill            skill provider registry
 @deepseek-ai/dsh-skill-filesystem      local filesystem skill provider

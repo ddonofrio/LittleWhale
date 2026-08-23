@@ -15,7 +15,7 @@ import { defineTool } from '@deepseek-ai/dsh-tools'
 import type { GenericCallView, ToolDefinition, ToolExecution } from '@deepseek-ai/dsh-tools'
 import { JobId } from '@deepseek-ai/dsh-jobs'
 import type { JobSnapshot } from '@deepseek-ai/dsh-jobs'
-import type {} from '@deepseek-ai/dsh-system-prompt'
+import type {} from '@ddonofrio/littlewhale'
 import type { Agent } from '@deepseek-ai/dsh-agent'
 
 export const name = 'tool-jobs'

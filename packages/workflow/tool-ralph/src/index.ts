@@ -14,7 +14,7 @@ import { defineTool } from '@deepseek-ai/dsh-tools'
 import type { ToolCallView, ToolResultView } from '@deepseek-ai/dsh-tools'
 import type { WorkflowResult, WorkflowRun } from '@deepseek-ai/dsh-workflow'
 // Declaration merge only: makes ctx.systemPrompt visible for section registration.
-import type {} from '@deepseek-ai/dsh-system-prompt'
+import type {} from '@ddonofrio/littlewhale'
 
 export const name = 'tool-ralph'
 export const inject = ['tools', 'workflowEngine', 'subagents', 'systemPrompt']

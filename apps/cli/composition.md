@@ -100,7 +100,7 @@ flowchart LR
   cfg --> plugin_dsh_base_goal_round_driver
   plugin_dsh_base_command_goal["command-goal<br/>@deepseek-ai/dsh-command-goal"]
   cfg --> plugin_dsh_base_command_goal
-  plugin_dsh_base_plan_mode["plan-mode<br/>@deepseek-ai/dsh-plan-mode"]
+  plugin_dsh_base_plan_mode["plan-mode<br/>@ddonofrio/littlewhale-plan-mode"]
   cfg --> plugin_dsh_base_plan_mode
   plugin_dsh_base_token_meter["token-meter<br/>@deepseek-ai/dsh-token-meter"]
   cfg --> plugin_dsh_base_token_meter
@@ -160,7 +160,7 @@ flowchart LR
   cfg --> plugin_dsh_base_tool_web
   plugin_dsh_base_tools["tools<br/>@deepseek-ai/dsh-tools"]
   cfg --> plugin_dsh_base_tools
-  plugin_dsh_base_system_prompt["system-prompt<br/>@deepseek-ai/dsh-system-prompt"]
+  plugin_dsh_base_system_prompt["system-prompt<br/>@ddonofrio/littlewhale"]
   cfg --> plugin_dsh_base_system_prompt
   plugin_dsh_base_agent_loop["agent-loop<br/>@deepseek-ai/dsh-agent-loop"]
   cfg --> plugin_dsh_base_agent_loop
@@ -218,7 +218,7 @@ flowchart LR
 | `goal` | `@deepseek-ai/dsh-goal` |
 | `goal-round-driver` | `@deepseek-ai/dsh-goal-round-driver` |
 | `command-goal` | `@deepseek-ai/dsh-command-goal` |
-| `plan-mode` | `@deepseek-ai/dsh-plan-mode` |
+| `plan-mode` | `@ddonofrio/littlewhale-plan-mode` |
 | `token-meter` | `@deepseek-ai/dsh-token-meter` |
 | `compaction-basic` | `@deepseek-ai/dsh-compaction-basic` |
 | `command-compact` | `@deepseek-ai/dsh-command-compact` |
@@ -248,7 +248,7 @@ flowchart LR
 | `web-search-deepseek` | `@deepseek-ai/dsh-web-search-deepseek` |
 | `tool-web` | `@deepseek-ai/dsh-tool-web` |
 | `tools` | `@deepseek-ai/dsh-tools` |
-| `system-prompt` | `@deepseek-ai/dsh-system-prompt` |
+| `system-prompt` | `@ddonofrio/littlewhale` |
 | `agent-loop` | `@deepseek-ai/dsh-agent-loop` |
 | `fs-sandbox` | `@deepseek-ai/dsh-fs-sandbox` |
 | `llm-deepseek` | `@deepseek-ai/dsh-llm-deepseek` |

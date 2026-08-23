@@ -11,7 +11,7 @@ import { createServer, type IncomingMessage, type Server, type ServerResponse } 
 import { AddressInfo } from 'node:net'
 import { Context } from '@deepseek-ai/cordis'
 import { CallId } from '@deepseek-ai/dsh-llm'
-import SystemPrompt from '@deepseek-ai/dsh-system-prompt'
+import SystemPrompt from '@ddonofrio/littlewhale'
 import ToolRuntime, { type ToolExecutionResult } from '@deepseek-ai/dsh-tools'
 import WebRuntime from '@deepseek-ai/dsh-web'
 import * as WebFetchLocal from '@deepseek-ai/dsh-web-fetch-http'

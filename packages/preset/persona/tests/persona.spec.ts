@@ -1,5 +1,5 @@
 import { Context } from '@deepseek-ai/cordis'
-import SystemPrompt, { renderPrompt } from '@deepseek-ai/dsh-system-prompt'
+import SystemPrompt, { renderPrompt } from '@ddonofrio/littlewhale'
 import { createScope, type ScopeKey } from '@deepseek-ai/dsh-scope'
 import { describe, expect, it } from 'vitest'
 import * as Persona from '@deepseek-ai/dsh-persona'

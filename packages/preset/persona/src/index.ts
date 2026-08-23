@@ -15,12 +15,12 @@
 
 import type { Context } from '@deepseek-ai/cordis'
 import z from '@deepseek-ai/schemastery'
-import type {} from '@deepseek-ai/dsh-system-prompt'
+import type {} from '@ddonofrio/littlewhale'
 
 // Imported rather than restated: the registry declares the slot this row
 // replaces, and two hardcoded copies would drift into a preset whose persona
 // silently lands beside the deployment's instead of shadowing it.
-import { PERSONA_ORDER, PERSONA_SECTION } from '@deepseek-ai/dsh-system-prompt'
+import { PERSONA_ORDER, PERSONA_SECTION } from '@ddonofrio/littlewhale'
 
 export { PERSONA_ORDER, PERSONA_SECTION }
 

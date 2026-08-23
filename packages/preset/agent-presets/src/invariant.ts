@@ -7,7 +7,7 @@ import type { Context } from '@deepseek-ai/cordis'
 import type { InvariantInstaller } from '@deepseek-ai/dsh-invariants'
 // Type-only: resolves the `system-prompt/assemble` waterfall this companion
 // joins, and the `agent` field `dsh-agent` merges into its context.
-import type {} from '@deepseek-ai/dsh-system-prompt'
+import type {} from '@ddonofrio/littlewhale'
 import type {} from '@deepseek-ai/dsh-agent'
 // Imported through the package name, not `./mount.ts`: a module shared between
 // the two build entry points becomes a third chunk that the published `files`

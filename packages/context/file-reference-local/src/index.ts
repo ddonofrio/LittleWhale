@@ -11,7 +11,7 @@ import FileReferenceService, {
   FILE_REFERENCE_PROMPT,
   type FileReferenceCandidate,
 } from '@deepseek-ai/dsh-file-reference'
-import type {} from '@deepseek-ai/dsh-system-prompt'
+import type {} from '@ddonofrio/littlewhale'
 import type {} from '@deepseek-ai/dsh-tools'
 import {
   DEFAULT_FILE_SEARCH_EXCLUDED_DIRECTORIES,

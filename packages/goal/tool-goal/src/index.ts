@@ -11,7 +11,7 @@ import type { GoalRef, GoalView } from '@deepseek-ai/dsh-goal'
 import { boundContextSummary, createUserMessage, HarnessError } from '@deepseek-ai/dsh-llm'
 import { defineTool } from '@deepseek-ai/dsh-tools'
 import type { GenericCallView } from '@deepseek-ai/dsh-tools'
-import type {} from '@deepseek-ai/dsh-system-prompt'
+import type {} from '@ddonofrio/littlewhale'
 import {
   completionAuthority,
   goalToolExecution,

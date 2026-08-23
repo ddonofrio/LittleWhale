@@ -655,11 +655,11 @@ describe('MessageItem arms', () => {
         content: [{ type: 'text', text: 'Current runtime context.\n\nsandbox\n\nworkspace' }],
         source: {
           kind: 'plugin',
-          plugin: '@deepseek-ai/dsh-system-prompt',
+          plugin: '@ddonofrio/littlewhale',
           form: 'snapshot',
           sections: [{ name: 'sandbox:policy', text: 'workspace-write' }, { name: 'workspace', text: '/repo' }],
         },
-        provenance: { role: 'inject', label: '@deepseek-ai/dsh-system-prompt' },
+        provenance: { role: 'inject', label: '@ddonofrio/littlewhale' },
         form: 'snapshot',
       } as never}
       />,

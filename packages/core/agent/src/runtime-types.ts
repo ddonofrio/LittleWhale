@@ -12,8 +12,8 @@ import type { AgentCancelCause, Session, SessionId, TurnEndReason, UserMessage }
 export type { AgentCancelCause } from '@deepseek-ai/dsh-session'
 import type { Inbox } from './inbox.ts'
 import type { InboxTarget } from './types.ts'
-import type {} from '@deepseek-ai/dsh-system-prompt'
-declare module '@deepseek-ai/dsh-system-prompt' {
+import type {} from '@ddonofrio/littlewhale'
+declare module '@ddonofrio/littlewhale' {
   interface AssembleContext {
     /** Agent for this assembly; absent on diagnostics. When present, `scope` must identify the same agent. */
     agent?: Agent

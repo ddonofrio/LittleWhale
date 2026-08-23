@@ -20,7 +20,7 @@
  * Agent Note:
  * - .agents/notes/implemented/simplification/2026-07-22-plan-specific-collaboration-state.md
  *
- * @module @deepseek-ai/dsh-plan-mode
+ * @module @ddonofrio/littlewhale-plan-mode
  */
 
 import { Context, Service } from '@deepseek-ai/cordis'
@@ -30,7 +30,7 @@ import type { Agent, PreStepDecision } from '@deepseek-ai/dsh-agent'
 import { createUserMessage } from '@deepseek-ai/dsh-llm'
 import type { Session, SessionEvent, UserMessage } from '@deepseek-ai/dsh-session'
 import { defineTool } from '@deepseek-ai/dsh-tools'
-import type {} from '@deepseek-ai/dsh-system-prompt'
+import type {} from '@ddonofrio/littlewhale'
 import { UserQuestionError } from '@deepseek-ai/dsh-user-questions'
 // Type-only edge: resolves `ctx.commands` for the optional command child.
 import type { CommandId } from '@deepseek-ai/dsh-commands'

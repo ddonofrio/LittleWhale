@@ -24,7 +24,7 @@ import type {
   ToolWorkflowRunEndData, ToolWorkflowRunStartData,
 } from './types.ts'
 // Declaration merge only: makes ctx.systemPrompt visible for the section registration.
-import type {} from '@deepseek-ai/dsh-system-prompt'
+import type {} from '@ddonofrio/littlewhale'
 
 export const name = 'tool-workflow'
 export const inject = ['tools', 'workflowEngine', 'systemPrompt']

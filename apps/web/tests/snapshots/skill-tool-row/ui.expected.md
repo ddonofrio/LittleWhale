@@ -10,10 +10,10 @@
 - text: Load the editing-cordis-compositions skill with the skill tool, then reply DONE. {{date}} {{clock}}
 - button "Copy":
   - img
-- button "Context injection @deepseek-ai/dsh-system-prompt":
+- button "Context injection @ddonofrio/littlewhale":
   - img
   - img
-  - text: Context injection @deepseek-ai/dsh-system-prompt
+  - text: Context injection @ddonofrio/littlewhale
 - button "Context injection skill-catalog":
   - img
   - img

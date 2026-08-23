@@ -1,5 +1,5 @@
 {
-  "name": "@deepseek-ai/dsh-system-prompt",
+  "name": "@ddonofrio/littlewhale",
   "description": "System prompt assembly registry for Little Whale",
   "version": "0.1.1-rc.2",
   "publishConfig": {

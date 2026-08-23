@@ -1,4 +1,4 @@
-# @deepseek-ai/dsh-plan-mode
+# @ddonofrio/littlewhale-plan-mode
 
 Logged, per-agent plan collaboration state with deployment-owned guidance, direct `/plan [message]` entry and `/plan off` exit commands, and the reviewed `exit_plan_mode` exit. Plan mode is soft guidance; sandbox mode and approval policy enforce restrictions independently and do not read or write plan state.
 
@@ -26,7 +26,7 @@ When the composition mounts `ctx.sessionProjections` ([`@deepseek-ai/dsh-session
 
 ```yaml
 - id: plan-mode
-  name: '@deepseek-ai/dsh-plan-mode'
+  name: '@ddonofrio/littlewhale-plan-mode'
   config:
     section: |
       You are in plan mode. Explore and design before presenting the complete
@@ -77,7 +77,7 @@ The user block is append-only conversation growth. Entering or leaving plan mode
 
 #### What the model sees
 
-The [`exit_plan_mode` schema](../../../docs/tool-catalog.md#deepseek-aidsh-plan-mode) remains available in both states; execution outside plan mode fails, while an approved in-mode review returns the canonical `{ approved: true }` value and renders the existing confirmation text. Rejection remains a failed call carrying review feedback, and a dismissed review a failed call naming the user's takeover.
+The [`exit_plan_mode` schema](../../../docs/tool-catalog.md#ddonofriolittlewhale-plan-mode) remains available in both states; execution outside plan mode fails, while an approved in-mode review returns the canonical `{ approved: true }` value and renders the existing confirmation text. Rejection remains a failed call carrying review feedback, and a dismissed review a failed call naming the user's takeover.
 
 #### Token effect
 

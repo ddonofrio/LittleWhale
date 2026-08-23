@@ -21,7 +21,7 @@ import type {
   FsWriteOutcome,
 } from '@deepseek-ai/dsh-fs'
 import LocalFileSystem from '@deepseek-ai/dsh-fs-local'
-import SystemPrompt from '@deepseek-ai/dsh-system-prompt'
+import SystemPrompt from '@ddonofrio/littlewhale'
 import ToolRuntime, { defineContentToolFixture } from '@deepseek-ai/dsh-tools'
 import type {
   ToolExecution,

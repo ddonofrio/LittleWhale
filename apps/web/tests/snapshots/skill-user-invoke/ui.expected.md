@@ -12,10 +12,10 @@
 - text: /user-invoke-demo and confirm the fixture wiring {{clock}}
 - button "Copy":
   - img
-- button "Context injection @deepseek-ai/dsh-system-prompt":
+- button "Context injection @ddonofrio/littlewhale":
   - img
   - img
-  - text: Context injection @deepseek-ai/dsh-system-prompt
+  - text: Context injection @ddonofrio/littlewhale
 - button "Context injection user-invoke-demo":
   - img
   - img

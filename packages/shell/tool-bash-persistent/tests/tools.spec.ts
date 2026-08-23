@@ -15,7 +15,7 @@ import type {
   TerminalSignal,
   TerminalWaitReason,
 } from '@deepseek-ai/dsh-terminal'
-import SystemPrompt from '@deepseek-ai/dsh-system-prompt'
+import SystemPrompt from '@ddonofrio/littlewhale'
 import ToolRuntime from '@deepseek-ai/dsh-tools'
 import * as ToolBashPersistent from '@deepseek-ai/dsh-tool-bash-persistent'
 

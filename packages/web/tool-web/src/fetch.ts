@@ -12,7 +12,7 @@ import { defineTool } from '@deepseek-ai/dsh-tools'
 import type { GenericCallView, JsonValue, ToolResult, WebFetchResultView } from '@deepseek-ai/dsh-tools'
 import type { WebFetchBody, WebFetchResult } from '@deepseek-ai/dsh-web'
 import { assertNever } from '@deepseek-ai/dsh-llm'
-import type {} from '@deepseek-ai/dsh-system-prompt'
+import type {} from '@ddonofrio/littlewhale'
 
 /**
  * The shared HTML→markdown converter: turndown over its bundled domino DOM,

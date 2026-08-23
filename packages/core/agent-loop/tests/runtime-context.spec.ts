@@ -4,7 +4,7 @@ import { createUserMessage } from '@deepseek-ai/dsh-llm'
 import SessionStore, { SessionId } from '@deepseek-ai/dsh-session'
 import { RuntimeContextProjection } from '../src/runtime-context.ts'
 
-const SOURCE = '@deepseek-ai/dsh-system-prompt'
+const SOURCE = '@ddonofrio/littlewhale'
 
 function contextMessage(text: string) {
   return createUserMessage({

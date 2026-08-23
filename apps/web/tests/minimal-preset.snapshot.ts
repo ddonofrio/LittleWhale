@@ -6,7 +6,7 @@ import type { AgentHandle } from '@deepseek-ai/dsh-agent'
 import { CallId, createUserMessage } from '@deepseek-ai/dsh-llm'
 import { SessionId } from '@deepseek-ai/dsh-session'
 import type {} from '@deepseek-ai/dsh-agent-presets'
-import type {} from '@deepseek-ai/dsh-system-prompt'
+import type {} from '@ddonofrio/littlewhale'
 import { assertFixtureInventory, launchWebScaffold, type WebScaffold } from './scaffold.ts'
 
 const SNAPSHOT_DIR = fileURLToPath(new URL('./snapshots/minimal-preset', import.meta.url))
@@ -57,7 +57,7 @@ describe('minimal agent preset', () => {
     if (requestHeader === undefined) throw new Error('the minimal agent issued no model request')
     expect(agentHandle.agent.session.events.some(event => event.type === 'user/message'
       && event.data.source.kind === 'plugin'
-      && event.data.source.plugin === '@deepseek-ai/dsh-system-prompt')).toBe(false)
+      && event.data.source.plugin === '@ddonofrio/littlewhale')).toBe(false)
     const presetFileSystem = scaffold.ctx.agentPresets.serviceFor(agentHandle.agent, 'fs')
     expect(presetFileSystem).toBeDefined()
     expect(presetFileSystem?.sandboxMode).toBeUndefined()

@@ -28,6 +28,8 @@
     // not declaration path aliases, keep each package/vendor source compiled
     // under its own tsconfig boundary.
     "paths": {
+      "@ddonofrio/littlewhale": ["./packages/core/system-prompt/src/index.ts"],
+      "@ddonofrio/littlewhale-plan-mode": ["./packages/plan/plan-mode/src/index.ts"],
       "@deepseek-ai/cordis": ["./vendor/cordis/src"],
       "@deepseek-ai/cosmokit": ["./vendor/cosmokit/src"],
       "@deepseek-ai/schemastery": ["./vendor/schemastery/src"],
@@ -63,8 +65,8 @@
       "@deepseek-ai/dsh-session-title/client": ["./packages/session/session-title/src/client.ts"],
       "@deepseek-ai/dsh-session-stats/types": ["./packages/session/session-stats/src/types.ts"],
       "@deepseek-ai/dsh-session-stats/client": ["./packages/session/session-stats/src/client.ts"],
-      "@deepseek-ai/dsh-plan-mode/types": ["./packages/plan/plan-mode/src/types.ts"],
-      "@deepseek-ai/dsh-plan-mode/client": ["./packages/plan/plan-mode/src/client.ts"],
+      "@ddonofrio/littlewhale-plan-mode/types": ["./packages/plan/plan-mode/src/types.ts"],
+      "@ddonofrio/littlewhale-plan-mode/client": ["./packages/plan/plan-mode/src/client.ts"],
       "@deepseek-ai/dsh-agent-presets/types": ["./packages/preset/agent-presets/src/types.ts"],
       "@deepseek-ai/dsh-pwsh-local": ["./packages/shell/pwsh-local/src/index.ts"],
       "@deepseek-ai/dsh-tool-pwsh": ["./packages/shell/tool-pwsh/src/index.ts"],

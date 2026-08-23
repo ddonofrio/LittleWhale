@@ -9,6 +9,49 @@ This file is GENERATED from source (`scripts/gen-config-catalog.ts`) and verifie
 
 A `Requires:` line lists the service keys the plugin `inject`s: its `cordis.yml` tree must also load providers for those services. Scope is the harness tier (`packages/`); the vendored cordis plugins a config tree may also load (`hmr`, the console logger, …) are pinned upstream source ([vendoring policy](../vendor/README.md)) and not catalogued here.
 
+<a id="ddonofriolittlewhale"></a>
+
+## `@ddonofrio/littlewhale`
+
+```ts config-catalog
+/** Plugin config: the deployment-authored fragment of the system prompt (see {@link Config.persona} for its contract). */
+export interface Config {
+  /** Include the fixed Little Whale identity before the deployment persona (default true). */
+  includeHarnessIdentity?: boolean
+  /** Include dynamic runtime-context snapshots in model history (default true). */
+  includeRuntimeContext?: boolean
+  /**
+   * Deployment-wide order-0 persona template. A scoped section named
+   * `deployment:persona` shadows it; `{{variable}}` references are strict.
+   */
+  persona?: string
+  /**
+   * Model-facing tool names in order, with {@link TOOL_ORDER_REST} exactly once.
+   * Invalid fields fail at load and unknown names fail at assembly; known names
+   * hidden in one scope may be absent there. Omitted means lexicographic order.
+   */
+  toolOrder?: string[]
+}
+```
+
+Source: [`packages/core/system-prompt/src/index.ts:186`](../packages/core/system-prompt/src/index.ts)
+
+<a id="ddonofriolittlewhale-plan-mode"></a>
+
+## `@ddonofrio/littlewhale-plan-mode`
+
+Requires: `tools` · `systemPrompt`
+
+```ts config-catalog
+/** Deployment-owned plan guidance. */
+export interface PlanModeConfig {
+  /** Guidance rendered as the `plan:policy` prompt section while plan mode is active. */
+  section: string
+}
+```
+
+Source: [`packages/plan/plan-mode/src/index.ts:70`](../packages/plan/plan-mode/src/index.ts)
+
 <a id="deepseek-aidsh-acp"></a>
 
 ## `@deepseek-ai/dsh-acp`
@@ -290,7 +333,7 @@ export interface GoalConfig {
 }
 ```
 
-Depends on: [`AgentLoopConfig`](#deepseek-aidsh-agent-loop) · [`GoalDomainConfig`](#deepseek-aidsh-goal) · [`InvariantConfig`](#deepseek-aidsh-invariants) · [`JobsConfig`](#deepseek-aidsh-jobs-local) · [`SessionTitleConfig`](#deepseek-aidsh-session-title) · [`SkillFileSystem`](../packages/skill/skill-filesystem/src/index.ts) · [`SkillRegistryConfig`](#deepseek-aidsh-skill) · [`SystemPromptConfig`](#deepseek-aidsh-system-prompt) · [`toolBash`](../packages/shell/tool-bash/src/index.ts) · [`toolGoal`](../packages/goal/tool-goal/src/index.ts) · [`toolJobs`](../packages/jobs/tool-jobs/src/index.ts) · [`ToolsConfig`](#deepseek-aidsh-tools) · [`toolSkill`](../packages/skill/tool-skill/src/index.ts) · [`workspaceContext`](../packages/context/agent-instructions/src/index.ts)
+Depends on: [`AgentLoopConfig`](#deepseek-aidsh-agent-loop) · [`GoalDomainConfig`](#deepseek-aidsh-goal) · [`InvariantConfig`](#deepseek-aidsh-invariants) · [`JobsConfig`](#deepseek-aidsh-jobs-local) · [`SessionTitleConfig`](#deepseek-aidsh-session-title) · [`SkillFileSystem`](../packages/skill/skill-filesystem/src/index.ts) · [`SkillRegistryConfig`](#deepseek-aidsh-skill) · [`SystemPromptConfig`](#ddonofriolittlewhale) · [`toolBash`](../packages/shell/tool-bash/src/index.ts) · [`toolGoal`](../packages/goal/tool-goal/src/index.ts) · [`toolJobs`](../packages/jobs/tool-jobs/src/index.ts) · [`ToolsConfig`](#deepseek-aidsh-tools) · [`toolSkill`](../packages/skill/tool-skill/src/index.ts) · [`workspaceContext`](../packages/context/agent-instructions/src/index.ts)
 
 Source: [`packages/examples/agent-spine-demo/src/index.ts:92`](../packages/examples/agent-spine-demo/src/index.ts)
 
@@ -1536,22 +1579,6 @@ export interface Config {
 
 Source: [`packages/preset/persona/src/index.ts:34`](../packages/preset/persona/src/index.ts)
 
-<a id="deepseek-aidsh-plan-mode"></a>
-
-## `@deepseek-ai/dsh-plan-mode`
-
-Requires: `tools` · `systemPrompt`
-
-```ts config-catalog
-/** Deployment-owned plan guidance. */
-export interface PlanModeConfig {
-  /** Guidance rendered as the `plan:policy` prompt section while plan mode is active. */
-  section: string
-}
-```
-
-Source: [`packages/plan/plan-mode/src/index.ts:70`](../packages/plan/plan-mode/src/index.ts)
-
 <a id="deepseek-aidsh-pwsh-local"></a>
 
 ## `@deepseek-ai/dsh-pwsh-local`
@@ -2400,33 +2427,6 @@ export interface Config {
 ```
 
 Source: [`packages/e2b/subprocess-e2b/src/index.ts:25`](../packages/e2b/subprocess-e2b/src/index.ts)
-
-<a id="deepseek-aidsh-system-prompt"></a>
-
-## `@deepseek-ai/dsh-system-prompt`
-
-```ts config-catalog
-/** Plugin config: the deployment-authored fragment of the system prompt (see {@link Config.persona} for its contract). */
-export interface Config {
-  /** Include the fixed Little Whale identity before the deployment persona (default true). */
-  includeHarnessIdentity?: boolean
-  /** Include dynamic runtime-context snapshots in model history (default true). */
-  includeRuntimeContext?: boolean
-  /**
-   * Deployment-wide order-0 persona template. A scoped section named
-   * `deployment:persona` shadows it; `{{variable}}` references are strict.
-   */
-  persona?: string
-  /**
-   * Model-facing tool names in order, with {@link TOOL_ORDER_REST} exactly once.
-   * Invalid fields fail at load and unknown names fail at assembly; known names
-   * hidden in one scope may be absent there. Omitted means lexicographic order.
-   */
-  toolOrder?: string[]
-}
-```
-
-Source: [`packages/core/system-prompt/src/index.ts:186`](../packages/core/system-prompt/src/index.ts)
 
 <a id="deepseek-aidsh-terminal-bash"></a>
 

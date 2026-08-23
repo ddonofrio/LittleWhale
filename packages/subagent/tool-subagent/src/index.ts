@@ -17,7 +17,7 @@ import type { JsonValue } from '@deepseek-ai/dsh-session'
 import { assertSubagentMaxDepth, settleRun } from '@deepseek-ai/dsh-subagent'
 import type { SubagentProvider, SubagentResult, SubagentRun } from '@deepseek-ai/dsh-subagent'
 import type { JobOutcome } from '@deepseek-ai/dsh-jobs'
-import type {} from '@deepseek-ai/dsh-system-prompt'
+import type {} from '@ddonofrio/littlewhale'
 
 export const name = 'tool-subagent'
 export const inject = ['tools', 'subagents', 'systemPrompt']

@@ -7,7 +7,7 @@ import type { ImageAttachmentLimits, ImageAttachmentRef, SaveImageAttachment, St
 import { CallId, LlmAdapter, LlmRuntime } from '@deepseek-ai/dsh-llm'
 import type { ContentBlock } from '@deepseek-ai/dsh-llm'
 import type { GenerateOptions, LlmResolvedModelInfo, StreamChunk } from '@deepseek-ai/dsh-llm'
-import SystemPrompt from '@deepseek-ai/dsh-system-prompt'
+import SystemPrompt from '@ddonofrio/littlewhale'
 import ToolRuntime, { type JsonValue } from '@deepseek-ai/dsh-tools'
 import type { PostToolDecision } from '@deepseek-ai/dsh-tools'
 import { publicToolName, syncTools, type ToolBridgeOptions } from '@deepseek-ai/dsh-mcp-client/src/tools.ts'

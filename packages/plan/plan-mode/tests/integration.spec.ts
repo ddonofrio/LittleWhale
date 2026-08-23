@@ -2,11 +2,11 @@ import { describe, expect, it } from 'vitest'
 import { Context } from '@deepseek-ai/cordis'
 import LlmRuntime, { createUserMessage, type StreamChunk  } from '@deepseek-ai/dsh-llm'
 import SessionStore, { SessionId, type SessionEvent } from '@deepseek-ai/dsh-session'
-import SystemPrompt from '@deepseek-ai/dsh-system-prompt'
+import SystemPrompt from '@ddonofrio/littlewhale'
 import ToolRuntime, { defineContentToolFixture } from '@deepseek-ai/dsh-tools'
 import AgentRegistry, { type Agent } from '@deepseek-ai/dsh-agent'
 import AgentLoop from '@deepseek-ai/dsh-agent-loop'
-import PlanModeController, { foldPlanMode } from '@deepseek-ai/dsh-plan-mode'
+import PlanModeController, { foldPlanMode } from '@ddonofrio/littlewhale-plan-mode'
 import { MockAdapter, textResponse, toolCallResponse } from '../../../core/agent-loop/tests/mock-adapter.ts'
 
 const PLAN_CONFIG = { section: 'Test plan mode instructions.' }

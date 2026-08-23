@@ -11,7 +11,7 @@ import z from '@deepseek-ai/schemastery'
 import type { Agent } from '@deepseek-ai/dsh-agent'
 import type { ContentBlock } from '@deepseek-ai/dsh-llm'
 import type { SubagentReportDelivery } from '@deepseek-ai/dsh-subagent'
-import type {} from '@deepseek-ai/dsh-system-prompt'
+import type {} from '@ddonofrio/littlewhale'
 import { defineTool } from '@deepseek-ai/dsh-tools'
 
 export const name = 'tool-subagent-report'

@@ -1,7 +1,7 @@
 /**
  * Registry for ordered system sections, dynamic context, tool schemas, and prompt variables.
  *
- * @module @deepseek-ai/dsh-system-prompt
+ * @module @ddonofrio/littlewhale
  */
 
 import { Context, Service } from '@deepseek-ai/cordis'

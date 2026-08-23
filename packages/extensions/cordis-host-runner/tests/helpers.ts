@@ -1,7 +1,7 @@
 import { Context } from '@deepseek-ai/cordis'
 import Timer from '@deepseek-ai/cordis-plugin-timer'
 import { CallId } from '@deepseek-ai/dsh-llm'
-import SystemPrompt from '@deepseek-ai/dsh-system-prompt'
+import SystemPrompt from '@ddonofrio/littlewhale'
 import ToolRegistry from '@deepseek-ai/dsh-tools'
 import type { ToolDefinition, ToolExecutionResult } from '@deepseek-ai/dsh-tools'
 import type { CordisDynamicPluginId } from '../src/types.ts'

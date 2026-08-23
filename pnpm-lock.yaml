@@ -126,6 +126,9 @@ importers:
 
   apps/cli:
     dependencies:
+      '@ddonofrio/littlewhale-plan-mode':
+        specifier: workspace:^
+        version: link:../../packages/plan/plan-mode
       '@deepseek-ai/cordis':
         specifier: workspace:^
         version: link:../../vendor/cordis
@@ -204,9 +207,6 @@ importers:
       '@deepseek-ai/dsh-persona':
         specifier: workspace:^
         version: link:../../packages/preset/persona
-      '@deepseek-ai/dsh-plan-mode':
-        specifier: workspace:^
-        version: link:../../packages/plan/plan-mode
       '@deepseek-ai/dsh-pwsh-local':
         specifier: workspace:^
         version: link:../../packages/shell/pwsh-local
@@ -313,6 +313,9 @@ importers:
         specifier: ^0.1.4
         version: 0.1.4
     devDependencies:
+      '@ddonofrio/littlewhale':
+        specifier: workspace:^
+        version: link:../../packages/core/system-prompt
       '@deepseek-ai/dsh-agent':
         specifier: workspace:^
         version: link:../../packages/core/agent
@@ -343,9 +346,6 @@ importers:
       '@deepseek-ai/dsh-subagent':
         specifier: workspace:^
         version: link:../../packages/subagent/subagent
-      '@deepseek-ai/dsh-system-prompt':
-        specifier: workspace:^
-        version: link:../../packages/core/system-prompt
       '@deepseek-ai/dsh-tools':
         specifier: workspace:^
         version: link:../../packages/core/tools
@@ -415,6 +415,12 @@ importers:
 
   examples:
     dependencies:
+      '@ddonofrio/littlewhale':
+        specifier: workspace:*
+        version: link:../packages/core/system-prompt
+      '@ddonofrio/littlewhale-plan-mode':
+        specifier: workspace:*
+        version: link:../packages/plan/plan-mode
       '@deepseek-ai/cordis-plugin-hmr':
         specifier: workspace:*
         version: link:../vendor/hmr
@@ -544,9 +550,6 @@ importers:
       '@deepseek-ai/dsh-permission-presets':
         specifier: workspace:*
         version: link:../packages/interaction/permission-presets
-      '@deepseek-ai/dsh-plan-mode':
-        specifier: workspace:*
-        version: link:../packages/plan/plan-mode
       '@deepseek-ai/dsh-pwsh-local':
         specifier: workspace:*
         version: link:../packages/shell/pwsh-local
@@ -646,9 +649,6 @@ importers:
       '@deepseek-ai/dsh-subprocess-local':
         specifier: workspace:*
         version: link:../packages/subprocess/subprocess-local
-      '@deepseek-ai/dsh-system-prompt':
-        specifier: workspace:*
-        version: link:../packages/core/system-prompt
       '@deepseek-ai/dsh-terminal':
         specifier: workspace:*
         version: link:../packages/terminal/terminal
@@ -943,6 +943,9 @@ importers:
         specifier: ^4.2.0
         version: 4.2.0
     devDependencies:
+      '@ddonofrio/littlewhale':
+        specifier: workspace:^
+        version: link:../../core/system-prompt
       '@deepseek-ai/cordis':
         specifier: workspace:^
         version: link:../../../vendor/cordis
@@ -970,9 +973,6 @@ importers:
       '@deepseek-ai/dsh-launch-environment':
         specifier: workspace:^
         version: link:../../util/launch-environment
-      '@deepseek-ai/dsh-system-prompt':
-        specifier: workspace:^
-        version: link:../../core/system-prompt
       '@types/js-yaml':
         specifier: ^4.0.9
         version: 4.0.9
@@ -997,6 +997,12 @@ importers:
 
   packages/bundle/base:
     dependencies:
+      '@ddonofrio/littlewhale':
+        specifier: workspace:^
+        version: link:../../core/system-prompt
+      '@ddonofrio/littlewhale-plan-mode':
+        specifier: workspace:^
+        version: link:../../plan/plan-mode
       '@deepseek-ai/cordis-plugin-hmr':
         specifier: workspace:^
         version: link:../../../vendor/hmr
@@ -1081,9 +1087,6 @@ importers:
       '@deepseek-ai/dsh-permission-presets':
         specifier: workspace:^
         version: link:../../interaction/permission-presets
-      '@deepseek-ai/dsh-plan-mode':
-        specifier: workspace:^
-        version: link:../../plan/plan-mode
       '@deepseek-ai/dsh-pwsh-sandbox':
         specifier: workspace:^
         version: link:../../shell/pwsh-sandbox
@@ -1153,9 +1156,6 @@ importers:
       '@deepseek-ai/dsh-subprocess-local':
         specifier: workspace:^
         version: link:../../subprocess/subprocess-local
-      '@deepseek-ai/dsh-system-prompt':
-        specifier: workspace:^
-        version: link:../../core/system-prompt
       '@deepseek-ai/dsh-token-limit-handler':
         specifier: workspace:^
         version: link:../../guard/token-limit-handler
@@ -1492,6 +1492,9 @@ importers:
         specifier: ^11.0.0
         version: 11.0.0
     devDependencies:
+      '@ddonofrio/littlewhale':
+        specifier: workspace:^
+        version: link:../../core/system-prompt
       '@deepseek-ai/cordis':
         specifier: workspace:^
         version: link:../../../vendor/cordis
@@ -1504,9 +1507,6 @@ importers:
       '@deepseek-ai/dsh-shell-env':
         specifier: workspace:^
         version: link:../../shell/shell-env
-      '@deepseek-ai/dsh-system-prompt':
-        specifier: workspace:^
-        version: link:../../core/system-prompt
 
   packages/client/connection:
     dependencies:
@@ -1871,6 +1871,9 @@ importers:
         specifier: ^2.0.0
         version: 2.1.1
     devDependencies:
+      '@ddonofrio/littlewhale-plan-mode':
+        specifier: workspace:^
+        version: link:../../plan/plan-mode
       '@deepseek-ai/cordis':
         specifier: workspace:^
         version: link:../../../vendor/cordis
@@ -1931,9 +1934,6 @@ importers:
       '@deepseek-ai/dsh-permission-presets':
         specifier: workspace:^
         version: link:../../interaction/permission-presets
-      '@deepseek-ai/dsh-plan-mode':
-        specifier: workspace:^
-        version: link:../../plan/plan-mode
       '@deepseek-ai/dsh-session-projection':
         specifier: workspace:^
         version: link:../../session/session-projection
@@ -1961,6 +1961,9 @@ importers:
 
   packages/client/ui-deliverables:
     devDependencies:
+      '@ddonofrio/littlewhale':
+        specifier: workspace:^
+        version: link:../../core/system-prompt
       '@deepseek-ai/cordis':
         specifier: workspace:^
         version: link:../../../vendor/cordis
@@ -1988,9 +1991,6 @@ importers:
       '@deepseek-ai/dsh-invariants':
         specifier: workspace:^
         version: link:../../runtime-diagnostics/invariants
-      '@deepseek-ai/dsh-system-prompt':
-        specifier: workspace:^
-        version: link:../../core/system-prompt
       '@types/react':
         specifier: ~18.3.1
         version: 18.3.31
@@ -2372,6 +2372,9 @@ importers:
 
   packages/client/ui-plan:
     devDependencies:
+      '@ddonofrio/littlewhale-plan-mode':
+        specifier: workspace:^
+        version: link:../../plan/plan-mode
       '@deepseek-ai/cordis':
         specifier: workspace:^
         version: link:../../../vendor/cordis
@@ -2399,9 +2402,6 @@ importers:
       '@deepseek-ai/dsh-invariants':
         specifier: workspace:^
         version: link:../../runtime-diagnostics/invariants
-      '@deepseek-ai/dsh-plan-mode':
-        specifier: workspace:^
-        version: link:../../plan/plan-mode
       '@types/react':
         specifier: ~18.3.1
         version: 18.3.31
@@ -3072,6 +3072,9 @@ importers:
         specifier: ^2.0.0
         version: 2.1.1
     devDependencies:
+      '@ddonofrio/littlewhale':
+        specifier: workspace:^
+        version: link:../../core/system-prompt
       '@deepseek-ai/cordis':
         specifier: workspace:^
         version: link:../../../vendor/cordis
@@ -3102,9 +3105,6 @@ importers:
       '@deepseek-ai/dsh-invariants':
         specifier: workspace:^
         version: link:../../runtime-diagnostics/invariants
-      '@deepseek-ai/dsh-system-prompt':
-        specifier: workspace:^
-        version: link:../../core/system-prompt
       '@deepseek-ai/dsh-tools':
         specifier: workspace:^
         version: link:../../core/tools
@@ -3422,6 +3422,9 @@ importers:
         specifier: link:../../../vendor/schemastery
         version: link:../../../vendor/schemastery
     devDependencies:
+      '@ddonofrio/littlewhale':
+        specifier: workspace:^
+        version: link:../../core/system-prompt
       '@deepseek-ai/cordis':
         specifier: workspace:^
         version: link:../../../vendor/cordis
@@ -3455,9 +3458,6 @@ importers:
       '@deepseek-ai/dsh-session':
         specifier: workspace:^
         version: link:../../core/session
-      '@deepseek-ai/dsh-system-prompt':
-        specifier: workspace:^
-        version: link:../../core/system-prompt
       '@deepseek-ai/dsh-tool-fs':
         specifier: workspace:^
         version: link:../../fs/tool-fs
@@ -3490,6 +3490,9 @@ importers:
         specifier: link:../../../vendor/schemastery
         version: link:../../../vendor/schemastery
     devDependencies:
+      '@ddonofrio/littlewhale':
+        specifier: workspace:^
+        version: link:../../core/system-prompt
       '@deepseek-ai/cordis':
         specifier: workspace:^
         version: link:../../../vendor/cordis
@@ -3502,9 +3505,6 @@ importers:
       '@deepseek-ai/dsh-invariants':
         specifier: workspace:^
         version: link:../../runtime-diagnostics/invariants
-      '@deepseek-ai/dsh-system-prompt':
-        specifier: workspace:^
-        version: link:../../core/system-prompt
       '@deepseek-ai/dsh-tools':
         specifier: workspace:^
         version: link:../../core/tools
@@ -3552,6 +3552,9 @@ importers:
         specifier: link:../../../vendor/schemastery
         version: link:../../../vendor/schemastery
     devDependencies:
+      '@ddonofrio/littlewhale':
+        specifier: workspace:^
+        version: link:../../core/system-prompt
       '@deepseek-ai/cordis':
         specifier: workspace:^
         version: link:../../../vendor/cordis
@@ -3576,9 +3579,6 @@ importers:
       '@deepseek-ai/dsh-session':
         specifier: workspace:^
         version: link:../../core/session
-      '@deepseek-ai/dsh-system-prompt':
-        specifier: workspace:^
-        version: link:../../core/system-prompt
       '@deepseek-ai/dsh-tools':
         specifier: workspace:^
         version: link:../../core/tools
@@ -3589,6 +3589,9 @@ importers:
         specifier: link:../../../vendor/schemastery
         version: link:../../../vendor/schemastery
     devDependencies:
+      '@ddonofrio/littlewhale':
+        specifier: workspace:^
+        version: link:../../core/system-prompt
       '@deepseek-ai/cordis':
         specifier: workspace:^
         version: link:../../../vendor/cordis
@@ -3607,12 +3610,12 @@ importers:
       '@deepseek-ai/dsh-shell':
         specifier: workspace:^
         version: link:../../shell/shell
-      '@deepseek-ai/dsh-system-prompt':
-        specifier: workspace:^
-        version: link:../../core/system-prompt
 
   packages/core/agent:
     devDependencies:
+      '@ddonofrio/littlewhale':
+        specifier: workspace:^
+        version: link:../system-prompt
       '@deepseek-ai/cordis':
         specifier: workspace:^
         version: link:../../../vendor/cordis
@@ -3628,9 +3631,6 @@ importers:
       '@deepseek-ai/dsh-session':
         specifier: workspace:^
         version: link:../session
-      '@deepseek-ai/dsh-system-prompt':
-        specifier: workspace:^
-        version: link:../system-prompt
       '@deepseek-ai/dsh-typert-protocol':
         specifier: workspace:^
         version: link:../../typert/protocol
@@ -3666,6 +3666,9 @@ importers:
         specifier: link:../../../vendor/schemastery
         version: link:../../../vendor/schemastery
     devDependencies:
+      '@ddonofrio/littlewhale':
+        specifier: workspace:^
+        version: link:../system-prompt
       '@deepseek-ai/cordis':
         specifier: workspace:^
         version: link:../../../vendor/cordis
@@ -3696,9 +3699,6 @@ importers:
       '@deepseek-ai/dsh-settings':
         specifier: workspace:^
         version: link:../../settings/settings
-      '@deepseek-ai/dsh-system-prompt':
-        specifier: workspace:^
-        version: link:../system-prompt
       '@deepseek-ai/dsh-tools':
         specifier: workspace:^
         version: link:../tools
@@ -3709,6 +3709,9 @@ importers:
         specifier: link:../../../vendor/schemastery
         version: link:../../../vendor/schemastery
     devDependencies:
+      '@ddonofrio/littlewhale':
+        specifier: workspace:^
+        version: link:../system-prompt
       '@deepseek-ai/cordis':
         specifier: workspace:^
         version: link:../../../vendor/cordis
@@ -3727,9 +3730,6 @@ importers:
       '@deepseek-ai/dsh-session':
         specifier: workspace:^
         version: link:../session
-      '@deepseek-ai/dsh-system-prompt':
-        specifier: workspace:^
-        version: link:../system-prompt
       '@deepseek-ai/dsh-tools':
         specifier: workspace:^
         version: link:../tools
@@ -3792,6 +3792,9 @@ importers:
         specifier: link:../../../vendor/schemastery
         version: link:../../../vendor/schemastery
     devDependencies:
+      '@ddonofrio/littlewhale':
+        specifier: workspace:^
+        version: link:../system-prompt
       '@deepseek-ai/cordis':
         specifier: workspace:^
         version: link:../../../vendor/cordis
@@ -3813,9 +3816,6 @@ importers:
       '@deepseek-ai/dsh-session':
         specifier: workspace:^
         version: link:../session
-      '@deepseek-ai/dsh-system-prompt':
-        specifier: workspace:^
-        version: link:../system-prompt
       '@deepseek-ai/dsh-user-approval':
         specifier: workspace:^
         version: link:../../interaction/user-approval
@@ -3943,6 +3943,9 @@ importers:
         specifier: link:../../../vendor/schemastery
         version: link:../../../vendor/schemastery
     devDependencies:
+      '@ddonofrio/littlewhale':
+        specifier: workspace:^
+        version: link:../../core/system-prompt
       '@deepseek-ai/cordis':
         specifier: workspace:^
         version: link:../../../vendor/cordis
@@ -3982,9 +3985,6 @@ importers:
       '@deepseek-ai/dsh-session-query-sqlite':
         specifier: workspace:^
         version: link:../../session-query/session-query-sqlite
-      '@deepseek-ai/dsh-system-prompt':
-        specifier: workspace:^
-        version: link:../../core/system-prompt
       '@deepseek-ai/dsh-tools':
         specifier: workspace:^
         version: link:../../core/tools
@@ -3995,6 +3995,9 @@ importers:
         specifier: link:../../../vendor/schemastery
         version: link:../../../vendor/schemastery
     devDependencies:
+      '@ddonofrio/littlewhale':
+        specifier: workspace:^
+        version: link:../../core/system-prompt
       '@deepseek-ai/cordis':
         specifier: workspace:^
         version: link:../../../vendor/cordis
@@ -4076,9 +4079,6 @@ importers:
       '@deepseek-ai/dsh-subprocess-local':
         specifier: workspace:^
         version: link:../../subprocess/subprocess-local
-      '@deepseek-ai/dsh-system-prompt':
-        specifier: workspace:^
-        version: link:../../core/system-prompt
       '@deepseek-ai/dsh-tool-bash':
         specifier: workspace:^
         version: link:../../shell/tool-bash
@@ -4172,6 +4172,9 @@ importers:
         specifier: link:../../../vendor/schemastery
         version: link:../../../vendor/schemastery
     devDependencies:
+      '@ddonofrio/littlewhale':
+        specifier: workspace:^
+        version: link:../../core/system-prompt
       '@deepseek-ai/cordis':
         specifier: workspace:^
         version: link:../../../vendor/cordis
@@ -4208,9 +4211,6 @@ importers:
       '@deepseek-ai/dsh-subagent-spawn-in-process':
         specifier: workspace:^
         version: link:../../subagent/subagent-spawn-in-process
-      '@deepseek-ai/dsh-system-prompt':
-        specifier: workspace:^
-        version: link:../../core/system-prompt
       '@deepseek-ai/dsh-tool-subagent-control':
         specifier: workspace:^
         version: link:../../subagent/tool-subagent-control
@@ -4293,6 +4293,9 @@ importers:
 
   packages/extensions/tool-cordis:
     devDependencies:
+      '@ddonofrio/littlewhale':
+        specifier: workspace:^
+        version: link:../../core/system-prompt
       '@deepseek-ai/cordis':
         specifier: workspace:^
         version: link:../../../vendor/cordis
@@ -4317,9 +4320,6 @@ importers:
       '@deepseek-ai/dsh-session':
         specifier: workspace:^
         version: link:../../core/session
-      '@deepseek-ai/dsh-system-prompt':
-        specifier: workspace:^
-        version: link:../../core/system-prompt
       '@deepseek-ai/dsh-tools':
         specifier: workspace:^
         version: link:../../core/tools
@@ -4536,6 +4536,9 @@ importers:
         specifier: ^9.0.0
         version: 9.0.0
     devDependencies:
+      '@ddonofrio/littlewhale':
+        specifier: workspace:^
+        version: link:../../core/system-prompt
       '@deepseek-ai/cordis':
         specifier: workspace:^
         version: link:../../../vendor/cordis
@@ -4578,9 +4581,6 @@ importers:
       '@deepseek-ai/dsh-session':
         specifier: workspace:^
         version: link:../../core/session
-      '@deepseek-ai/dsh-system-prompt':
-        specifier: workspace:^
-        version: link:../../core/system-prompt
       '@deepseek-ai/dsh-tools':
         specifier: workspace:^
         version: link:../../core/tools
@@ -4597,6 +4597,9 @@ importers:
         specifier: ^1.18.0
         version: 1.18.0
     devDependencies:
+      '@ddonofrio/littlewhale':
+        specifier: workspace:^
+        version: link:../../core/system-prompt
       '@deepseek-ai/cordis':
         specifier: workspace:^
         version: link:../../../vendor/cordis
@@ -4624,9 +4627,6 @@ importers:
       '@deepseek-ai/dsh-subprocess-local':
         specifier: workspace:^
         version: link:../../subprocess/subprocess-local
-      '@deepseek-ai/dsh-system-prompt':
-        specifier: workspace:^
-        version: link:../../core/system-prompt
       '@deepseek-ai/dsh-timeout':
         specifier: workspace:^
         version: link:../../util/timeout
@@ -4640,6 +4640,9 @@ importers:
         specifier: link:../../../vendor/schemastery
         version: link:../../../vendor/schemastery
     devDependencies:
+      '@ddonofrio/littlewhale':
+        specifier: workspace:^
+        version: link:../../core/system-prompt
       '@deepseek-ai/cordis':
         specifier: workspace:^
         version: link:../../../vendor/cordis
@@ -4673,9 +4676,6 @@ importers:
       '@deepseek-ai/dsh-session':
         specifier: workspace:^
         version: link:../../core/session
-      '@deepseek-ai/dsh-system-prompt':
-        specifier: workspace:^
-        version: link:../../core/system-prompt
       '@deepseek-ai/dsh-tools':
         specifier: workspace:^
         version: link:../../core/tools
@@ -4749,6 +4749,9 @@ importers:
 
   packages/goal/goal-round-driver:
     devDependencies:
+      '@ddonofrio/littlewhale':
+        specifier: workspace:^
+        version: link:../../core/system-prompt
       '@deepseek-ai/cordis':
         specifier: workspace:^
         version: link:../../../vendor/cordis
@@ -4773,9 +4776,6 @@ importers:
       '@deepseek-ai/dsh-session':
         specifier: workspace:^
         version: link:../../core/session
-      '@deepseek-ai/dsh-system-prompt':
-        specifier: workspace:^
-        version: link:../../core/system-prompt
       '@deepseek-ai/dsh-tools':
         specifier: workspace:^
         version: link:../../core/tools
@@ -4786,6 +4786,9 @@ importers:
         specifier: link:../../../vendor/schemastery
         version: link:../../../vendor/schemastery
     devDependencies:
+      '@ddonofrio/littlewhale':
+        specifier: workspace:^
+        version: link:../../core/system-prompt
       '@deepseek-ai/cordis':
         specifier: workspace:^
         version: link:../../../vendor/cordis
@@ -4807,9 +4810,6 @@ importers:
       '@deepseek-ai/dsh-session':
         specifier: workspace:^
         version: link:../../core/session
-      '@deepseek-ai/dsh-system-prompt':
-        specifier: workspace:^
-        version: link:../../core/system-prompt
       '@deepseek-ai/dsh-tools':
         specifier: workspace:^
         version: link:../../core/tools
@@ -4820,6 +4820,9 @@ importers:
         specifier: link:../../../vendor/schemastery
         version: link:../../../vendor/schemastery
     devDependencies:
+      '@ddonofrio/littlewhale':
+        specifier: workspace:^
+        version: link:../../core/system-prompt
       '@deepseek-ai/cordis':
         specifier: workspace:^
         version: link:../../../vendor/cordis
@@ -4850,9 +4853,6 @@ importers:
       '@deepseek-ai/dsh-subagent-spawn-in-process':
         specifier: workspace:^
         version: link:../../subagent/subagent-spawn-in-process
-      '@deepseek-ai/dsh-system-prompt':
-        specifier: workspace:^
-        version: link:../../core/system-prompt
       '@deepseek-ai/dsh-tools':
         specifier: workspace:^
         version: link:../../core/tools
@@ -5390,6 +5390,9 @@ importers:
 
   packages/interaction/tool-ask-user:
     devDependencies:
+      '@ddonofrio/littlewhale':
+        specifier: workspace:^
+        version: link:../../core/system-prompt
       '@deepseek-ai/cordis':
         specifier: workspace:^
         version: link:../../../vendor/cordis
@@ -5402,9 +5405,6 @@ importers:
       '@deepseek-ai/dsh-llm':
         specifier: workspace:^
         version: link:../../llm/llm
-      '@deepseek-ai/dsh-system-prompt':
-        specifier: workspace:^
-        version: link:../../core/system-prompt
       '@deepseek-ai/dsh-tools':
         specifier: workspace:^
         version: link:../../core/tools
@@ -5418,6 +5418,9 @@ importers:
         specifier: link:../../../vendor/schemastery
         version: link:../../../vendor/schemastery
     devDependencies:
+      '@ddonofrio/littlewhale':
+        specifier: workspace:^
+        version: link:../../core/system-prompt
       '@deepseek-ai/cordis':
         specifier: workspace:^
         version: link:../../../vendor/cordis
@@ -5439,9 +5442,6 @@ importers:
       '@deepseek-ai/dsh-session':
         specifier: workspace:^
         version: link:../../core/session
-      '@deepseek-ai/dsh-system-prompt':
-        specifier: workspace:^
-        version: link:../../core/system-prompt
 
   packages/interaction/user-questions:
     devDependencies:
@@ -5519,6 +5519,9 @@ importers:
         specifier: link:../../../vendor/schemastery
         version: link:../../../vendor/schemastery
     devDependencies:
+      '@ddonofrio/littlewhale':
+        specifier: workspace:^
+        version: link:../../core/system-prompt
       '@deepseek-ai/cordis':
         specifier: workspace:^
         version: link:../../../vendor/cordis
@@ -5543,9 +5546,6 @@ importers:
       '@deepseek-ai/dsh-session':
         specifier: workspace:^
         version: link:../../core/session
-      '@deepseek-ai/dsh-system-prompt':
-        specifier: workspace:^
-        version: link:../../core/system-prompt
       '@deepseek-ai/dsh-tools':
         specifier: workspace:^
         version: link:../../core/tools
@@ -5691,6 +5691,9 @@ importers:
         specifier: link:../../../vendor/schemastery
         version: link:../../../vendor/schemastery
     devDependencies:
+      '@ddonofrio/littlewhale':
+        specifier: workspace:^
+        version: link:../../core/system-prompt
       '@deepseek-ai/cordis':
         specifier: workspace:^
         version: link:../../../vendor/cordis
@@ -5733,9 +5736,6 @@ importers:
       '@deepseek-ai/dsh-session-persistence-sqlite':
         specifier: workspace:^
         version: link:../../session/session-persistence-sqlite
-      '@deepseek-ai/dsh-system-prompt':
-        specifier: workspace:^
-        version: link:../../core/system-prompt
       '@deepseek-ai/dsh-timeout':
         specifier: workspace:^
         version: link:../../util/timeout
@@ -5835,6 +5835,9 @@ importers:
         specifier: link:../../../vendor/schemastery
         version: link:../../../vendor/schemastery
     devDependencies:
+      '@ddonofrio/littlewhale':
+        specifier: workspace:^
+        version: link:../../core/system-prompt
       '@deepseek-ai/cordis':
         specifier: workspace:^
         version: link:../../../vendor/cordis
@@ -5862,9 +5865,6 @@ importers:
       '@deepseek-ai/dsh-subprocess-local':
         specifier: workspace:^
         version: link:../../subprocess/subprocess-local
-      '@deepseek-ai/dsh-system-prompt':
-        specifier: workspace:^
-        version: link:../../core/system-prompt
       '@deepseek-ai/dsh-timeout':
         specifier: workspace:^
         version: link:../../util/timeout
@@ -5924,6 +5924,9 @@ importers:
         specifier: ^4.4.3
         version: 4.4.3
     devDependencies:
+      '@ddonofrio/littlewhale':
+        specifier: workspace:^
+        version: link:../../core/system-prompt
       '@deepseek-ai/cordis':
         specifier: workspace:^
         version: link:../../../vendor/cordis
@@ -5951,9 +5954,6 @@ importers:
       '@deepseek-ai/dsh-session-projection':
         specifier: workspace:^
         version: link:../../session/session-projection
-      '@deepseek-ai/dsh-system-prompt':
-        specifier: workspace:^
-        version: link:../../core/system-prompt
       '@deepseek-ai/dsh-tools':
         specifier: workspace:^
         version: link:../../core/tools
@@ -5970,6 +5970,9 @@ importers:
         specifier: ^4.1.0
         version: 4.2.0
     devDependencies:
+      '@ddonofrio/littlewhale':
+        specifier: workspace:^
+        version: link:../../core/system-prompt
       '@deepseek-ai/cordis':
         specifier: workspace:^
         version: link:../../../vendor/cordis
@@ -6009,9 +6012,6 @@ importers:
       '@deepseek-ai/dsh-settings-file':
         specifier: workspace:^
         version: link:../../settings/settings-file
-      '@deepseek-ai/dsh-system-prompt':
-        specifier: workspace:^
-        version: link:../../core/system-prompt
       '@deepseek-ai/dsh-tools':
         specifier: workspace:^
         version: link:../../core/tools
@@ -6022,6 +6022,9 @@ importers:
         specifier: link:../../../vendor/schemastery
         version: link:../../../vendor/schemastery
     devDependencies:
+      '@ddonofrio/littlewhale':
+        specifier: workspace:^
+        version: link:../../core/system-prompt
       '@deepseek-ai/cordis':
         specifier: workspace:^
         version: link:../../../vendor/cordis
@@ -6031,9 +6034,6 @@ importers:
       '@deepseek-ai/dsh-scope':
         specifier: workspace:^
         version: link:../../core/scope
-      '@deepseek-ai/dsh-system-prompt':
-        specifier: workspace:^
-        version: link:../../core/system-prompt
 
   packages/runtime-diagnostics/invariants:
     dependencies:
@@ -6094,6 +6094,9 @@ importers:
         specifier: link:../../../vendor/schemastery
         version: link:../../../vendor/schemastery
     devDependencies:
+      '@ddonofrio/littlewhale':
+        specifier: workspace:^
+        version: link:../../core/system-prompt
       '@deepseek-ai/cordis':
         specifier: workspace:^
         version: link:../../../vendor/cordis
@@ -6109,9 +6112,6 @@ importers:
       '@deepseek-ai/dsh-session':
         specifier: workspace:^
         version: link:../../core/session
-      '@deepseek-ai/dsh-system-prompt':
-        specifier: workspace:^
-        version: link:../../core/system-prompt
 
   packages/sandbox/sandbox-windows-acl:
     dependencies:
@@ -6134,6 +6134,9 @@ importers:
 
   packages/schedule/schedule:
     devDependencies:
+      '@ddonofrio/littlewhale':
+        specifier: workspace:^
+        version: link:../../core/system-prompt
       '@deepseek-ai/cordis':
         specifier: workspace:^
         version: link:../../../vendor/cordis
@@ -6167,9 +6170,6 @@ importers:
       '@deepseek-ai/dsh-session-persistence-jsonl':
         specifier: workspace:^
         version: link:../../session/session-persistence-jsonl
-      '@deepseek-ai/dsh-system-prompt':
-        specifier: workspace:^
-        version: link:../../core/system-prompt
       '@deepseek-ai/dsh-tools':
         specifier: workspace:^
         version: link:../../core/tools
@@ -6356,6 +6356,9 @@ importers:
         specifier: link:../../../vendor/schemastery
         version: link:../../../vendor/schemastery
     devDependencies:
+      '@ddonofrio/littlewhale':
+        specifier: workspace:^
+        version: link:../../core/system-prompt
       '@deepseek-ai/cordis':
         specifier: workspace:^
         version: link:../../../vendor/cordis
@@ -6386,9 +6389,6 @@ importers:
       '@deepseek-ai/dsh-session-title':
         specifier: workspace:^
         version: link:../../session/session-title
-      '@deepseek-ai/dsh-system-prompt':
-        specifier: workspace:^
-        version: link:../../core/system-prompt
       '@deepseek-ai/dsh-timeout':
         specifier: workspace:^
         version: link:../../util/timeout
@@ -6401,6 +6401,9 @@ importers:
 
   packages/session/session-checkpoint-policy:
     devDependencies:
+      '@ddonofrio/littlewhale':
+        specifier: workspace:^
+        version: link:../../core/system-prompt
       '@deepseek-ai/cordis':
         specifier: workspace:^
         version: link:../../../vendor/cordis
@@ -6431,9 +6434,6 @@ importers:
       '@deepseek-ai/dsh-session-persistence-jsonl':
         specifier: workspace:^
         version: link:../session-persistence-jsonl
-      '@deepseek-ai/dsh-system-prompt':
-        specifier: workspace:^
-        version: link:../../core/system-prompt
       '@deepseek-ai/dsh-tools':
         specifier: workspace:^
         version: link:../../core/tools
@@ -6981,6 +6981,9 @@ importers:
         specifier: link:../../../vendor/schemastery
         version: link:../../../vendor/schemastery
     devDependencies:
+      '@ddonofrio/littlewhale':
+        specifier: workspace:^
+        version: link:../../core/system-prompt
       '@deepseek-ai/cordis':
         specifier: workspace:^
         version: link:../../../vendor/cordis
@@ -7029,9 +7032,6 @@ importers:
       '@deepseek-ai/dsh-subprocess-local':
         specifier: workspace:^
         version: link:../../subprocess/subprocess-local
-      '@deepseek-ai/dsh-system-prompt':
-        specifier: workspace:^
-        version: link:../../core/system-prompt
       '@deepseek-ai/dsh-tool-jobs':
         specifier: workspace:^
         version: link:../../jobs/tool-jobs
@@ -7048,6 +7048,9 @@ importers:
         specifier: link:../../../vendor/schemastery
         version: link:../../../vendor/schemastery
     devDependencies:
+      '@ddonofrio/littlewhale':
+        specifier: workspace:^
+        version: link:../../core/system-prompt
       '@deepseek-ai/cordis':
         specifier: workspace:^
         version: link:../../../vendor/cordis
@@ -7078,9 +7081,6 @@ importers:
       '@deepseek-ai/dsh-subprocess-local':
         specifier: workspace:^
         version: link:../../subprocess/subprocess-local
-      '@deepseek-ai/dsh-system-prompt':
-        specifier: workspace:^
-        version: link:../../core/system-prompt
       '@deepseek-ai/dsh-terminal':
         specifier: workspace:^
         version: link:../../terminal/terminal
@@ -7100,6 +7100,9 @@ importers:
         specifier: link:../../../vendor/schemastery
         version: link:../../../vendor/schemastery
     devDependencies:
+      '@ddonofrio/littlewhale':
+        specifier: workspace:^
+        version: link:../../core/system-prompt
       '@deepseek-ai/cordis':
         specifier: workspace:^
         version: link:../../../vendor/cordis
@@ -7139,9 +7142,6 @@ importers:
       '@deepseek-ai/dsh-subprocess-local':
         specifier: workspace:^
         version: link:../../subprocess/subprocess-local
-      '@deepseek-ai/dsh-system-prompt':
-        specifier: workspace:^
-        version: link:../../core/system-prompt
       '@deepseek-ai/dsh-tool-jobs':
         specifier: workspace:^
         version: link:../../jobs/tool-jobs
@@ -7158,6 +7158,9 @@ importers:
         specifier: link:../../../vendor/schemastery
         version: link:../../../vendor/schemastery
     devDependencies:
+      '@ddonofrio/littlewhale':
+        specifier: workspace:^
+        version: link:../../core/system-prompt
       '@deepseek-ai/cordis':
         specifier: workspace:^
         version: link:../../../vendor/cordis
@@ -7191,9 +7194,6 @@ importers:
       '@deepseek-ai/dsh-subprocess-local':
         specifier: workspace:^
         version: link:../../subprocess/subprocess-local
-      '@deepseek-ai/dsh-system-prompt':
-        specifier: workspace:^
-        version: link:../../core/system-prompt
       '@deepseek-ai/dsh-terminal':
         specifier: workspace:^
         version: link:../../terminal/terminal
@@ -7718,6 +7718,9 @@ importers:
 
   packages/subagent/subagent-in-process-driver:
     devDependencies:
+      '@ddonofrio/littlewhale':
+        specifier: workspace:^
+        version: link:../../core/system-prompt
       '@deepseek-ai/cordis':
         specifier: workspace:^
         version: link:../../../vendor/cordis
@@ -7757,9 +7760,6 @@ importers:
       '@deepseek-ai/dsh-subagent':
         specifier: workspace:^
         version: link:../subagent
-      '@deepseek-ai/dsh-system-prompt':
-        specifier: workspace:^
-        version: link:../../core/system-prompt
       '@deepseek-ai/dsh-tool-fs':
         specifier: workspace:^
         version: link:../../fs/tool-fs
@@ -7828,6 +7828,9 @@ importers:
         specifier: link:../../../vendor/schemastery
         version: link:../../../vendor/schemastery
     devDependencies:
+      '@ddonofrio/littlewhale':
+        specifier: workspace:^
+        version: link:../../core/system-prompt
       '@deepseek-ai/cordis':
         specifier: workspace:^
         version: link:../../../vendor/cordis
@@ -7864,9 +7867,6 @@ importers:
       '@deepseek-ai/dsh-subagent-spawn-in-process':
         specifier: workspace:^
         version: link:../subagent-spawn-in-process
-      '@deepseek-ai/dsh-system-prompt':
-        specifier: workspace:^
-        version: link:../../core/system-prompt
       '@deepseek-ai/dsh-tool-jobs':
         specifier: workspace:^
         version: link:../../jobs/tool-jobs
@@ -7922,6 +7922,9 @@ importers:
         specifier: link:../../../vendor/schemastery
         version: link:../../../vendor/schemastery
     devDependencies:
+      '@ddonofrio/littlewhale':
+        specifier: workspace:^
+        version: link:../../core/system-prompt
       '@deepseek-ai/cordis':
         specifier: workspace:^
         version: link:../../../vendor/cordis
@@ -7955,9 +7958,6 @@ importers:
       '@deepseek-ai/dsh-subagent-spawn-in-process':
         specifier: workspace:^
         version: link:../subagent-spawn-in-process
-      '@deepseek-ai/dsh-system-prompt':
-        specifier: workspace:^
-        version: link:../../core/system-prompt
       '@deepseek-ai/dsh-tool-subagent-control':
         specifier: workspace:^
         version: link:../tool-subagent-control
@@ -8060,6 +8060,9 @@ importers:
         specifier: link:../../../vendor/schemastery
         version: link:../../../vendor/schemastery
     devDependencies:
+      '@ddonofrio/littlewhale':
+        specifier: workspace:^
+        version: link:../../core/system-prompt
       '@deepseek-ai/cordis':
         specifier: workspace:^
         version: link:../../../vendor/cordis
@@ -8099,9 +8102,6 @@ importers:
       '@deepseek-ai/dsh-subprocess-local':
         specifier: workspace:^
         version: link:../../subprocess/subprocess-local
-      '@deepseek-ai/dsh-system-prompt':
-        specifier: workspace:^
-        version: link:../../core/system-prompt
       '@deepseek-ai/dsh-terminal':
         specifier: workspace:^
         version: link:../terminal
@@ -8139,6 +8139,9 @@ importers:
 
   packages/test-support/agent-loop-testkit:
     devDependencies:
+      '@ddonofrio/littlewhale':
+        specifier: workspace:^
+        version: link:../../core/system-prompt
       '@deepseek-ai/cordis':
         specifier: workspace:^
         version: link:../../../vendor/cordis
@@ -8157,9 +8160,6 @@ importers:
       '@deepseek-ai/dsh-session':
         specifier: workspace:^
         version: link:../../core/session
-      '@deepseek-ai/dsh-system-prompt':
-        specifier: workspace:^
-        version: link:../../core/system-prompt
       '@deepseek-ai/dsh-tools':
         specifier: workspace:^
         version: link:../../core/tools
@@ -8268,6 +8268,9 @@ importers:
         specifier: ^4.4.3
         version: 4.4.3
     devDependencies:
+      '@ddonofrio/littlewhale':
+        specifier: workspace:^
+        version: link:../../core/system-prompt
       '@deepseek-ai/cordis':
         specifier: workspace:^
         version: link:../../../vendor/cordis
@@ -8301,9 +8304,6 @@ importers:
       '@deepseek-ai/dsh-session-projection':
         specifier: workspace:^
         version: link:../../session/session-projection
-      '@deepseek-ai/dsh-system-prompt':
-        specifier: workspace:^
-        version: link:../../core/system-prompt
       '@deepseek-ai/dsh-tools':
         specifier: workspace:^
         version: link:../../core/tools
@@ -8458,6 +8458,9 @@ importers:
         specifier: ^7.2.4
         version: 7.2.4
     devDependencies:
+      '@ddonofrio/littlewhale':
+        specifier: workspace:^
+        version: link:../../core/system-prompt
       '@deepseek-ai/cordis':
         specifier: workspace:^
         version: link:../../../vendor/cordis
@@ -8479,9 +8482,6 @@ importers:
       '@deepseek-ai/dsh-spill-policy':
         specifier: workspace:^
         version: link:../../spill/spill-policy
-      '@deepseek-ai/dsh-system-prompt':
-        specifier: workspace:^
-        version: link:../../core/system-prompt
       '@deepseek-ai/dsh-tool-call-timeout-policy':
         specifier: workspace:^
         version: link:../../guard/timeout-policy
@@ -8614,6 +8614,9 @@ importers:
         specifier: link:../../../vendor/schemastery
         version: link:../../../vendor/schemastery
     devDependencies:
+      '@ddonofrio/littlewhale':
+        specifier: workspace:^
+        version: link:../../core/system-prompt
       '@deepseek-ai/cordis':
         specifier: workspace:^
         version: link:../../../vendor/cordis
@@ -8647,9 +8650,6 @@ importers:
       '@deepseek-ai/dsh-subagent-spawn-in-process':
         specifier: workspace:^
         version: link:../../subagent/subagent-spawn-in-process
-      '@deepseek-ai/dsh-system-prompt':
-        specifier: workspace:^
-        version: link:../../core/system-prompt
       '@deepseek-ai/dsh-tools':
         specifier: workspace:^
         version: link:../../core/tools
@@ -8666,6 +8666,9 @@ importers:
         specifier: link:../../../vendor/schemastery
         version: link:../../../vendor/schemastery
     devDependencies:
+      '@ddonofrio/littlewhale':
+        specifier: workspace:^
+        version: link:../../core/system-prompt
       '@deepseek-ai/cordis':
         specifier: workspace:^
         version: link:../../../vendor/cordis
@@ -8684,9 +8687,6 @@ importers:
       '@deepseek-ai/dsh-subagent':
         specifier: workspace:^
         version: link:../../subagent/subagent
-      '@deepseek-ai/dsh-system-prompt':
-        specifier: workspace:^
-        version: link:../../core/system-prompt
       '@deepseek-ai/dsh-tools':
         specifier: workspace:^
         version: link:../../core/tools
@@ -8724,6 +8724,9 @@ importers:
         specifier: link:../../../vendor/schemastery
         version: link:../../../vendor/schemastery
     devDependencies:
+      '@ddonofrio/littlewhale':
+        specifier: workspace:^
+        version: link:../../core/system-prompt
       '@deepseek-ai/cordis':
         specifier: workspace:^
         version: link:../../../vendor/cordis
@@ -8754,9 +8757,6 @@ importers:
       '@deepseek-ai/dsh-subagent-spawn-in-process':
         specifier: workspace:^
         version: link:../../subagent/subagent-spawn-in-process
-      '@deepseek-ai/dsh-system-prompt':
-        specifier: workspace:^
-        version: link:../../core/system-prompt
       '@deepseek-ai/dsh-tools':
         specifier: workspace:^
         version: link:../../core/tools
@@ -8797,6 +8797,12 @@ importers:
 
   python/sdk-runtime:
     dependencies:
+      '@ddonofrio/littlewhale':
+        specifier: workspace:^
+        version: link:../../packages/core/system-prompt
+      '@ddonofrio/littlewhale-plan-mode':
+        specifier: workspace:^
+        version: link:../../packages/plan/plan-mode
       '@deepseek-ai/cordis':
         specifier: workspace:^
         version: link:../../vendor/cordis
@@ -8950,9 +8956,6 @@ importers:
       '@deepseek-ai/dsh-persona':
         specifier: workspace:^
         version: link:../../packages/preset/persona
-      '@deepseek-ai/dsh-plan-mode':
-        specifier: workspace:^
-        version: link:../../packages/plan/plan-mode
       '@deepseek-ai/dsh-pwsh-local':
         specifier: workspace:^
         version: link:../../packages/shell/pwsh-local
@@ -9049,9 +9052,6 @@ importers:
       '@deepseek-ai/dsh-subprocess-local':
         specifier: workspace:^
         version: link:../../packages/subprocess/subprocess-local
-      '@deepseek-ai/dsh-system-prompt':
-        specifier: workspace:^
-        version: link:../../packages/core/system-prompt
       '@deepseek-ai/dsh-terminal':
         specifier: workspace:^
         version: link:../../packages/terminal/terminal

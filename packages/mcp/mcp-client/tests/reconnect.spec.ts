@@ -6,7 +6,7 @@
  */
 import { describe, expect, it, vi, beforeEach } from 'vitest'
 import { Context } from '@deepseek-ai/cordis'
-import SystemPrompt from '@deepseek-ai/dsh-system-prompt'
+import SystemPrompt from '@ddonofrio/littlewhale'
 import ToolRuntime from '@deepseek-ai/dsh-tools'
 import { CallId } from '@deepseek-ai/dsh-llm'
 import type { Config } from '@deepseek-ai/dsh-mcp-client'
