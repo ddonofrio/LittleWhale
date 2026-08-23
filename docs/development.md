@@ -39,6 +39,16 @@ Setup is complete when `pnpm run typecheck` exits successfully.
 
 ## Contributor reference
 
+### Development handoff
+
+Every change has an implementation phase and a finalization phase. The implementation phase ends with a user-validation handoff; it is not a completion claim.
+
+During the implementation phase, make the requested code change, run the relevant TypeScript checks, and run the relevant build. For a Client or UI change, the build must include the Client artifact that contains the changed surface. Do not spend the final test, coverage, documentation, lint, catalog, or broad-gate cycle before the user has exercised the change.
+
+The validation handoff must identify the changed behavior and give concrete visual and functional steps, including the expected result and any required configuration or restart. Stop after the handoff and wait for the user to confirm the result or request a commit.
+
+After explicit user approval or a commit request, run the focused tests, applicable broad tests, coverage, documentation and catalog checks, lint, and repository gates required by the changed surface. Fix failures before finalizing. If the user reports a problem, return to the implementation phase and make another validation handoff; user approval is required again before finalization.
+
 ### TypeScript project layout
 
 The repository uses isolated Host and Client aggregates. An ordinary package is registered in exactly one aggregate: Host packages in `tsconfig.host.json` and Client packages in `tsconfig.client.json`.

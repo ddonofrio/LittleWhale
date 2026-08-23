@@ -78,9 +78,13 @@ describe('agent-loop settings section', () => {
       'loopDetectionDetectOnToolCall',
       'loopDetectionIncludeLoop',
       'loopDetectionMinTokens',
+      'loopDetectionMaxToolCallDetections',
       'loopDetectionFirstPrompt',
       'loopDetectionSecondPrompt',
       'loopDetectionThirdPrompt',
+      'loopDetectionToolCallFirstPrompt',
+      'loopDetectionToolCallSecondPrompt',
+      'loopDetectionToolCallThirdPrompt',
       'loopDetectionCompactBeforeFailing',
     ])
     await bench.ctx.fiber.dispose()
@@ -91,6 +95,16 @@ describe('agent-loop settings section', () => {
 
     const descriptor = bench.ctx.settings.describe().find(row => String(row.ns) === 'agent-loop')
     expect((descriptor?.value as { loopDetectionMinTokens: number }).loopDetectionMinTokens).toBe(16)
+    expect((descriptor?.value as { loopDetectionMaxToolCallDetections: number }).loopDetectionMaxToolCallDetections).toBe(32)
+    expect((descriptor?.value as {
+      loopDetectionToolCallFirstPrompt: string
+      loopDetectionToolCallSecondPrompt: string
+      loopDetectionToolCallThirdPrompt: string
+    })).toMatchObject({
+      loopDetectionToolCallFirstPrompt: 'You have repeated {maximum-tool-call-detections} tokens. This might be not an issue but a restriction. Please restart the tool call in another way.',
+      loopDetectionToolCallSecondPrompt: 'Ops. Again! WARNING, this is the second consecutive time that you are repeating the last {maximum-tool-call-detections} tokens. This might be not an issue but a restriction. Please restart the tool call in another way.',
+      loopDetectionToolCallThirdPrompt: 'THIS IS A SYSTEM MESSAGE: <Please stop. Explain to the user, in detail, the current status, what you have done, and what is missing; do not continue with your task>',
+    })
     expect((descriptor?.value as {
       loopDetectionDetectOnText: boolean
       loopDetectionDetectOnReasoning: boolean
@@ -98,7 +112,7 @@ describe('agent-loop settings section', () => {
     })).toMatchObject({
       loopDetectionDetectOnText: true,
       loopDetectionDetectOnReasoning: true,
-      loopDetectionDetectOnToolCall: false,
+      loopDetectionDetectOnToolCall: true,
     })
 
     const agent = bench.ctx.agentLoop.create(SessionId('default-loop-threshold'), {
@@ -107,6 +121,7 @@ describe('agent-loop settings section', () => {
       loopDetection: { enabled: true },
     })
     expect(agent.options.loopDetection?.minTokens).toBe(16)
+    expect(agent.options.loopDetection?.maxToolCallDetections).toBe(32)
     expect(agent.options.loopDetection?.compactBeforeFailing).toBe(true)
     await bench.ctx.fiber.dispose()
   })
@@ -142,9 +157,13 @@ describe('agent-loop settings section', () => {
       loopDetectionDetectOnToolCall: true,
       loopDetectionIncludeLoop: false,
       loopDetectionMinTokens: 7,
+      loopDetectionMaxToolCallDetections: 12,
       loopDetectionFirstPrompt: 'first',
       loopDetectionSecondPrompt: 'second',
       loopDetectionThirdPrompt: 'third',
+      loopDetectionToolCallFirstPrompt: 'tool first',
+      loopDetectionToolCallSecondPrompt: 'tool second',
+      loopDetectionToolCallThirdPrompt: 'tool third',
       loopDetectionCompactBeforeFailing: true,
     })
 
@@ -159,9 +178,13 @@ describe('agent-loop settings section', () => {
       detectOnToolCall: true,
       includeLoop: false,
       minTokens: 7,
+      maxToolCallDetections: 12,
       firstPrompt: 'first',
       secondPrompt: 'second',
       thirdPrompt: 'third',
+      toolCallFirstPrompt: 'tool first',
+      toolCallSecondPrompt: 'tool second',
+      toolCallThirdPrompt: 'tool third',
       compactBeforeFailing: true,
     })
     await bench.ctx.fiber.dispose()

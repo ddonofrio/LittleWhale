@@ -26,9 +26,13 @@ export interface AgentLoopSettings {
   loopDetectionDetectOnToolCall?: boolean
   loopDetectionIncludeLoop?: boolean
   loopDetectionMinTokens?: number
+  loopDetectionMaxToolCallDetections?: number
   loopDetectionFirstPrompt?: string
   loopDetectionSecondPrompt?: string
   loopDetectionThirdPrompt?: string
+  loopDetectionToolCallFirstPrompt?: string
+  loopDetectionToolCallSecondPrompt?: string
+  loopDetectionToolCallThirdPrompt?: string
   loopDetectionCompactBeforeFailing?: boolean
 }
 
@@ -78,9 +82,13 @@ export interface LoopDetectionRowState extends CardShell {
   detectOnToolCall: CardFieldState
   includeLoop: CardFieldState
   minTokens: CardFieldState
+  maxToolCallDetections: CardFieldState
   firstPrompt: CardFieldState
   secondPrompt: CardFieldState
   thirdPrompt: CardFieldState
+  toolCallFirstPrompt: CardFieldState
+  toolCallSecondPrompt: CardFieldState
+  toolCallThirdPrompt: CardFieldState
   compactBeforeFailing: CardFieldState
 }
 
@@ -104,9 +112,13 @@ export class LoopDetectionRowController {
       booleanField('loopDetectionDetectOnToolCall'),
       booleanField('loopDetectionIncludeLoop'),
       numberField('loopDetectionMinTokens'),
+      numberField('loopDetectionMaxToolCallDetections'),
       textField('loopDetectionFirstPrompt'),
       textField('loopDetectionSecondPrompt'),
       textField('loopDetectionThirdPrompt'),
+      textField('loopDetectionToolCallFirstPrompt'),
+      textField('loopDetectionToolCallSecondPrompt'),
+      textField('loopDetectionToolCallThirdPrompt'),
       booleanField('loopDetectionCompactBeforeFailing'),
     ])
     this.store = this.form.bind(() => this.projection())
@@ -121,9 +133,13 @@ export class LoopDetectionRowController {
       detectOnToolCall: this.form.field('loopDetectionDetectOnToolCall'),
       includeLoop: this.form.field('loopDetectionIncludeLoop'),
       minTokens: this.form.field('loopDetectionMinTokens'),
+      maxToolCallDetections: this.form.field('loopDetectionMaxToolCallDetections'),
       firstPrompt: this.form.field('loopDetectionFirstPrompt'),
       secondPrompt: this.form.field('loopDetectionSecondPrompt'),
       thirdPrompt: this.form.field('loopDetectionThirdPrompt'),
+      toolCallFirstPrompt: this.form.field('loopDetectionToolCallFirstPrompt'),
+      toolCallSecondPrompt: this.form.field('loopDetectionToolCallSecondPrompt'),
+      toolCallThirdPrompt: this.form.field('loopDetectionToolCallThirdPrompt'),
       compactBeforeFailing: this.form.field('loopDetectionCompactBeforeFailing'),
     }
   }

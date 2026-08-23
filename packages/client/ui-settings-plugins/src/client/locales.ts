@@ -10,9 +10,10 @@ export type PluginsSettingsLocaleKey =
   | 'agentLoopTitle' | 'agentLoopDescription' | 'agentLoopMaxParallel' | 'agentLoopMaxParallelHint'
   | 'loopDetectionTitle' | 'loopDetectionDescription' | 'loopDetectionEnabled' | 'loopDetectionDetectOnText'
   | 'loopDetectionDetectOn' | 'loopDetectionDetectOnReasoning' | 'loopDetectionDetectOnToolCall' | 'loopDetectionDetectOnHint'
+  | 'loopDetectionDetectOnTextHint' | 'loopDetectionDetectOnReasoningHint' | 'loopDetectionDetectOnToolCallHint'
   | 'loopDetectionIncludeLoop'
-  | 'loopDetectionMinTokens' | 'loopDetectionMinTokensHint' | 'loopDetectionFirstPrompt'
-  | 'loopDetectionSecondPrompt' | 'loopDetectionThirdPrompt' | 'loopDetectionPromptHint'
+  | 'loopDetectionMinTokens' | 'loopDetectionMinTokensHint' | 'loopDetectionMaxToolCallDetections' | 'loopDetectionMaxToolCallDetectionsHint' | 'loopDetectionFirstPrompt'
+  | 'loopDetectionSecondPrompt' | 'loopDetectionThirdPrompt' | 'loopDetectionToolCallFirstPrompt' | 'loopDetectionToolCallSecondPrompt' | 'loopDetectionToolCallThirdPrompt' | 'loopDetectionToolCallPromptHint' | 'loopDetectionPromptHint'
   | 'loopDetectionCompactBeforeFailing' | 'loopDetectionCompactBeforeFailingHint'
   | 'loopDetectionOn' | 'loopDetectionOff' | 'loopDetectionYes' | 'loopDetectionNo'
   | 'tokenLimitHandlerTitle' | 'tokenLimitHandlerDescription' | 'tokenLimitHandlerAction'
@@ -67,12 +68,21 @@ export const en: Record<PluginsSettingsLocaleKey, string> = {
   loopDetectionDetectOnReasoning: 'Reasoning',
   loopDetectionDetectOnToolCall: 'Tool calls',
   loopDetectionDetectOnHint: 'At least one stream must remain selected.',
+  loopDetectionDetectOnTextHint: 'Detect repeated text in model responses.',
+  loopDetectionDetectOnReasoningHint: 'Detect repeated reasoning content in model responses.',
+  loopDetectionDetectOnToolCallHint: 'Detect repeated tool calls before they execute.',
   loopDetectionIncludeLoop: 'Include detected loop in the answer',
   loopDetectionMinTokens: 'Minimum repeated tokens',
   loopDetectionMinTokensHint: 'A block must repeat three times at the end of the response.',
+  loopDetectionMaxToolCallDetections: 'Maximum tool-call detections',
+  loopDetectionMaxToolCallDetectionsHint: 'Consecutive tool-call loop detections before reporting an infinite loop. Default: 32.',
   loopDetectionFirstPrompt: 'First recovery prompt',
   loopDetectionSecondPrompt: 'Second recovery prompt',
   loopDetectionThirdPrompt: 'Third recovery prompt',
+  loopDetectionToolCallFirstPrompt: 'First recovery prompt for tool-call',
+  loopDetectionToolCallSecondPrompt: 'Second recovery prompt for tool-call',
+  loopDetectionToolCallThirdPrompt: 'Third recovery prompt for tool-call',
+  loopDetectionToolCallPromptHint: 'Sent as the next user message after a consecutive tool-call loop detection.',
   loopDetectionPromptHint: 'Sent as the next user message after a consecutive loop detection.',
   loopDetectionCompactBeforeFailing: 'Compact before failing',
   loopDetectionCompactBeforeFailingHint: 'After three recovery prompts, compact the conversation and retry the request before reporting an infinite loop.',
@@ -105,6 +115,11 @@ export const en: Record<PluginsSettingsLocaleKey, string> = {
 
 /** Simplified Chinese copy. */
 export const zh: Record<PluginsSettingsLocaleKey, string> = {
+  loopDetectionDetectOnTextHint: 'Detect repeated text in model responses.',
+  loopDetectionDetectOnReasoningHint: 'Detect repeated reasoning content in model responses.',
+  loopDetectionDetectOnToolCallHint: 'Detect repeated tool calls before they execute.',
+  loopDetectionMaxToolCallDetections: 'Maximum tool-call detections',
+  loopDetectionMaxToolCallDetectionsHint: 'Consecutive tool-call loop detections before reporting an infinite loop. Default: 32.',
   completionCheckerTitle: '复核结果',
   completionCheckerDescription: '停止前让第二个 agent 检查请求是否已经完整完成。',
   completionCheckerEnabled: '复核结果',
@@ -151,6 +166,10 @@ export const zh: Record<PluginsSettingsLocaleKey, string> = {
   loopDetectionFirstPrompt: '第一次恢复提示词',
   loopDetectionSecondPrompt: '第二次恢复提示词',
   loopDetectionThirdPrompt: '第三次恢复提示词',
+  loopDetectionToolCallFirstPrompt: '工具调用第一次恢复提示词',
+  loopDetectionToolCallSecondPrompt: '工具调用第二次恢复提示词',
+  loopDetectionToolCallThirdPrompt: '工具调用第三次恢复提示词',
+  loopDetectionToolCallPromptHint: '连续检测到工具调用循环后，作为下一条用户消息发送。',
   loopDetectionPromptHint: '每次连续检测到循环后，作为下一条用户消息发送。',
   loopDetectionCompactBeforeFailing: '在失败前压缩上下文',
   loopDetectionCompactBeforeFailingHint: '三次恢复提示词后，先压缩对话并重试请求，再报告无限循环。',

@@ -100,12 +100,16 @@ function renderLoopDetection(state: Partial<LoopDetectionRowState> = {}) {
     enabled: field('on'),
     detectOnText: field('on'),
     detectOnReasoning: field('on'),
-    detectOnToolCall: field('off'),
+    detectOnToolCall: field('on'),
     includeLoop: field('on'),
     minTokens: field('5'),
+    maxToolCallDetections: field('32'),
     firstPrompt: field('first'),
     secondPrompt: field('second'),
     thirdPrompt: field('third'),
+    toolCallFirstPrompt: field('tool first'),
+    toolCallSecondPrompt: field('tool second'),
+    toolCallThirdPrompt: field('tool third'),
     compactBeforeFailing: field('off'),
     ...state,
   })
@@ -374,13 +378,17 @@ describe('AgentLoopCard', () => {
 })
 
 describe('LoopDetectionRow', () => {
-  it('shows text and reasoning selected by default while tool calls are off', () => {
+  it('shows all streams selected by default', () => {
     renderLoopDetection()
     fireEvent.click(screen.getByText(en.loopDetectionTitle))
 
     expect(screen.getByRole('checkbox', { name: en.loopDetectionDetectOnText })).toHaveProperty('checked', true)
     expect(screen.getByRole('checkbox', { name: en.loopDetectionDetectOnReasoning })).toHaveProperty('checked', true)
-    expect(screen.getByRole('checkbox', { name: en.loopDetectionDetectOnToolCall })).toHaveProperty('checked', false)
+    expect(screen.getByRole('checkbox', { name: en.loopDetectionDetectOnToolCall })).toHaveProperty('checked', true)
+    expect(screen.getByLabelText(en.loopDetectionMaxToolCallDetections)).toHaveProperty('value', '32')
+    expect(screen.getByText(en.loopDetectionDetectOnTextHint)).toBeTruthy()
+    expect(screen.getByText(en.loopDetectionDetectOnReasoningHint)).toBeTruthy()
+    expect(screen.getByText(en.loopDetectionDetectOnToolCallHint)).toBeTruthy()
   })
 
   it('disables the last selected stream', () => {
@@ -390,21 +398,15 @@ describe('LoopDetectionRow', () => {
     expect(screen.getByRole('checkbox', { name: en.loopDetectionDetectOnReasoning })).toHaveProperty('disabled', true)
   })
 
-  it('shows the compact-before-failing checkbox even before detection is enabled', () => {
-    const actions = renderLoopDetection({ enabled: field('off') })
+  it('hides detection controls and compaction before detection is enabled', () => {
+    renderLoopDetection({ enabled: field('off') })
     fireEvent.click(screen.getByText(en.loopDetectionTitle))
 
-    expect(screen.getByRole('checkbox', { name: en.loopDetectionDetectOnText })).toBeTruthy()
-    expect(screen.getByRole('checkbox', { name: en.loopDetectionDetectOnReasoning })).toBeTruthy()
-    expect(screen.getByRole('checkbox', { name: en.loopDetectionDetectOnToolCall })).toBeTruthy()
-    const checkbox = screen.getByRole('checkbox', { name: en.loopDetectionCompactBeforeFailing })
-    expect(checkbox).toBeTruthy()
-    expect(checkbox.compareDocumentPosition(screen.getByRole('button', { name: en.save }))
-      & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy()
-
-    fireEvent.click(checkbox)
-
-    expect(actions.edit).toHaveBeenCalledWith('loopDetectionCompactBeforeFailing', 'on')
+    expect(screen.queryByRole('checkbox', { name: en.loopDetectionDetectOnText })).toBeNull()
+    expect(screen.queryByRole('checkbox', { name: en.loopDetectionDetectOnReasoning })).toBeNull()
+    expect(screen.queryByRole('checkbox', { name: en.loopDetectionDetectOnToolCall })).toBeNull()
+    expect(screen.queryByLabelText(en.loopDetectionMaxToolCallDetections)).toBeNull()
+    expect(screen.queryByRole('checkbox', { name: en.loopDetectionCompactBeforeFailing })).toBeNull()
   })
 })
 

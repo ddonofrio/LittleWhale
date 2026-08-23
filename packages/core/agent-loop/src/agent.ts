@@ -17,7 +17,7 @@ import type {
   RequestErrorAction,
 } from '@deepseek-ai/dsh-agent'
 import { Inbox, agentEvents, assembleContextFor } from '@deepseek-ai/dsh-agent'
-import type { GenerateOptions, LlmCallConfig, Message, PreparedLlmCall } from '@deepseek-ai/dsh-llm'
+import type { GenerateOptions, LlmCallConfig, Message, PreparedLlmCall, StreamChunk } from '@deepseek-ai/dsh-llm'
 import {
   BlockAssembler,
   LlmError,
@@ -58,6 +58,9 @@ type PreparedStep =
 const DEFAULT_LOOP_FIRST_PROMPT = '<continue>'
 const DEFAULT_LOOP_SECOND_PROMPT = 'THIS IS A SYSTEM MESSAGE: <You are in an LLM loop; please output the response now>'
 const DEFAULT_LOOP_THIRD_PROMPT = 'THIS IS A SYSTEM MESSAGE: <Please stop. Explain to the user, in detail, the current status, what you have done, and what is missing; do not continue with your task>'
+const DEFAULT_TOOL_CALL_FIRST_PROMPT = 'You have repeated {maximum-tool-call-detections} tokens. This might be not an issue but a restriction. Please restart the tool call in another way.'
+const DEFAULT_TOOL_CALL_SECOND_PROMPT = 'Ops. Again! WARNING, this is the second consecutive time that you are repeating the last {maximum-tool-call-detections} tokens. This might be not an issue but a restriction. Please restart the tool call in another way.'
+const DEFAULT_TOOL_CALL_THIRD_PROMPT = 'THIS IS A SYSTEM MESSAGE: <Please stop. Explain to the user, in detail, the current status, what you have done, and what is missing; do not continue with your task>'
 
 interface ResolvedLoopDetectionOptions {
   enabled: boolean
@@ -66,9 +69,13 @@ interface ResolvedLoopDetectionOptions {
   detectOnToolCall: boolean
   includeLoop: boolean
   minTokens: number
+  maxToolCallDetections: number
   firstPrompt: string
   secondPrompt: string
   thirdPrompt: string
+  toolCallFirstPrompt: string
+  toolCallSecondPrompt: string
+  toolCallThirdPrompt: string
   compactBeforeFailing: boolean
 }
 
@@ -105,17 +112,33 @@ function resolveLoopDetection(options: LoopDetectionOptions | undefined): Resolv
     enabled: options?.enabled ?? false,
     detectOnText: options?.detectOnText ?? true,
     detectOnReasoning: options?.detectOnReasoning ?? true,
-    detectOnToolCall: options?.detectOnToolCall ?? false,
+    detectOnToolCall: options?.detectOnToolCall ?? true,
     includeLoop: options?.includeLoop ?? true,
     minTokens: options?.minTokens ?? 16,
+    maxToolCallDetections: options?.maxToolCallDetections ?? 32,
     firstPrompt: options?.firstPrompt ?? DEFAULT_LOOP_FIRST_PROMPT,
     secondPrompt: options?.secondPrompt ?? DEFAULT_LOOP_SECOND_PROMPT,
     thirdPrompt: options?.thirdPrompt ?? DEFAULT_LOOP_THIRD_PROMPT,
+    toolCallFirstPrompt: options?.toolCallFirstPrompt ?? DEFAULT_TOOL_CALL_FIRST_PROMPT,
+    toolCallSecondPrompt: options?.toolCallSecondPrompt ?? DEFAULT_TOOL_CALL_SECOND_PROMPT,
+    toolCallThirdPrompt: options?.toolCallThirdPrompt ?? DEFAULT_TOOL_CALL_THIRD_PROMPT,
     compactBeforeFailing: options?.compactBeforeFailing ?? true,
   }
 }
 
-function loopPrompt(options: ResolvedLoopDetectionOptions, count: number): string {
+/** Whether a stream chunk belongs to a tool-call block. */
+function isToolCallChunk(chunk: StreamChunk): boolean {
+  return chunk.type === 'tool-call-delta'
+    || (chunk.type === 'block-end' && chunk.block.type === 'tool-call')
+}
+
+function loopPrompt(options: ResolvedLoopDetectionOptions, count: number, toolCall: boolean): string {
+  if (toolCall) {
+    const prompt = count === 1
+      ? options.toolCallFirstPrompt
+      : count === 2 ? options.toolCallSecondPrompt : options.toolCallThirdPrompt
+    return prompt.replaceAll('{maximum-tool-call-detections}', String(options.maxToolCallDetections))
+  }
   if (count === 1) return options.firstPrompt
   if (count === 2) return options.secondPrompt
   return options.thirdPrompt
@@ -148,6 +171,7 @@ export class ReactLoopAgent implements Agent {
   private readonly runtimeContext: RuntimeContextProjection
   private readonly loopDetection: ResolvedLoopDetectionOptions
   private consecutiveLoopDetections = 0
+  private consecutiveToolCallDetections = 0
   private activeTurnMessages: UserMessage[] = []
   private pendingLoopCompaction: PendingLoopCompaction | undefined
 
@@ -333,7 +357,10 @@ export class ReactLoopAgent implements Agent {
     const signal = this.phase.abort.signal
     const claimed = this.inbox.claim(target, position.turn)
     if (target === 'next-turn') this.activeTurnMessages = [...claimed]
-    if (claimed.some(message => message.source.kind === 'user')) this.consecutiveLoopDetections = 0
+    if (claimed.some(message => message.source.kind === 'user')) {
+      this.consecutiveLoopDetections = 0
+      this.consecutiveToolCallDetections = 0
+    }
     const assembly = await this.loopCtx.systemPrompt.assemble(assembleContextFor(this, signal))
     signal.throwIfAborted()
     const sections = renderContextSections(assembly)
@@ -497,6 +524,7 @@ export class ReactLoopAgent implements Agent {
         ? markAgentLoopRequest(deepFreeze({ ...request, signal: requestSignal }))
         : request
       let detectedLoop: ReturnType<typeof detectTokenLoop>
+      let detectedLoopIsToolCall = false
       try {
         const stream = preparedCall?.stream(streamRequest) ?? this.loopCtx.llm.stream(streamRequest)
         signal.throwIfAborted()
@@ -513,6 +541,7 @@ export class ReactLoopAgent implements Agent {
           assembler.push(chunk)
           const loopText = this.loopDetection.enabled ? loopTextForChunk(chunk, deltaIndexes, selection) : undefined
           if (loopText !== undefined) {
+            detectedLoopIsToolCall ||= isToolCallChunk(chunk)
             responseText += loopText
             detectedLoop = detectTokenLoop(tokenizeLoopText(responseText), this.loopDetection.minTokens)
             if (detectedLoop !== undefined) {
@@ -523,8 +552,11 @@ export class ReactLoopAgent implements Agent {
         }
         requestAbort.abort()
         if (detectedLoop !== undefined) {
-          this.consecutiveLoopDetections += 1
-          if (this.consecutiveLoopDetections >= 4) {
+          const loopCount = detectedLoopIsToolCall
+            ? ++this.consecutiveToolCallDetections
+            : ++this.consecutiveLoopDetections
+          const loopLimit = detectedLoopIsToolCall ? this.loopDetection.maxToolCallDetections : 4
+          if (loopCount >= loopLimit) {
             if (this.loopDetection.compactBeforeFailing) {
               // Preset groups isolate their services from both the host and the
               // agent context; the preset registry addresses the joined instance.
@@ -554,7 +586,7 @@ export class ReactLoopAgent implements Agent {
               { surfaceOp: 'append', sourceEventSeqs: chunkSeqs },
             )
           }
-          this.injectLoopPrompt(loopPrompt(this.loopDetection, this.consecutiveLoopDetections), this.consecutiveLoopDetections)
+          this.injectLoopPrompt(loopPrompt(this.loopDetection, loopCount, detectedLoopIsToolCall), loopCount)
           return null
         }
         signal.throwIfAborted()
@@ -616,11 +648,13 @@ export class ReactLoopAgent implements Agent {
       )
       if (finish.kind === 'max-tokens') {
         this.consecutiveLoopDetections = 0
+        this.consecutiveToolCallDetections = 0
         return { kind: 'max-tokens' }
       }
 
       const toolCalls = message.content.filter(block => block.type === 'tool-call')
       this.consecutiveLoopDetections = 0
+      this.consecutiveToolCallDetections = 0
       if (toolCalls.length === 0) return { kind: 'completed' }
       const { concluded } = await executeToolCalls(
         this.loopCtx, turn, step, toolCalls, signal,

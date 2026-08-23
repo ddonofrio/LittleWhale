@@ -28,18 +28,26 @@ export interface LoopDetectionOptions {
   detectOnText?: boolean
   /** Include reasoning output in repeated-output detection. Defaults to `true`. */
   detectOnReasoning?: boolean
-  /** Include tool-call output in repeated-output detection. Defaults to `false`. */
+  /** Include tool-call output in repeated-output detection. Defaults to `true`. */
   detectOnToolCall?: boolean
   /** Preserve the partial repeated output as an assistant message. Defaults to `true`. */
   includeLoop?: boolean
   /** Minimum token-like units in the repeated block. Defaults to `5`. */
   minTokens?: number
+  /** Maximum consecutive tool-call loop detections before failing. Defaults to `32`. */
+  maxToolCallDetections?: number
   /** Prompt sent after the first consecutive detection. */
   firstPrompt?: string
   /** Prompt sent after the second consecutive detection. */
   secondPrompt?: string
   /** Prompt sent after the third consecutive detection. */
   thirdPrompt?: string
+  /** Prompt sent after the first consecutive tool-call detection. */
+  toolCallFirstPrompt?: string
+  /** Prompt sent after the second consecutive tool-call detection. */
+  toolCallSecondPrompt?: string
+  /** Prompt sent after the third consecutive tool-call detection. */
+  toolCallThirdPrompt?: string
   /** Compact the retained context before failing after the third retry. Defaults to `true`. */
   compactBeforeFailing?: boolean
 }

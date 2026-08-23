@@ -3651,7 +3651,7 @@ export const TYPE_API: readonly TypeApiEntry[] = [
   },
   {
     name: 'LoopDetectionOptions',
-    declaration: 'export interface LoopDetectionOptions {\n    enabled?: boolean;\n    detectOnText?: boolean;\n    detectOnReasoning?: boolean;\n    detectOnToolCall?: boolean;\n    includeLoop?: boolean;\n    minTokens?: number;\n    firstPrompt?: string;\n    secondPrompt?: string;\n    thirdPrompt?: string;\n    compactBeforeFailing?: boolean;\n}',
+    declaration: 'export interface LoopDetectionOptions {\n    enabled?: boolean;\n    detectOnText?: boolean;\n    detectOnReasoning?: boolean;\n    detectOnToolCall?: boolean;\n    includeLoop?: boolean;\n    minTokens?: number;\n    maxToolCallDetections?: number;\n    firstPrompt?: string;\n    secondPrompt?: string;\n    thirdPrompt?: string;\n    toolCallFirstPrompt?: string;\n    toolCallSecondPrompt?: string;\n    toolCallThirdPrompt?: string;\n    compactBeforeFailing?: boolean;\n}',
   },
   {
     name: 'LspHover',

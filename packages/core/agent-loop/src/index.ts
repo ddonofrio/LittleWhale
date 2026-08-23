@@ -144,12 +144,16 @@ const DEFAULT_LOOP_DETECTION: Required<LoopDetectionOptions> = {
   enabled: false,
   detectOnText: true,
   detectOnReasoning: true,
-  detectOnToolCall: false,
+  detectOnToolCall: true,
   includeLoop: true,
   minTokens: 16,
+  maxToolCallDetections: 32,
   firstPrompt: '<continue>',
   secondPrompt: 'THIS IS A SYSTEM MESSAGE: <You are in an LLM loop; please output the response now>',
   thirdPrompt: 'THIS IS A SYSTEM MESSAGE: <Please stop. Explain to the user, in detail, the current status, what you have done, and what is missing; do not continue with your task>',
+  toolCallFirstPrompt: 'You have repeated {maximum-tool-call-detections} tokens. This might be not an issue but a restriction. Please restart the tool call in another way.',
+  toolCallSecondPrompt: 'Ops. Again! WARNING, this is the second consecutive time that you are repeating the last {maximum-tool-call-detections} tokens. This might be not an issue but a restriction. Please restart the tool call in another way.',
+  toolCallThirdPrompt: 'THIS IS A SYSTEM MESSAGE: <Please stop. Explain to the user, in detail, the current status, what you have done, and what is missing; do not continue with your task>',
   compactBeforeFailing: true,
 }
 
@@ -162,9 +166,13 @@ function loopDetectionFromSettings(settings: AgentLoopSettings): Required<LoopDe
     detectOnToolCall: settings.loopDetectionDetectOnToolCall,
     includeLoop: settings.loopDetectionIncludeLoop,
     minTokens: settings.loopDetectionMinTokens,
+    maxToolCallDetections: settings.loopDetectionMaxToolCallDetections,
     firstPrompt: settings.loopDetectionFirstPrompt,
     secondPrompt: settings.loopDetectionSecondPrompt,
     thirdPrompt: settings.loopDetectionThirdPrompt,
+    toolCallFirstPrompt: settings.loopDetectionToolCallFirstPrompt,
+    toolCallSecondPrompt: settings.loopDetectionToolCallSecondPrompt,
+    toolCallThirdPrompt: settings.loopDetectionToolCallThirdPrompt,
     compactBeforeFailing: settings.loopDetectionCompactBeforeFailing,
   }
 }
@@ -178,9 +186,13 @@ function resolveAgentOptions(options: AgentOptions, settings: AgentLoopSettings)
     && configured.detectOnToolCall === DEFAULT_LOOP_DETECTION.detectOnToolCall
     && configured.includeLoop === DEFAULT_LOOP_DETECTION.includeLoop
     && configured.minTokens === DEFAULT_LOOP_DETECTION.minTokens
+    && configured.maxToolCallDetections === DEFAULT_LOOP_DETECTION.maxToolCallDetections
     && configured.firstPrompt === DEFAULT_LOOP_DETECTION.firstPrompt
     && configured.secondPrompt === DEFAULT_LOOP_DETECTION.secondPrompt
     && configured.thirdPrompt === DEFAULT_LOOP_DETECTION.thirdPrompt
+    && configured.toolCallFirstPrompt === DEFAULT_LOOP_DETECTION.toolCallFirstPrompt
+    && configured.toolCallSecondPrompt === DEFAULT_LOOP_DETECTION.toolCallSecondPrompt
+    && configured.toolCallThirdPrompt === DEFAULT_LOOP_DETECTION.toolCallThirdPrompt
     && configured.compactBeforeFailing === DEFAULT_LOOP_DETECTION.compactBeforeFailing
   if (options.loopDetection === undefined && usesDefaultPolicy) return options
   return {
@@ -209,10 +221,17 @@ function assertAgentOptions(options: AgentOptions): void {
     && (!Number.isSafeInteger(loopDetection.minTokens) || loopDetection.minTokens < 1)) {
     throw new TypeError('agent loopDetection.minTokens must be a positive safe integer')
   }
+  if (loopDetection.maxToolCallDetections !== undefined
+    && (!Number.isSafeInteger(loopDetection.maxToolCallDetections) || loopDetection.maxToolCallDetections < 1)) {
+    throw new TypeError('agent loopDetection.maxToolCallDetections must be a positive safe integer')
+  }
   for (const [name, prompt] of [
     ['firstPrompt', loopDetection.firstPrompt],
     ['secondPrompt', loopDetection.secondPrompt],
     ['thirdPrompt', loopDetection.thirdPrompt],
+    ['toolCallFirstPrompt', loopDetection.toolCallFirstPrompt],
+    ['toolCallSecondPrompt', loopDetection.toolCallSecondPrompt],
+    ['toolCallThirdPrompt', loopDetection.toolCallThirdPrompt],
   ] as const) {
     if (prompt !== undefined && prompt.length === 0) throw new TypeError(`agent loopDetection.${name} must not be empty`)
   }
@@ -328,12 +347,20 @@ export interface AgentLoopSettings {
   loopDetectionIncludeLoop: boolean
   /** Minimum token-like units in the repeated block. */
   loopDetectionMinTokens: number
+  /** Maximum consecutive tool-call loop detections before failure. */
+  loopDetectionMaxToolCallDetections: number
   /** Prompt injected after the first detected loop. */
   loopDetectionFirstPrompt: string
   /** Prompt injected after the second detected loop. */
   loopDetectionSecondPrompt: string
   /** Prompt injected after the third detected loop. */
   loopDetectionThirdPrompt: string
+  /** Prompt injected after the first detected tool-call loop. */
+  loopDetectionToolCallFirstPrompt: string
+  /** Prompt injected after the second detected tool-call loop. */
+  loopDetectionToolCallSecondPrompt: string
+  /** Prompt injected after the third detected tool-call loop. */
+  loopDetectionToolCallThirdPrompt: string
   /** Whether to compact retained context before the loop becomes terminal. */
   loopDetectionCompactBeforeFailing: boolean
 }
@@ -347,9 +374,14 @@ export const AGENT_LOOP_SETTINGS_SCHEMA: z<AgentLoopSettings> = z.object({
   loopDetectionDetectOnToolCall: z.boolean().default(DEFAULT_LOOP_DETECTION.detectOnToolCall),
   loopDetectionIncludeLoop: z.boolean().default(DEFAULT_LOOP_DETECTION.includeLoop),
   loopDetectionMinTokens: z.number().step(1).min(1).max(Number.MAX_SAFE_INTEGER).default(DEFAULT_LOOP_DETECTION.minTokens),
+  loopDetectionMaxToolCallDetections: z.number().step(1).min(1).max(Number.MAX_SAFE_INTEGER)
+    .default(DEFAULT_LOOP_DETECTION.maxToolCallDetections),
   loopDetectionFirstPrompt: z.string().default(DEFAULT_LOOP_DETECTION.firstPrompt),
   loopDetectionSecondPrompt: z.string().default(DEFAULT_LOOP_DETECTION.secondPrompt),
   loopDetectionThirdPrompt: z.string().default(DEFAULT_LOOP_DETECTION.thirdPrompt),
+  loopDetectionToolCallFirstPrompt: z.string().default(DEFAULT_LOOP_DETECTION.toolCallFirstPrompt),
+  loopDetectionToolCallSecondPrompt: z.string().default(DEFAULT_LOOP_DETECTION.toolCallSecondPrompt),
+  loopDetectionToolCallThirdPrompt: z.string().default(DEFAULT_LOOP_DETECTION.toolCallThirdPrompt),
   loopDetectionCompactBeforeFailing: z.boolean().default(DEFAULT_LOOP_DETECTION.compactBeforeFailing),
 })
 
@@ -411,12 +443,16 @@ export class AgentLoop extends Service implements AgentFactory {
         enabled: z.boolean().default(false),
         detectOnText: z.boolean().default(true),
         detectOnReasoning: z.boolean().default(true),
-        detectOnToolCall: z.boolean().default(false),
+        detectOnToolCall: z.boolean().default(true),
         includeLoop: z.boolean().default(true),
         minTokens: z.number().step(1).min(1).max(Number.MAX_SAFE_INTEGER).default(16),
+        maxToolCallDetections: z.number().step(1).min(1).max(Number.MAX_SAFE_INTEGER).default(32),
         firstPrompt: z.string().default('<continue>'),
         secondPrompt: z.string().default('THIS IS A SYSTEM MESSAGE: <You are in an LLM loop; please output the response now>'),
         thirdPrompt: z.string().default('THIS IS A SYSTEM MESSAGE: <Please stop. Explain to the user, in detail, the current status, what you have done, and what is missing; do not continue with your task>'),
+        toolCallFirstPrompt: z.string().default('You have repeated {maximum-tool-call-detections} tokens. This might be not an issue but a restriction. Please restart the tool call in another way.'),
+        toolCallSecondPrompt: z.string().default('Ops. Again! WARNING, this is the second consecutive time that you are repeating the last {maximum-tool-call-detections} tokens. This might be not an issue but a restriction. Please restart the tool call in another way.'),
+        toolCallThirdPrompt: z.string().default('THIS IS A SYSTEM MESSAGE: <Please stop. Explain to the user, in detail, the current status, what you have done, and what is missing; do not continue with your task>'),
         compactBeforeFailing: z.boolean().default(true),
       }),
       cwd: z.string(),
@@ -442,9 +478,13 @@ export class AgentLoop extends Service implements AgentFactory {
       loopDetectionDetectOnToolCall: DEFAULT_LOOP_DETECTION.detectOnToolCall,
       loopDetectionIncludeLoop: DEFAULT_LOOP_DETECTION.includeLoop,
       loopDetectionMinTokens: DEFAULT_LOOP_DETECTION.minTokens,
+      loopDetectionMaxToolCallDetections: DEFAULT_LOOP_DETECTION.maxToolCallDetections,
       loopDetectionFirstPrompt: DEFAULT_LOOP_DETECTION.firstPrompt,
       loopDetectionSecondPrompt: DEFAULT_LOOP_DETECTION.secondPrompt,
       loopDetectionThirdPrompt: DEFAULT_LOOP_DETECTION.thirdPrompt,
+      loopDetectionToolCallFirstPrompt: DEFAULT_LOOP_DETECTION.toolCallFirstPrompt,
+      loopDetectionToolCallSecondPrompt: DEFAULT_LOOP_DETECTION.toolCallSecondPrompt,
+      loopDetectionToolCallThirdPrompt: DEFAULT_LOOP_DETECTION.toolCallThirdPrompt,
       loopDetectionCompactBeforeFailing: DEFAULT_LOOP_DETECTION.compactBeforeFailing,
     }
     this.settingsEntry = entry

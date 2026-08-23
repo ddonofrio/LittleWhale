@@ -11,6 +11,10 @@ You can still make a meaningful contribution:
 - Report reproducible bugs.
 - Propose improvements and describe the local model or inference server involved.
 - Share compatibility results for DeepSeek Harness plugins and extensions.
+
+## Development handoff
+
+Changes use the two-phase workflow in the [development guide](docs/development.md#development-handoff): implementation first reaches a TypeScript-and-build validation handoff, then the contributor validates the visual and functional behavior before final tests, coverage, documentation gates, and commit work begin.
 - Publish independent plugins using the retained Cordis extension model.
 - Improve examples, guides, or troubleshooting information through an issue or discussion.
 - Help other users reproduce and diagnose local-model behaviour.

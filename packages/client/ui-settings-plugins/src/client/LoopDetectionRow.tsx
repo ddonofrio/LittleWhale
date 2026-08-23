@@ -62,40 +62,83 @@ export function LoopDetectionRow(props: LoopDetectionRowProps) {
               onEdit={(text) => { props.edit('loopDetectionEnabled', text) }}
               onReset={() => { props.resetField('loopDetectionEnabled') }}
             />
-            <p className={css.streamHeading}>{field('loopDetectionDetectOn')}</p>
-            <CheckboxField
-              id="general-loop-detection-text"
-              label={field('loopDetectionDetectOnText')}
-              hint={field('loopDetectionDetectOnHint')}
-              {...common}
-              {...state.detectOnText}
-              disabled={common.disabled || (selectedStreams === 1 && state.detectOnText.text === 'on')}
-              onEdit={(text) => { props.edit('loopDetectionDetectOnText', text) }}
-              onReset={() => { props.resetField('loopDetectionDetectOnText') }}
-            />
-            <CheckboxField
-              id="general-loop-detection-reasoning"
-              label={field('loopDetectionDetectOnReasoning')}
-              hint={field('loopDetectionDetectOnHint')}
-              {...common}
-              {...state.detectOnReasoning}
-              disabled={common.disabled || (selectedStreams === 1 && state.detectOnReasoning.text === 'on')}
-              onEdit={(text) => { props.edit('loopDetectionDetectOnReasoning', text) }}
-              onReset={() => { props.resetField('loopDetectionDetectOnReasoning') }}
-            />
-            <CheckboxField
-              id="general-loop-detection-tool-call"
-              label={field('loopDetectionDetectOnToolCall')}
-              hint={field('loopDetectionDetectOnHint')}
-              {...common}
-              {...state.detectOnToolCall}
-              disabled={common.disabled || (selectedStreams === 1 && state.detectOnToolCall.text === 'on')}
-              onEdit={(text) => { props.edit('loopDetectionDetectOnToolCall', text) }}
-              onReset={() => { props.resetField('loopDetectionDetectOnToolCall') }}
-            />
             {enabled
               ? (
                 <>
+                  <p className={css.streamHeading}>{field('loopDetectionDetectOn')}</p>
+                  <CheckboxField
+                    id="general-loop-detection-text"
+                    label={field('loopDetectionDetectOnText')}
+                    hint={field('loopDetectionDetectOnTextHint')}
+                    {...common}
+                    {...state.detectOnText}
+                    disabled={common.disabled || (selectedStreams === 1 && state.detectOnText.text === 'on')}
+                    onEdit={(text) => { props.edit('loopDetectionDetectOnText', text) }}
+                    onReset={() => { props.resetField('loopDetectionDetectOnText') }}
+                  />
+                  <CheckboxField
+                    id="general-loop-detection-reasoning"
+                    label={field('loopDetectionDetectOnReasoning')}
+                    hint={field('loopDetectionDetectOnReasoningHint')}
+                    {...common}
+                    {...state.detectOnReasoning}
+                    disabled={common.disabled || (selectedStreams === 1 && state.detectOnReasoning.text === 'on')}
+                    onEdit={(text) => { props.edit('loopDetectionDetectOnReasoning', text) }}
+                    onReset={() => { props.resetField('loopDetectionDetectOnReasoning') }}
+                  />
+                  <CheckboxField
+                    id="general-loop-detection-tool-call"
+                    label={field('loopDetectionDetectOnToolCall')}
+                    hint={field('loopDetectionDetectOnToolCallHint')}
+                    {...common}
+                    {...state.detectOnToolCall}
+                    disabled={common.disabled || (selectedStreams === 1 && state.detectOnToolCall.text === 'on')}
+                    onEdit={(text) => { props.edit('loopDetectionDetectOnToolCall', text) }}
+                    onReset={() => { props.resetField('loopDetectionDetectOnToolCall') }}
+                  />
+                  {state.detectOnToolCall.text === 'on'
+                    ? (
+                      <div className={css.toolCallChildren}>
+                        <ValueField
+                          id="general-loop-detection-max-tool-call-detections"
+                          label={field('loopDetectionMaxToolCallDetections')}
+                          hint={field('loopDetectionMaxToolCallDetectionsHint')}
+                          numeric
+                          {...common}
+                          {...state.maxToolCallDetections}
+                          onEdit={(text) => { props.edit('loopDetectionMaxToolCallDetections', text) }}
+                          onReset={() => { props.resetField('loopDetectionMaxToolCallDetections') }}
+                        />
+                        <TextAreaField
+                          id="general-loop-detection-tool-call-first-prompt"
+                          label={field('loopDetectionToolCallFirstPrompt')}
+                          hint={field('loopDetectionToolCallPromptHint')}
+                          {...common}
+                          {...state.toolCallFirstPrompt}
+                          onEdit={(text) => { props.edit('loopDetectionToolCallFirstPrompt', text) }}
+                          onReset={() => { props.resetField('loopDetectionToolCallFirstPrompt') }}
+                        />
+                        <TextAreaField
+                          id="general-loop-detection-tool-call-second-prompt"
+                          label={field('loopDetectionToolCallSecondPrompt')}
+                          hint={field('loopDetectionToolCallPromptHint')}
+                          {...common}
+                          {...state.toolCallSecondPrompt}
+                          onEdit={(text) => { props.edit('loopDetectionToolCallSecondPrompt', text) }}
+                          onReset={() => { props.resetField('loopDetectionToolCallSecondPrompt') }}
+                        />
+                        <TextAreaField
+                          id="general-loop-detection-tool-call-third-prompt"
+                          label={field('loopDetectionToolCallThirdPrompt')}
+                          hint={field('loopDetectionToolCallPromptHint')}
+                          {...common}
+                          {...state.toolCallThirdPrompt}
+                          onEdit={(text) => { props.edit('loopDetectionToolCallThirdPrompt', text) }}
+                          onReset={() => { props.resetField('loopDetectionToolCallThirdPrompt') }}
+                        />
+                      </div>
+                    )
+                    : null}
                   <SelectField
                     id="general-loop-detection-include"
                     label={field('loopDetectionIncludeLoop')}
@@ -146,18 +189,18 @@ export function LoopDetectionRow(props: LoopDetectionRowProps) {
                     onEdit={(text) => { props.edit('loopDetectionThirdPrompt', text) }}
                     onReset={() => { props.resetField('loopDetectionThirdPrompt') }}
                   />
+                  <CheckboxField
+                    id="general-loop-detection-compact-before-failing"
+                    label={field('loopDetectionCompactBeforeFailing')}
+                    hint={field('loopDetectionCompactBeforeFailingHint')}
+                    {...common}
+                    {...state.compactBeforeFailing}
+                    onEdit={(text) => { props.edit('loopDetectionCompactBeforeFailing', text) }}
+                    onReset={() => { props.resetField('loopDetectionCompactBeforeFailing') }}
+                  />
                 </>
               )
               : null}
-            <CheckboxField
-              id="general-loop-detection-compact-before-failing"
-              label={field('loopDetectionCompactBeforeFailing')}
-              hint={field('loopDetectionCompactBeforeFailingHint')}
-              {...common}
-              {...state.compactBeforeFailing}
-              onEdit={(text) => { props.edit('loopDetectionCompactBeforeFailing', text) }}
-              onReset={() => { props.resetField('loopDetectionCompactBeforeFailing') }}
-            />
             <div className={css.footer}>
               {state.failed ? <p className={css.failed}>{t('saveFailed')}</p> : null}
               <button type="button" className={css.discard} disabled={!state.dirty || state.saving} onClick={props.discard}>

@@ -65,6 +65,16 @@
   color: var(--dsw-alias-label-secondary);
 }
 
+.toolCallChildren {
+  margin-left: 24px;
+  padding-left: 16px;
+  border-left: 1px solid var(--dsw-alias-border-l2);
+}
+
+.toolCallChildren > :first-child {
+  border-top: 1px solid var(--dsw-alias-border-l2);
+}
+
 .readOnly,
 .failed {
   margin: 0 0 8px;

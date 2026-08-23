@@ -242,7 +242,7 @@ describe('agent loop', () => {
 
     send(agent, 'answer this')
     await agent.whenIdle()
-    disposeAgentPresetLookup()
+    void disposeAgentPresetLookup()
 
     expect(compaction.calls).toBe(1)
     expect(compaction.statuses).toEqual(['idle'])
@@ -390,9 +390,54 @@ describe('agent loop', () => {
     expect(executions).toBe(0)
     expect(adapter.requests[1]?.messages.at(-1)).toMatchObject({
       role: 'user',
-      content: [{ type: 'text', text: '<continue>' }],
+      content: [{
+        type: 'text',
+        text: 'You have repeated 32 tokens. This might be not an issue but a restriction. Please restart the tool call in another way.',
+      }],
     })
   })
+
+  it('uses an independent limit for consecutive tool-call loop detections', async () => {
+    const repeated = Array.from({ length: 4 }, () => repeatedToolCallResponse())
+    const adapter = new MockAdapter([...repeated, textResponse('recovered')])
+    const ctx = await harness(adapter)
+    const agent = ctx.agentLoop.create(SessionId('llm-loop-tool-call-limit'), {
+      provider: 'mock',
+      model: 'mock',
+      loopDetection: {
+        enabled: true,
+        minTokens: 5,
+        includeLoop: false,
+        detectOnText: false,
+        detectOnReasoning: false,
+        detectOnToolCall: true,
+        maxToolCallDetections: 5,
+      },
+    })
+    const errors: unknown[] = []
+    ctx.on('agent/error', ({ agent: subject, error }) => {
+      if (subject === agent) errors.push(error)
+    })
+
+    send(agent, 'answer this')
+    await waitForIdle(ctx, agent)
+
+    expect(errors).toHaveLength(0)
+    expect(adapter.requests).toHaveLength(5)
+  })
+
+  it.each([0, -1, 1.5, Number.NaN, Number.MAX_SAFE_INTEGER + 1])(
+    'rejects invalid loopDetection.maxToolCallDetections %s before publication',
+    async (maxToolCallDetections) => {
+      const ctx = await harness(new MockAdapter([]))
+      expect(() => ctx.agentLoop.create(
+        SessionId('invalid-tool-call-loop-limit'),
+        { provider: 'mock', model: 'mock', loopDetection: { maxToolCallDetections } },
+      )).toThrow('agent loopDetection.maxToolCallDetections must be a positive safe integer')
+      expect(ctx.agents.list()).toEqual([])
+      expect(ctx.sessions.list()).toEqual([])
+    },
+  )
 
   it('keeps detection disabled by default', async () => {
     const repeated = 'a b c d e a b c d e a b c d e'
