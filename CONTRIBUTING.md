@@ -1,21 +1,40 @@
-# Contributing
+# Contributing to Little Whale
 
-Thank you for your interest in contributing to Little Whale!
+Little Whale is an agentic coding assistant focused on small, locally hosted language models. Useful contributions are those that improve local-provider compatibility, efficiency, reliability, documentation, testing, or interoperability with the DeepSeek Harness plugin ecosystem.
 
-We deeply believe in the power of open source communities, and that belief has shaped this project from the very beginning.
+## Current contribution model
 
-Little Whale is still at an early stage and under active development. We are sorry that we cannot accept external pull requests at the moment. However, contributing code to this repository is far from the only way to help. There are many other ways to get involved:
+The project is in an early, tightly coordinated stage and is not currently accepting unsolicited external code contributions. This keeps architectural and compatibility decisions coherent while the core product boundaries are still changing.
 
-- Identify and report issues or bugs in GitHub Discussions:
-  - Upvote discussions that you would like to bring to the team's attention. We are a very small team and may not be able to reply to every post, but we monitor them and consider them when allocating resources.
-- Contribute to the ecosystem:
-  - Create a plugin that excites you and share it with others:
-    - Associate your GitHub project with the `dsh-plugin` topic to help others discover your plugin.
-  - Write blog posts and how-to guides about Little Whale.
-  - Answer questions and help other members of the community.
+You can still make a meaningful contribution:
 
-Little Whale is designed to be deeply customizable. We do not believe that packages in this repository are inherently more important than packages created by the community. You may consider this repository an idea, a showcase, and a source of inspiration, but not a mandate from us.
+- Report reproducible bugs.
+- Propose improvements and describe the local model or inference server involved.
+- Share compatibility results for DeepSeek Harness plugins and extensions.
+- Publish independent plugins using the retained Cordis extension model.
+- Improve examples, guides, or troubleshooting information through an issue or discussion.
+- Help other users reproduce and diagnose local-model behaviour.
 
-We have already seen exciting projects emerge from the community, and we hope to see the ecosystem continue to grow in its own directions.
+## Reporting a problem
 
-Into the unknown.
+Include:
+
+- Little Whale revision or version.
+- Operating system and Node.js version.
+- Local inference server and version.
+- Model name, quantisation, and context configuration when relevant.
+- Exact reproduction steps.
+- Expected and observed behaviour.
+- Sanitised logs with credentials, tokens, local paths, and private source removed.
+
+## Plugin compatibility
+
+When reporting a DeepSeek Harness plugin compatibility problem, identify the plugin version, the upstream interface it expects, and whether the affected package is mirrored, adapted, or replaced by Little Whale. See [`UPSTREAM.md`](UPSTREAM.md) for the compatibility policy.
+
+## Documentation and language
+
+All project documentation, source comments, test descriptions, configuration help, and agent instructions are written in English. User and model content remains fully Unicode-capable.
+
+## Security and credentials
+
+Never include API keys, authorization headers, private repository content, or sensitive prompts in issues, logs, examples, or screenshots.
