@@ -20,5 +20,5 @@ export function LittleWhaleHeroMark({ size, className }: HeroBrandMarkOwnerProps
 
 /** The supplied text-only artwork for the expanded sidebar wordmark. */
 export function LittleWhaleName(_props: SidebarBrandNameOwnerProps) {
-  return <img src="/little-whale-text.png" width={164} height={48} style={imageStyle} alt="Little Whale" />
+  return <img src="/little-whale-text.png" width={82} height={24} style={imageStyle} alt="Little Whale" />
 }

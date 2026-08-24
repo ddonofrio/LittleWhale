@@ -147,9 +147,7 @@
   display: inline-flex;
   align-items: center;
   gap: 6px;
-  /* The slot wrapper keeps an upstream leading seat; cancel it for the
-     supplied wordmark so it sits directly beside the whale. */
-  margin-left: -32px;
+  margin-left: 0;
   min-width: 0;
   height: 48px;
   font-size: 36px;
