@@ -6,7 +6,7 @@ Source: [`packages/plan/plan-mode/src/index.ts`](../../packages/plan/plan-mode/s
 
 ## Logged state and recovery
 
-`plan/mode` (`{ active: boolean }`) is a log-only, whole-value-replace [session event](session.md): durable and replayable, never in the model transcript. `foldPlanMode(events, end?)` returns the last logged value in the prefix, or `false` when there is none — the state in force is always a pure fold of the session log, so resume, fork, and compaction recover it with no live mirror, and UIs observe committed flips through `session/event`. The complete event declaration is in the [persistence log event catalog](../persistence-catalog.md).
+`plan/mode` (`{ active: boolean }`) is a log-only, whole-value-replace [session event](session.md): durable and replayable, never in the model transcript. `foldPlanMode(events, end?)` returns the last logged value in the prefix, or the active default when there is none — the state in force is always a pure fold of the session log, so new sessions start in plan mode and resume, fork, and compaction recover later changes with no live mirror. UIs observe committed flips through `session/event`. The complete event declaration is in the [persistence log event catalog](../persistence-catalog.md).
 
 ## Pending selections and the pre-step append
 

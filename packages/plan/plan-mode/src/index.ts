@@ -48,7 +48,7 @@ declare module '@deepseek-ai/dsh-session/types' {
     /**
      * Whether plan mode is in force from this point on: log-only, non-surface,
      * whole-value replace. The last `plan/mode` wins; a log with none folds to
-     * inactive through {@link foldPlanMode}.
+     * the active default through {@link foldPlanMode}.
      */
     'plan/mode': { active: boolean }
   }
@@ -80,6 +80,9 @@ const APPROVE_LABEL = 'Approve'
 
 /** The review question's keep-planning option label. */
 const KEEP_PLANNING_LABEL = 'Keep planning'
+
+/** New sessions start in plan mode until an explicit mode event changes it. */
+const DEFAULT_PLAN_MODE_ACTIVE = true
 
 const EXIT_DESCRIPTION
   = 'Use only in plan mode. Present your plan for the user\'s review and, on approval, leave plan mode. '
@@ -120,14 +123,14 @@ export function resolveConfig(config: PlanModeConfig): PlanModeConfig {
 
 /**
  * Whether plan mode is active after the first `end` events. The last
- * `plan/mode` wins; a prefix with none is inactive.
+ * `plan/mode` wins; a prefix with none uses the active default.
  *
  * @param events The session log or any prefix of it.
  * @param end Fold `events[0, end)`; defaults to the whole log.
  * @returns Whether plan mode is active.
  */
 export function foldPlanMode(events: readonly SessionEvent[], end = events.length): boolean {
-  let active = false
+  let active = DEFAULT_PLAN_MODE_ACTIVE
   let index = 0
   for (const event of events) {
     if (index >= end) break
@@ -262,7 +265,7 @@ export class PlanModeController extends Service {
       projectionCtx.sessionProjections.register<'plan', PlanUnitState>({
         key: 'plan',
         stateSchema: planUnitStateSchema,
-        init: () => ({ active: false, wanted: null, running: null }),
+        init: () => ({ active: DEFAULT_PLAN_MODE_ACTIVE, wanted: null, running: null }),
         apply: (state, event) => {
           if (event.type === 'command/run' && event.data.name === 'plan') {
             if (event.data.args === undefined) return state
@@ -502,7 +505,7 @@ export class PlanModeController extends Service {
     if (told === undefined || told === target) return
     const text = target
       ? 'The user switched this session to plan mode.'
-      : 'The user switched this session back to the default mode.'
+      : 'The user switched this session out of plan mode.'
     return createUserMessage({
       content: [{ type: 'text', text }],
       // The narration is already one sentence, so it is its own summary.

@@ -71,6 +71,7 @@ describe('plan mode through the agent loop', () => {
     ])
     const ctx = await harness(adapter)
     const agent = ctx.agentLoop.create(SessionId('it-plan-seed'), { provider: 'mock', model: 'mock' })
+    agent.session.append('plan/mode', { active: false })
     // Selected while idle: the mode commits immediately, before the first assembly.
     ctx.planMode.set(agent, true)
 
@@ -78,7 +79,7 @@ describe('plan mode through the agent loop', () => {
     await waitForIdle(ctx, agent)
 
     const log = agent.session.events
-    const planMode = findEvent(log, 'plan/mode')
+    const planMode = findEvent(log, 'plan/mode', 'last')
     const header = findEvent(log, 'request/header')
     expect(planMode.seq).toBeLessThan(header.seq)
     expect(header.data.reason).toBe('initial')
@@ -101,6 +102,7 @@ describe('plan mode through the agent loop', () => {
     ])
     const ctx = await harness(adapter)
     const agent = ctx.agentLoop.create(SessionId('it-plan-flip'), { provider: 'mock', model: 'mock' })
+    agent.session.append('plan/mode', { active: false })
 
     agent.followup(createUserMessage({ content: [{ type: 'text', text: 'hello' }], source: { kind: 'user' } }))
     await waitForIdle(ctx, agent)
@@ -139,6 +141,7 @@ describe('plan mode through the agent loop', () => {
     ])
     const ctx = await harness(adapter)
     const agent = ctx.agentLoop.create(SessionId('it-plan-retry-flip'), { provider: 'mock', model: 'mock' })
+    agent.session.append('plan/mode', { active: false })
     ctx.on('agent/request-error', async ({ agent: subject }, next) => {
       if (subject !== agent) return next()
       ctx.planMode.set(agent, true)
@@ -154,7 +157,7 @@ describe('plan mode through the agent loop', () => {
     expect(adapter.requests[1]?.system).not.toContain(PLAN_CONFIG.section)
     expect(adapter.requests[1]?.tools).toEqual(adapter.requests[0]?.tools)
     expect(ctx.planMode.get(agent)).toEqual({ active: false, pending: true })
-    expect(agent.session.events.some(event => event.type === 'plan/mode')).toBe(false)
+    expect(agent.session.events.filter(event => event.type === 'plan/mode')).toHaveLength(1)
 
     const nextIdle = waitForIdle(ctx, agent)
     agent.followup(createUserMessage({ content: [{ type: 'text', text: 'continue with the plan' }], source: { kind: 'user' } }))
@@ -164,7 +167,7 @@ describe('plan mode through the agent loop', () => {
     expect(adapter.requests[2]?.system).toContain(PLAN_CONFIG.section)
     expect(adapter.requests[2]?.tools).toEqual(adapter.requests[0]?.tools)
     const log = agent.session.events
-    const planMode = findEvent(log, 'plan/mode')
+    const planMode = findEvent(log, 'plan/mode', 'last')
     const firstEnd = log.find(event => event.type === 'step/end'
       && event.data.turn === 1 && event.data.step === 1)
     const nextStart = log.find(event => event.type === 'step/start'

@@ -28,7 +28,7 @@ const PLAN_CONFIG = { section: TEST_PLAN_SECTION } satisfies PlanModeConfig
 async function agentWithSession(
   ctx: Context,
   id = 'agent-1',
-  { active, owner }: { active?: boolean; owner?: Agent } = {},
+  { active = false, owner, seed = true }: { active?: boolean; owner?: Agent; seed?: boolean } = {},
 ): Promise<Agent & { session: Session }> {
   // A live store session when a store is mounted (the command executor logs
   // lifecycle events through it); bare otherwise (fold/tool-only benches).
@@ -46,8 +46,9 @@ async function agentWithSession(
     inject: ['tools'],
   }))
   ;(agent as { ctx?: Context }).ctx = scoped
-  // Seeded plan state lands before the creation announcement, matching resume.
-  if (active !== undefined) session.append('plan/mode', { active })
+  // Most benches need an explicit inactive state; the new-session bench opts
+  // out of seeding to exercise a truly new session.
+  if (seed && active !== undefined) session.append('plan/mode', { active })
   // The loop publishes through the live registry when it is composed; narrow
   // fold-only benches retain the direct lifecycle event used before it exists.
   const agents = ctx.get('agents')
@@ -176,9 +177,9 @@ describe('resolveConfig', () => {
 })
 
 describe('foldPlanMode', () => {
-  it('folds an empty log to inactive and takes the last plan/mode otherwise', () => {
+  it('folds an empty log to the active default and takes the last plan/mode otherwise', () => {
     const session = Session.create(SessionId('fold'))
-    expect(foldPlanMode(session.events)).toBe(false)
+    expect(foldPlanMode(session.events)).toBe(true)
     session.append('plan/mode', { active: true })
     session.append('plan/mode', { active: false })
     session.append('plan/mode', { active: true })
@@ -190,7 +191,7 @@ describe('foldPlanMode', () => {
     session.append('plan/mode', { active: true })
     session.append('plan/mode', { active: false })
     expect(foldPlanMode(session.events, 1)).toBe(true)
-    expect(foldPlanMode(session.events, 0)).toBe(false)
+    expect(foldPlanMode(session.events, 0)).toBe(true)
   })
 })
 
@@ -200,6 +201,12 @@ describe('ctx.planMode: get/set', () => {
     const agent = await agentWithSession(ctx)
     expect(ctx.planMode.get(agent)).toEqual({ active: false })
     agent.session.append('plan/mode', { active: true })
+    expect(ctx.planMode.get(agent)).toEqual({ active: true })
+  })
+
+  it('starts an unlogged session in plan mode', async () => {
+    const ctx = await setup()
+    const agent = await agentWithSession(ctx, 'agent-default', { seed: false })
     expect(ctx.planMode.get(agent)).toEqual({ active: true })
   })
 
@@ -234,7 +241,7 @@ describe('ctx.planMode: get/set', () => {
     expect(foldPlanMode(agent.session.events)).toBe(false)
     // A later boundary finds nothing pending — no double append.
     await boundary(ctx, agent, 'step-start')
-    expect(agent.session.events.filter(event => event.type === 'plan/mode')).toHaveLength(2)
+    expect(agent.session.events.filter(event => event.type === 'plan/mode')).toHaveLength(3)
   })
 
   it('a between-turns reversal of a mid-turn pending intent cancels without logging', async () => {
@@ -243,9 +250,9 @@ describe('ctx.planMode: get/set', () => {
     openTurn(agent.session)
     expect(ctx.planMode.set(agent, true)).toBe('queued')
     closeTurn(agent.session)
-    // Back to the logged state: the pending intent clears, nothing lands.
+    // Back to the logged state: the pending intent clears without a new record.
     expect(ctx.planMode.set(agent, false)).toBe('cancelled')
-    expect(agent.session.events.some(event => event.type === 'plan/mode')).toBe(false)
+    expect(agent.session.events.filter(event => event.type === 'plan/mode')).toHaveLength(1)
     expect(ctx.planMode.get(agent)).toEqual({ active: false })
   })
 
@@ -265,7 +272,7 @@ describe('the boundary flush', () => {
     const service = ctx.planMode as unknown as { onBoundary(session: Session): void }
 
     expect(() => { service.onBoundary(agent.session) }).not.toThrow()
-    expect(agent.session.events.some(event => event.type === 'plan/mode')).toBe(false)
+    expect(agent.session.events.filter(event => event.type === 'plan/mode')).toHaveLength(1)
   })
 
   it('flushes from pre-step before the following step/start', async () => {
@@ -288,7 +295,7 @@ describe('the boundary flush', () => {
     ctx.planMode.set(agent, true)
     await fiber.dispose()
     await boundary(ctx, agent, 'pre-step')
-    expect(agent.session.events.some(event => event.type === 'plan/mode')).toBe(false)
+    expect(agent.session.events.filter(event => event.type === 'plan/mode')).toHaveLength(1)
   })
 
   it('flushes at the between-step seam too', async () => {
@@ -307,7 +314,7 @@ describe('the boundary flush', () => {
     ctx.planMode.set(agent, true)
     ctx.planMode.set(agent, false)
     await boundary(ctx, agent, 'pre-step')
-    expect(agent.session.events.some(event => event.type === 'plan/mode')).toBe(false)
+    expect(agent.session.events.filter(event => event.type === 'plan/mode')).toHaveLength(1)
     expect(noticeTexts(agent.session)).toEqual([])
   })
 
@@ -330,14 +337,14 @@ describe('the boundary flush', () => {
     expect(noticeTexts(agent.session)).toEqual(['The user switched this session to plan mode.'])
   })
 
-  it('narrates a switch back to the default mode with the default wording', async () => {
+  it('narrates a switch out of plan mode with the corresponding wording', async () => {
     const ctx = await setup()
     const agent = await agentWithSession(ctx)
     agent.session.append('plan/mode', { active: true })
     header(agent.session)
     ctx.planMode.set(agent, false)
     await boundary(ctx, agent, 'step-start')
-    expect(noticeTexts(agent.session)).toEqual(['The user switched this session back to the default mode.'])
+    expect(noticeTexts(agent.session)).toEqual(['The user switched this session out of plan mode.'])
   })
 
   it('stays silent when the header already reflects the flushed mode', async () => {
@@ -615,7 +622,7 @@ describe('/plan', () => {
     expect(enteringSteer).not.toHaveBeenCalled()
     await boundary(ctx, entering, 'step-start')
     expect(ctx.planMode.get(entering)).toEqual({ active: false })
-    expect(entering.session.events.some(event => event.type === 'plan/mode')).toBe(false)
+    expect(entering.session.events.filter(event => event.type === 'plan/mode')).toHaveLength(1)
 
     const active = await agentWithSession(ctx, 'active-plan-command', { active: true })
     openTurn(active.session)
@@ -1114,6 +1121,6 @@ describe('HMR disposal', () => {
     expect(ctx.tools.get(EXIT_PLAN_MODE)).toBeUndefined()
     expect((await ctx.systemPrompt.assemble()).sections.map(section => section.name)).not.toContain('plan:policy')
     await boundary(ctx, agent, 'step-start')
-    expect(agent.session.events.some(event => event.type === 'plan/mode')).toBe(false)
+    expect(agent.session.events.filter(event => event.type === 'plan/mode')).toHaveLength(1)
   })
 })

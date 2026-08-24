@@ -751,7 +751,9 @@ function viewFor(event: SessionEvent, log: readonly SessionEvent[]): ToolEventVi
  * fixture's step/start parallel).
  */
 function foldPlan(log: readonly SessionEvent[]): { active: boolean; pending: boolean; wanted: boolean | null } {
-  let active = false
+  // Keep the standalone client fixture aligned with the host plan projection:
+  // an unlogged session starts in plan mode until an explicit `plan/mode` event.
+  let active = true
   let wanted: boolean | null = null
   let running: { commandId: unknown; wanted: boolean } | null = null
   for (const event of log) {

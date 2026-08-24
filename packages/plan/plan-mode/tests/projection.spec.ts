@@ -29,7 +29,7 @@ interface Bench {
   values(): Record<string, unknown>
 }
 
-async function harness(withPlanMode: boolean): Promise<Bench> {
+async function harness(withPlanMode: boolean, initialActive: boolean | null = false): Promise<Bench> {
   const ctx = new Context()
   await ctx.plugin(SessionStore)
   await ctx.plugin(SystemPrompt, { persona: '' })
@@ -39,6 +39,7 @@ async function harness(withPlanMode: boolean): Promise<Bench> {
   await ctx.plugin(SessionProjectionRegistry)
   if (withPlanMode) await ctx.plugin(PlanModeController, { section: 'plan policy' })
   const session = ctx.sessions.create()
+  if (initialActive !== null) session.append('plan/mode', { active: initialActive })
   ctx.agents.register({ id: session.id, session, status: 'idle', ctx } as Agent)
   return {
     ctx,
@@ -72,9 +73,9 @@ function commitPlanMode(session: Session, active: boolean, turn: number): void {
 }
 
 describe('plan projection unit', () => {
-  it('serves inactive/not-pending for the empty log', async () => {
-    const bench = await harness(true)
-    expect(bench.values()).toEqual({ plan: { active: false, pending: false } })
+  it('serves the active default/not-pending for the empty log', async () => {
+    const bench = await harness(true, null)
+    expect(bench.values()).toEqual({ plan: { active: true, pending: false } })
   })
 
   it('a logged /plan selection reads pending until plan/mode records it', async () => {
