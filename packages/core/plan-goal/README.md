@@ -2,9 +2,9 @@
 
 The plan-goal core module turns every direct user request into a durable goal before the request reaches the current agent.
 
-For every request, the module makes a separate tools-free `ctx.llm.stream()` call with the clean, user-visible conversation transcript used by `completion_check` plus the newly claimed request. The system prompt explicitly forbids execution, investigation, workspace access, and tool calls. It requires one concise plain-text paragraph describing the main agent’s intended response or action rather than copying a short or conversational request, including for greetings or other requests that only need a reply. The returned text is persisted through `ctx.goals`, using the same create/edit domain operations as `/goal`.
+For every request, the module makes a separate `ctx.llm.stream()` call with the clean, user-visible conversation transcript used by `completion_check` plus the newly claimed request. The planner has one synthetic `emit_goal` result tool and must call it exactly once with `goal` and `source_excerpt`; it cannot return free-form text. The result is validated locally: `goal` must be one user story, `source_excerpt` must be an exact substring of the latest request, and prompt-wrapper text is rejected. The validated `goal` is persisted through `ctx.goals`, using the same create/edit domain operations as `/goal`.
 
-The planner is skipped for nested agents, plugin messages, and disabled configurations. For enabled direct requests, the parent request is admitted only after the planner returns a valid goal. If the route or auxiliary call is unavailable, fails, times out, returns no text, reaches the model output limit, or emits a tool call, the turn fails and the parent request is not sent.
+The planner is skipped for nested agents, plugin messages, and disabled configurations. For enabled direct requests, the parent request is admitted only after the planner returns one valid `emit_goal` call. A malformed structured result is sent back to the same planner as validator feedback and retried up to ten times after the initial attempt; the validation diagnostic stays inside the auxiliary exchange. If the route or auxiliary call is unavailable, fails, times out, reaches the model output limit, or all eleven attempts remain invalid, the turn fails with a generic resolution error and the parent request is not sent.
 
 ## Configuration
 
@@ -24,7 +24,7 @@ The `enabled` value is also exposed as the `plan-goal` General setting. It defau
 
 #### What the model sees
 
-The main agent does not see a planner tool. Before the step is admitted, the auxiliary call receives no tools and uses `purpose: 'goal'`. It inherits the selected model's maximum output budget and reasoning policy, so it can reason before returning one concise goal. Its text-only result is normalized and becomes the text of the latest user message, with the user source preserved; non-text content such as images remains attached. The goal domain and its existing continuation driver are updated with the same text. The parent request is never started without that result.
+The main agent does not see the planner tool. Before the step is admitted, the auxiliary call receives only the synthetic `emit_goal` result tool and uses `purpose: 'goal'`. It inherits the selected model's maximum output budget and reasoning policy. Its tool arguments are validated before the original user message is admitted unchanged and a separate plugin-sourced notice is appended: `SYSTEM: Just created the goal: <goal>` followed by `PLEASE STICK TO YOUR GOAL.` Non-text content such as images remains attached to the original request. The goal domain and its existing continuation driver are updated with the same validated text. The parent request is never started without that result.
 
 #### Token effect
 
