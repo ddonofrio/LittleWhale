@@ -22,12 +22,20 @@ export type PluginsSettingsLocaleKey =
   | 'tokenLimitHandlerCustomPrompt' | 'tokenLimitHandlerCustomPromptHint'
   | 'completionCheckerTitle' | 'completionCheckerDescription' | 'completionCheckerEnabled'
   | 'completionCheckerOn' | 'completionCheckerOff'
+  | 'planGoalTitle' | 'planGoalDescription' | 'planGoalEnabled'
+  | 'planModeStartupTitle' | 'planModeStartupDescription' | 'planModeStartupEnabled'
   | 'webSearchTitle' | 'webSearchDescription'
   | 'webSearchApiKey' | 'webSearchApiKeyHint' | 'webSearchApiKeySet' | 'webSearchApiKeyUnset'
   | 'webSearchBaseUrl' | 'webSearchBaseUrlHint' | 'webSearchMaxUses' | 'webSearchMaxUsesHint'
 
 /** English copy. */
 export const en: Record<PluginsSettingsLocaleKey, string> = {
+  planGoalTitle: 'Automatic goal assignment',
+  planGoalDescription: 'Have a separate agent define and update the current goal for each user request.',
+  planGoalEnabled: 'Automatically assign goals',
+  planModeStartupTitle: 'Plan mode for new chats',
+  planModeStartupDescription: 'Start each new chat in plan mode; you can still leave it with /plan off.',
+  planModeStartupEnabled: 'Start new chats in plan mode',
   completionCheckerTitle: 'Double-check results',
   completionCheckerDescription: 'Ask a second agent to verify that the request is fully complete before stopping.',
   completionCheckerEnabled: 'Double-check results',
@@ -115,6 +123,12 @@ export const en: Record<PluginsSettingsLocaleKey, string> = {
 
 /** Simplified Chinese copy. */
 export const zh: Record<PluginsSettingsLocaleKey, string> = {
+  planGoalTitle: '自动分配目标',
+  planGoalDescription: '让独立代理为每个用户请求定义并更新当前目标。',
+  planGoalEnabled: '自动分配目标',
+  planModeStartupTitle: '新聊天的计划模式',
+  planModeStartupDescription: '让每个新聊天以计划模式开始；仍可使用 /plan off 退出。',
+  planModeStartupEnabled: '新聊天启用计划模式',
   loopDetectionDetectOnTextHint: 'Detect repeated text in model responses.',
   loopDetectionDetectOnReasoningHint: 'Detect repeated reasoning content in model responses.',
   loopDetectionDetectOnToolCallHint: 'Detect repeated tool calls before they execute.',

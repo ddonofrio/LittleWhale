@@ -11,7 +11,7 @@ Write enough to preserve the contract, then remove reasoning transcripts, repeti
 
 Require an explicit `scope`. If it is missing, report the required input and stop; do not infer a repository-wide scope. Accept `mode: automatic | interactive`; default to `automatic`. Review and audit tasks report findings without editing; explicitly requested write, fix, or trim tasks may edit.
 
-Always exclude `vendor/` and `.agents/notes/archived/` from discovery, review, and edits. Treat generated catalogs, snapshots, and fixtures as derivative: edit their owner or scenario first, then regenerate.
+Always exclude `vendor/` from discovery, review, and edits. Treat generated catalogs, snapshots, and fixtures as derivative: edit their owner or scenario first, then regenerate.
 
 Canonical repository prose is English-only. Do not add translated counterparts, locale switchers, or translation sidecars. User and model content is data, not product copy; preserve its Unicode behavior and tests.
 
@@ -28,7 +28,6 @@ Keep a complete local contract at the point of use. Link to the owning document 
 - Tests explain only non-obvious fixture or assertion design.
 - Cookbooks include prerequisites, required actions, the real entry path, observable verification, and concise warnings.
 - READMEs include configuration, semantics, failures, limitations, extension points, and model-visible effects.
-- Agent Notes retain unique rationale, alternatives, consequences, verification evidence, and named coverage gaps.
 - Skills and agent instructions state behavioral guardrails and explicit scope limitations.
 - Prompts and visible strings are behavior; inspect generated output and run behavior validation.
 - Diagnostics name the failing subject, violated rule, and correction when non-obvious.

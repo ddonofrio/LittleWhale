@@ -11,14 +11,13 @@ import { existsSync, readFileSync } from 'node:fs'
 import { dirname, relative, resolve } from 'node:path'
 import type { Nodes } from 'mdast'
 import { markdownHeadingLines, parseMarkdown, visitMarkdown } from './markdown.ts'
-import { isArchivedAgentNotePath, uniqueRepoFiles } from './repo-files.ts'
+import { uniqueRepoFiles } from './repo-files.ts'
 
 const root = resolve(import.meta.dirname, '..')
 
 /** Repo-authored Markdown checked for relative links. */
 const PATTERNS = [
   'README.md',
-  '.agents/notes/**/*.md',
   'docs/**/*.md',
   'packages/*/*.md',
   'packages/*/*/*.md',
@@ -176,8 +175,6 @@ export function findViolations(
     const target = pathPart(url)
     const resolved = target === '' ? absPath : resolve(dir, target)
     if (!existsSync(resolved)) {
-      const notesRoot = resolve(scanRoot, '.agents', 'notes')
-      if (!existsSync(notesRoot) && (resolved === notesRoot || resolved.startsWith(`${notesRoot}\\`) || resolved.startsWith(`${notesRoot}/`))) return
       out.push({ file, line: node.position?.start.line ?? 0, url, reason: 'target' })
       return
     }
@@ -198,8 +195,7 @@ export function findViolations(
 
 // Run only when invoked as a script, not when imported by the spec.
 if (process.argv[1] && import.meta.filename === resolve(process.argv[1])) {
-  // Archived notes remain valid link targets, but their historical outbound links are frozen.
-  const files = uniqueRepoFiles(root, PATTERNS, isArchivedAgentNotePath)
+  const files = uniqueRepoFiles(root, PATTERNS)
   const anchorsOf = anchorCache()
   const all = files.flatMap(file => findViolations(file.abs, anchorsOf))
   const checked = files.length

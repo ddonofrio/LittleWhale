@@ -31,7 +31,10 @@ const SIGNAL = new AbortController().signal
 const MODEL = 'test-model'
 
 class ContextAdapter extends LlmAdapter {
-  constructor(private readonly contextWindow: number) {
+  constructor(
+    private readonly contextWindow: number,
+    private readonly defaultMaxTokens?: number,
+  ) {
     super()
   }
 
@@ -41,6 +44,7 @@ class ContextAdapter extends LlmAdapter {
       id: model,
       name: model,
       context: { contextWindow: this.contextWindow },
+      ...this.defaultMaxTokens === undefined ? {} : { defaultMaxTokens: this.defaultMaxTokens },
     })
   }
 
@@ -69,11 +73,11 @@ class RoutedContextAdapter extends LlmAdapter {
   }
 }
 
-function createContext(contextWindow = 1_000): Context {
+function createContext(contextWindow = 1_000, defaultMaxTokens?: number): Context {
   const ctx = new Context()
   void new LlmRuntime(ctx)
   void new TokenMeter(ctx)
-  ctx.llm.registerAdapter([MODEL, 'actual', 'unlisted-provider'], new ContextAdapter(contextWindow))
+  ctx.llm.registerAdapter([MODEL, 'actual', 'unlisted-provider'], new ContextAdapter(contextWindow, defaultMaxTokens))
   return ctx
 }
 
@@ -621,6 +625,19 @@ describe('pressure measurement and retention', () => {
     expect(result).not.toBeNull()
     expect(result?.shadowedSeqs.length).toBeGreaterThan(2)
     expect(session.surface.nodes.length).toBeLessThan(8)
+  })
+
+  it('reserves the routed output limit before deciding input pressure', async () => {
+    const ctx = createContext(1_000, 400)
+    const compact = service({
+      auto: false,
+      thresholdRatio: 0.8,
+      retainTokens: 100,
+    }, ctx)
+    const session = conversation(3)
+    expect(ctx.tokenMeter.measure(session).totalTokens).toBeLessThan(800)
+
+    await expect(compactIfNeeded(compact, session)).resolves.not.toBeNull()
   })
 
   it('counts the durable routed request envelope without putting it on the surface', async () => {

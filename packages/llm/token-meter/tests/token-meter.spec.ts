@@ -149,6 +149,9 @@ describe('TokenMeter pricing', () => {
     }))
     expect(estimated).toBeGreaterThan(30)
     expect(service.estimateMessage(textMessage('abcd'))).toBe(9)
+    expect(service.estimateMessage(textMessage('你好你好'))).toBeGreaterThan(
+      service.estimateMessage(textMessage('abcd')),
+    )
   })
 
   it('returns a detached deeply immutable empty measurement', () => {

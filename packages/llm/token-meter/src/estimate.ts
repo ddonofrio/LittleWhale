@@ -1,5 +1,5 @@
 /**
- * Fixed-density heuristic token pricing shared by the meter service and the
+ * Conservative token pricing shared by the meter service and the
  * pure context-breakdown projection, so both surfaces price identical content
  * to identical numbers.
  *
@@ -9,8 +9,8 @@
 import type { ContentBlock, Message } from '@deepseek-ai/dsh-llm'
 import type { EpochHeader } from '@deepseek-ai/dsh-session'
 
-/** Fixed text-density estimate used until exact tokenization is needed. */
-const CHARS_PER_TOKEN = 4
+/** Conservative density for ASCII text whose tokenizer is unknown. */
+const ASCII_CHARS_PER_TOKEN = 4
 
 /** Per-block structural overhead for JSON framing and type tags. */
 const BLOCK_OVERHEAD = 4
@@ -19,7 +19,7 @@ const BLOCK_OVERHEAD = 4
 export const ROLE_OVERHEAD = 4
 
 /**
- * Price content blocks recursively under the fixed density heuristic.
+ * Price content blocks recursively under the conservative heuristic.
  * @param blocks - content blocks to price without mutation.
  * @returns heuristic tokens including per-block structural overhead.
  */
@@ -29,11 +29,11 @@ export function estimateContent(blocks: readonly ContentBlock[]): number {
     switch (block.type) {
       case 'text':
       case 'reasoning':
-        tokens += Math.ceil(block.text.length / CHARS_PER_TOKEN) + BLOCK_OVERHEAD
+        tokens += estimateText(block.text) + BLOCK_OVERHEAD
         break
       case 'tool-call':
-        tokens += Math.ceil(block.name.length / CHARS_PER_TOKEN)
-          + Math.ceil(block.arguments.length / CHARS_PER_TOKEN)
+        tokens += estimateText(block.name)
+          + estimateText(block.arguments)
           + BLOCK_OVERHEAD
         break
       case 'tool-result':
@@ -41,8 +41,8 @@ export function estimateContent(blocks: readonly ContentBlock[]): number {
         break
       default:
         // ContentBlockMap is merge-extensible; unknown blocks retain a
-        // conservative structural JSON price under the fixed heuristic.
-        tokens += BLOCK_OVERHEAD + Math.ceil(JSON.stringify(block).length / CHARS_PER_TOKEN)
+        // conservative structural JSON price under the shared heuristic.
+        tokens += BLOCK_OVERHEAD + estimateText(JSON.stringify(block))
     }
   }
   return tokens
@@ -51,7 +51,7 @@ export function estimateContent(blocks: readonly ContentBlock[]): number {
 /**
  * Heuristically price one model-visible message.
  * @param message - message to price without mutation.
- * @returns content and role-framing tokens under the fixed heuristic.
+ * @returns content and role-framing tokens under the conservative heuristic.
  */
 export function estimateMessage(message: Message): number {
   return estimateContent(message.content) + ROLE_OVERHEAD
@@ -64,7 +64,7 @@ export function estimateMessage(message: Message): number {
  */
 export function estimateSystemTokens(header: EpochHeader | undefined): number {
   if (header?.system === undefined) return 0
-  return Math.ceil(header.system.length / CHARS_PER_TOKEN) + ROLE_OVERHEAD
+  return estimateText(header.system) + ROLE_OVERHEAD
 }
 
 /**
@@ -74,7 +74,7 @@ export function estimateSystemTokens(header: EpochHeader | undefined): number {
  */
 export function estimateToolsTokens(header: EpochHeader | undefined): number {
   if (header?.tools === undefined || header.tools.length === 0) return 0
-  return Math.ceil(JSON.stringify(header.tools).length / CHARS_PER_TOKEN) + BLOCK_OVERHEAD
+  return estimateText(JSON.stringify(header.tools)) + BLOCK_OVERHEAD
 }
 
 /**
@@ -84,4 +84,21 @@ export function estimateToolsTokens(header: EpochHeader | undefined): number {
  */
 export function estimateHeader(header: EpochHeader | undefined): number {
   return estimateSystemTokens(header) + estimateToolsTokens(header)
+}
+
+/**
+ * Conservatively price text without assuming that all scripts share an ASCII
+ * tokenizer density. Non-ASCII code points each reserve one token because
+ * CJK, emoji, and mixed tool output can otherwise grow far faster than their
+ * UTF-16 length divided by a single global density suggests.
+ */
+function estimateText(text: string): number {
+  let ascii = 0
+  let nonAscii = 0
+  for (const codePoint of text) {
+    const value = codePoint.codePointAt(0)
+    if (value !== undefined && value <= 0x7f) ascii += 1
+    else nonAscii += 1
+  }
+  return Math.ceil(ascii / ASCII_CHARS_PER_TOKEN) + nonAscii
 }

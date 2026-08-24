@@ -7,6 +7,7 @@ import type { TokenUsage } from '@deepseek-ai/dsh-llm'
 import type { SessionEvent } from '@deepseek-ai/dsh-session'
 import type { ProjectionDefinition } from '@deepseek-ai/dsh-session-projection'
 import type { ContextPressureProjection, TokenUsageProjection } from './projection.ts'
+import { estimateHeader } from './estimate.ts'
 import { foldSurfaceProjection } from './surface-projection.ts'
 
 const zeroBuckets = (): TokenUsageProjection => ({
@@ -93,9 +94,15 @@ declare module '@deepseek-ai/dsh-session-projection/types' {
 
 /** The context-pressure state schema and source of its inferred type. */
 const contextPressureStateSchema = z.object({
+  route: z.object({
+    provider: z.string(),
+    model: z.string(),
+  }).optional(),
   contextWindow: z.number().int().positive().optional(),
   pressureTokens: z.number().int().nonnegative().optional(),
+  headerTokens: z.number().int().nonnegative(),
   surfaceTokens: z.number().int().nonnegative(),
+  sampledHeaderTokens: z.number().int().nonnegative().optional(),
   sampledSurfaceTokens: z.number().int().nonnegative().optional(),
   claim: z.object({
     start: z.number().int().nonnegative(),
@@ -153,34 +160,52 @@ export const tokenUsageProjectionDefinition = {
 /**
  * Token-meter's context-occupancy projection unit.
  *
- * Independent last-wins slots: the newest usage sample supplies the provider
- * numerator, the newest `request/context` record the denominator. Both are
- * whole values, so replay order alone decides the result and no cross-field
- * consistency is claimed — the pair is explicitly not one atomic request
- * observation (see {@link ContextPressureProjection}).
+ * The newest provider usage anchors prompt pressure. The fold prices system
+ * prompt and tool-schema changes as well as surface movement after that
+ * sample, so `projectedTokens` follows the next request's complete envelope.
+ * A routed model change clears the old sample rather than pairing it with a
+ * new capacity.
  *
  * `pressureTokens` is prompt-side only, so it holds still while a turn streams
  * and steps forward once the next request reports its usage. Because nothing
  * but a request reports usage, it also cannot see a compaction: the fold
- * therefore carries a running surface total alongside it and publishes
- * `projectedTokens` — the sample plus the surface's signed movement since it
- * was taken — so occupancy answers for the next request rather than the last
- * one. The total rides {@link foldSurfaceProjection}, so the state stays O(1)
- * and a replacement shrinks it by its logged shadow price. A replacement
- * without a claim preserves the previous total. A usage sample is stamped
- * BEFORE the same event joins the surface, so an `assistant/message` anchors
- * against the surface its own request saw.
+ * therefore carries running envelope and surface totals alongside it and
+ * publishes `projectedTokens` for the next request. The total rides
+ * {@link foldSurfaceProjection}, so the state stays O(1) and a replacement
+ * shrinks it by its logged shadow price. A replacement without a claim
+ * preserves the previous total. A usage sample is stamped BEFORE the same
+ * event joins the surface, so an `assistant/message` anchors against the
+ * surface its own request saw.
  */
 export const contextPressureProjectionDefinition = {
   key: 'contextPressure',
-  stateVersion: 4,
+  stateVersion: 5,
   stateSchema: contextPressureStateSchema,
-  init: () => ({ surfaceTokens: 0 }),
+  init: () => ({ headerTokens: 0, surfaceTokens: 0 }),
   apply: (state, event) => {
     const fold = foldSurfaceProjection(state.claim, event)
     let next = state
+    if (event.type === 'request/header') {
+      const headerTokens = estimateHeader(event.data.header)
+      if (headerTokens !== next.headerTokens) next = { ...next, headerTokens }
+    }
     if (event.type === 'request/context') {
       const contextWindow = event.data.contextWindow
+      const routeChanged = next.route === undefined
+        || next.route.provider !== event.data.provider
+        || next.route.model !== event.data.model
+      if (routeChanged) {
+        const {
+          pressureTokens: _pressureTokens,
+          sampledHeaderTokens: _sampledHeaderTokens,
+          sampledSurfaceTokens: _sampledSurfaceTokens,
+          ...withoutSample
+        } = next
+        next = withoutSample
+      }
+      if (routeChanged || next.route === undefined) {
+        next = { ...next, route: { provider: event.data.provider, model: event.data.model } }
+      }
       if (contextWindow !== state.contextWindow) {
         if (contextWindow !== undefined) {
           next = { ...next, contextWindow }
@@ -193,8 +218,15 @@ export const contextPressureProjectionDefinition = {
     const usage = usageOf(event)
     if (usage !== undefined) {
       const pressureTokens = pressureFrom(usage)
-      if (pressureTokens !== next.pressureTokens || next.sampledSurfaceTokens !== next.surfaceTokens) {
-        next = { ...next, pressureTokens, sampledSurfaceTokens: next.surfaceTokens }
+      if (pressureTokens !== next.pressureTokens
+        || next.sampledHeaderTokens !== next.headerTokens
+        || next.sampledSurfaceTokens !== next.surfaceTokens) {
+        next = {
+          ...next,
+          pressureTokens,
+          sampledHeaderTokens: next.headerTokens,
+          sampledSurfaceTokens: next.surfaceTokens,
+        }
       }
     }
     if (fold.deltaTokens !== 0) {
@@ -208,12 +240,21 @@ export const contextPressureProjectionDefinition = {
   },
   wire: {
     viewSchema: pressureSchema,
-    view: ({ contextWindow, pressureTokens, surfaceTokens, sampledSurfaceTokens }) => ({
+    view: ({
+      contextWindow, pressureTokens, headerTokens, surfaceTokens, sampledHeaderTokens, sampledSurfaceTokens,
+    }) => ({
       ...contextWindow === undefined ? {} : { contextWindow },
       ...pressureTokens === undefined ? {} : { pressureTokens },
-      ...pressureTokens === undefined || sampledSurfaceTokens === undefined
+      ...pressureTokens === undefined
+        || sampledHeaderTokens === undefined
+        || sampledSurfaceTokens === undefined
         ? {}
-        : { projectedTokens: Math.max(0, pressureTokens + surfaceTokens - sampledSurfaceTokens) },
+        : {
+          projectedTokens: Math.max(
+            0,
+            pressureTokens + headerTokens + surfaceTokens - sampledHeaderTokens - sampledSurfaceTokens,
+          ),
+        },
     }),
   },
 } satisfies ProjectionDefinition<'contextPressure', ContextPressureState>

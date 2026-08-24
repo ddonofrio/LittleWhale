@@ -152,6 +152,8 @@ flowchart LR
   cfg --> plugin_dsh_base_token_limit_handler
   plugin_dsh_base_completion_checker["completion-checker<br/>@deepseek-ai/dsh-completion-checker"]
   cfg --> plugin_dsh_base_completion_checker
+  plugin_dsh_base_plan_goal["plan-goal<br/>@ddonofrio/littlewhale-plan-goal"]
+  cfg --> plugin_dsh_base_plan_goal
   plugin_dsh_base_web["web<br/>@deepseek-ai/dsh-web"]
   cfg --> plugin_dsh_base_web
   plugin_dsh_base_web_search_deepseek["web-search-deepseek<br/>@deepseek-ai/dsh-web-search-deepseek"]
@@ -244,6 +246,7 @@ flowchart LR
 | `repeat-tool-reminder` | `@deepseek-ai/dsh-repeat-tool-reminder` |
 | `token-limit-handler` | `@deepseek-ai/dsh-token-limit-handler` |
 | `completion-checker` | `@deepseek-ai/dsh-completion-checker` |
+| `plan-goal` | `@ddonofrio/littlewhale-plan-goal` |
 | `web` | `@deepseek-ai/dsh-web` |
 | `web-search-deepseek` | `@deepseek-ai/dsh-web-search-deepseek` |
 | `tool-web` | `@deepseek-ai/dsh-tool-web` |

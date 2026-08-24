@@ -70,6 +70,31 @@ function conversationTarget(
   return { provider: agent.options.provider, model: agent.options.model }
 }
 
+/** Reserve the routed request's output budget before pricing its input. */
+function inputCapacity(
+  contextWindow: number,
+  defaultMaxTokens: number | undefined,
+  agent: Agent,
+  targetKey: string,
+): number {
+  const maxTokens = agent.session.requestHeader()?.config.maxTokens ?? defaultMaxTokens
+  if (maxTokens === undefined) return contextWindow
+  if (!Number.isSafeInteger(maxTokens) || maxTokens <= 0) {
+    throw new TargetPressureConfigError(
+      targetKey,
+      `compaction-basic: ${targetKey} resolved an invalid maxTokens value (${maxTokens})`,
+    )
+  }
+  const available = contextWindow - maxTokens
+  if (available <= 0) {
+    throw new TargetPressureConfigError(
+      targetKey,
+      `compaction-basic: ${targetKey} reserves ${maxTokens} output tokens in a ${contextWindow}-token context window; reduce maxTokens`,
+    )
+  }
+  return available
+}
+
 const thresholdRatioSchema = z.number()
 const retainRatioSchema = z.number()
 const retainTokensSchema = z.number().step(1).min(0)
@@ -291,7 +316,8 @@ export class BasicCompactionEngine extends CompactionEngine {
       return this.compactRegion(range.start, range.end, agent, signal)
     }
 
-    const context = (await this.ctx.llm.resolveModelInfo(target.provider, target.model, signal)).context
+    const modelInfo = await this.ctx.llm.resolveModelInfo(target.provider, target.model, signal)
+    const context = modelInfo.context
     assertNoActiveCompaction(agent.session, 'automatic pressure compaction')
     const targetKey = `${target.provider}/${target.model}`
     if (context === undefined) {
@@ -301,7 +327,10 @@ export class BasicCompactionEngine extends CompactionEngine {
         + 'configure contextWindow on that adapter model',
       )
     }
-    const spec = resolveCompactSpec(policy, context.contextWindow)
+    const spec = resolveCompactSpec(
+      policy,
+      inputCapacity(context.contextWindow, modelInfo.defaultMaxTokens, agent, targetKey),
+    )
     if (measurement.totalTokens < spec.thresholdTokens) return null
 
     // Once pressure qualifies, land the model-free pass before choosing a

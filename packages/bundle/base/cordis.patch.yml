@@ -265,6 +265,7 @@
     - id: plan-mode
       name: '@ddonofrio/littlewhale-plan-mode'
       config:
+        startInPlanMode: false
         section: |
               You are in plan mode. Stay in plan mode until exit_plan_mode succeeds or the user switches the session mode. Imperative language to implement changes means plan the implementation, not execute it. A user's conversational agreement — including an answer confirming something you asked — approves nothing and does not end plan mode; fold the confirmed decision into the plan and submit it through exit_plan_mode.
 
@@ -401,6 +402,12 @@
 
     - id: completion-checker
       name: '@deepseek-ai/dsh-completion-checker'
+      config:
+        enabled: true
+        provider: spawn
+
+    - id: plan-goal
+      name: '@ddonofrio/littlewhale-plan-goal'
       config:
         enabled: true
         provider: spawn

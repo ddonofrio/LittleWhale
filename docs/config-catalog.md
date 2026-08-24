@@ -36,6 +36,24 @@ export interface Config {
 
 Source: [`packages/core/system-prompt/src/index.ts:186`](../packages/core/system-prompt/src/index.ts)
 
+<a id="ddonofriolittlewhale-plan-goal"></a>
+
+## `@ddonofrio/littlewhale-plan-goal`
+
+Requires: `subagents` · `goals`
+
+```ts config-catalog
+/** Plugin configuration. */
+export interface Config {
+  /** Whether automatic goal assignment is enabled by default. */
+  enabled?: boolean
+  /** Registry name of the one-shot subagent provider. */
+  provider?: string
+}
+```
+
+Source: [`packages/core/plan-goal/src/index.ts:20`](../packages/core/plan-goal/src/index.ts)
+
 <a id="ddonofriolittlewhale-plan-mode"></a>
 
 ## `@ddonofrio/littlewhale-plan-mode`
@@ -47,10 +65,12 @@ Requires: `tools` · `systemPrompt`
 export interface PlanModeConfig {
   /** Guidance rendered as the `plan:policy` prompt section while plan mode is active. */
   section: string
+  /** Whether new chats start in plan mode when no user setting overrides it. */
+  startInPlanMode?: boolean
 }
 ```
 
-Source: [`packages/plan/plan-mode/src/index.ts:70`](../packages/plan/plan-mode/src/index.ts)
+Source: [`packages/plan/plan-mode/src/index.ts:73`](../packages/plan/plan-mode/src/index.ts)
 
 <a id="deepseek-aidsh-acp"></a>
 
@@ -533,9 +553,9 @@ export interface BasicCompactionConfig extends CompactionPolicyConfig {
 
 /** Policy fields shared by the default policy and exact model overrides. */
 export interface CompactionPolicyConfig {
-  /** Compact at this fraction of the model's context window. Defaults to `0.8`. */
+  /** Compact at this fraction of input capacity after reserving request output. Defaults to `0.8`. */
   thresholdRatio?: number
-  /** Recent context retained as a fraction of the model's window. Defaults to `0.16`. */
+  /** Recent context retained as a fraction of input capacity after reserving request output. Defaults to `0.16`. */
   retainRatio?: number
   /** Absolute recent-context budget; mutually exclusive with `retainRatio`. */
   retainTokens?: number

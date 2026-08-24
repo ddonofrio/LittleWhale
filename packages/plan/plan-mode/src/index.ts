@@ -7,11 +7,12 @@
  * state.
  *
  * The state in force is folded from the session log (`plan/mode`, last one
- * wins), so resume and fork restore it without a live mirror. User selections
- * remain pending until the next accepted in-turn pre-step. The service includes
- * the selected state in the proposed step assembly, then appends `plan/mode`
- * from `agent/pre-step` only when the step is accepted. Same-step request
- * retries reuse their assembly.
+ * wins), with the startup setting used before the first mode event. Resume and
+ * fork restore logged state without a live mirror. User selections remain
+ * pending until the next accepted in-turn pre-step. The service includes the
+ * selected state in the proposed step assembly, then appends `plan/mode` from
+ * `agent/pre-step` only when the step is accepted. Same-step request retries
+ * reuse their assembly.
  *
  * The exit tool remains registered while plan mode is inactive, so entering
  * or leaving plan mode changes only the prompt section, not the request tool
@@ -29,6 +30,8 @@ import type { ZodType } from 'zod'
 import type { Agent, PreStepDecision } from '@deepseek-ai/dsh-agent'
 import { createUserMessage } from '@deepseek-ai/dsh-llm'
 import type { Session, SessionEvent, UserMessage } from '@deepseek-ai/dsh-session'
+import { installSettingsSection, settingsNamespace } from '@deepseek-ai/dsh-settings'
+import z from '@deepseek-ai/schemastery'
 import { defineTool } from '@deepseek-ai/dsh-tools'
 import type {} from '@ddonofrio/littlewhale'
 import { UserQuestionError } from '@deepseek-ai/dsh-user-questions'
@@ -48,7 +51,7 @@ declare module '@deepseek-ai/dsh-session/types' {
     /**
      * Whether plan mode is in force from this point on: log-only, non-surface,
      * whole-value replace. The last `plan/mode` wins; a log with none folds to
-     * the active default through {@link foldPlanMode}.
+     * the configured startup default through {@link foldPlanMode}.
      */
     'plan/mode': { active: boolean }
   }
@@ -70,7 +73,26 @@ export const EXIT_PLAN_MODE = 'exit_plan_mode'
 export interface PlanModeConfig {
   /** Guidance rendered as the `plan:policy` prompt section while plan mode is active. */
   section: string
+  /** Whether new chats start in plan mode when no user setting overrides it. */
+  startInPlanMode?: boolean
 }
+
+/** User-selectable plan-mode startup settings. */
+export interface PlanModeSettings {
+  /** Whether a new chat starts in plan mode. */
+  startInPlanMode: boolean
+}
+
+/** Settings namespace exposed on the General settings surface. */
+export const PLAN_MODE_SETTINGS_NAMESPACE = settingsNamespace('plan-mode')
+
+/** Whether new chats start in plan mode when no user override exists. */
+export const DEFAULT_START_IN_PLAN_MODE = false
+
+/** Schema for the user-owned General settings section. */
+export const PLAN_MODE_SETTINGS_SCHEMA: z<PlanModeSettings> = z.object({
+  startInPlanMode: z.boolean().default(DEFAULT_START_IN_PLAN_MODE),
+})
 
 /** The review question's id, echoed in the answer this tool reads. */
 const REVIEW_ID = 'plan-review'
@@ -80,9 +102,6 @@ const APPROVE_LABEL = 'Approve'
 
 /** The review question's keep-planning option label. */
 const KEEP_PLANNING_LABEL = 'Keep planning'
-
-/** New sessions start in plan mode until an explicit mode event changes it. */
-const DEFAULT_PLAN_MODE_ACTIVE = true
 
 const EXIT_DESCRIPTION
   = 'Use only in plan mode. Present your plan for the user\'s review and, on approval, leave plan mode. '
@@ -106,7 +125,7 @@ function firstHeading(plan: string): string | undefined {
  * @param config Raw plugin config.
  * @returns A detached validated config.
  */
-export function resolveConfig(config: PlanModeConfig): PlanModeConfig {
+export function resolveConfig(config: PlanModeConfig): PlanModeConfig & { startInPlanMode: boolean } {
   const section = (config as Partial<PlanModeConfig>).section
   if (typeof section !== 'string') {
     throw new Error('PlanModeConfig needs a string `section`')
@@ -114,23 +133,32 @@ export function resolveConfig(config: PlanModeConfig): PlanModeConfig {
   if (section.trim() === '') {
     throw new Error('PlanModeConfig needs a non-empty `section`')
   }
-  const unknown = Object.keys(config).filter(key => key !== 'section')
-  if (unknown.length > 0) {
-    throw new Error(`PlanModeConfig has unknown key(s) ${unknown.join(', ')} — config is { section }`)
+  const startInPlanMode = (config as Partial<PlanModeConfig>).startInPlanMode ?? DEFAULT_START_IN_PLAN_MODE
+  if (typeof startInPlanMode !== 'boolean') {
+    throw new Error('PlanModeConfig needs a boolean `startInPlanMode`')
   }
-  return { section }
+  const unknown = Object.keys(config).filter(key => key !== 'section' && key !== 'startInPlanMode')
+  if (unknown.length > 0) {
+    throw new Error(`PlanModeConfig has unknown key(s) ${unknown.join(', ')} — config is { section, startInPlanMode? }`)
+  }
+  return { section, startInPlanMode }
 }
 
 /**
  * Whether plan mode is active after the first `end` events. The last
- * `plan/mode` wins; a prefix with none uses the active default.
+ * `plan/mode` wins; a prefix with none uses the supplied startup default.
  *
  * @param events The session log or any prefix of it.
  * @param end Fold `events[0, end)`; defaults to the whole log.
+ * @param defaultActive Whether an unlogged prefix starts in plan mode.
  * @returns Whether plan mode is active.
  */
-export function foldPlanMode(events: readonly SessionEvent[], end = events.length): boolean {
-  let active = DEFAULT_PLAN_MODE_ACTIVE
+export function foldPlanMode(
+  events: readonly SessionEvent[],
+  end = events.length,
+  defaultActive = DEFAULT_START_IN_PLAN_MODE,
+): boolean {
+  let active = defaultActive
   let index = 0
   for (const event of events) {
     if (index >= end) break
@@ -186,7 +214,7 @@ function hasOpenTurn(events: readonly SessionEvent[]): boolean {
 }
 
 /** Plan state at the last logged request header, or `undefined` before the first header. */
-function planModeAtLastHeader(events: readonly SessionEvent[]): boolean | undefined {
+function planModeAtLastHeader(events: readonly SessionEvent[], defaultActive: boolean): boolean | undefined {
   let lastHeader = -1
   let index = 0
   for (const event of events) {
@@ -194,7 +222,7 @@ function planModeAtLastHeader(events: readonly SessionEvent[]): boolean | undefi
     index++
   }
   if (lastHeader < 0) return undefined
-  return foldPlanMode(events, lastHeader + 1)
+  return foldPlanMode(events, lastHeader + 1, defaultActive)
 }
 
 /**
@@ -208,6 +236,9 @@ export class PlanModeController extends Service {
   /** Validated deployment-owned guidance. */
   private readonly section: string
 
+  /** Current new-chat preference, including the user settings layer. */
+  private startInPlanMode: () => boolean
+
   /**
    * Latest selection per session awaiting the next accepted in-turn pre-step.
    * `narrate` is true for user selections and false for the exit tool, whose
@@ -217,7 +248,15 @@ export class PlanModeController extends Service {
 
   constructor(ctx: Context, config: PlanModeConfig = { section: '' }) {
     super(ctx, 'planMode')
-    this.section = resolveConfig(config).section
+    const resolved = resolveConfig(config)
+    this.section = resolved.section
+    this.startInPlanMode = () => resolved.startInPlanMode
+    installSettingsSection(ctx, PLAN_MODE_SETTINGS_NAMESPACE, PLAN_MODE_SETTINGS_SCHEMA, {
+      startInPlanMode: resolved.startInPlanMode,
+    }, {
+      setSource: (current) => { this.startInPlanMode = () => current().startInPlanMode },
+      onChange: () => {},
+    })
     let disposed = false
     // Pre-step is outside Session.append publication, so it can append the
     // log-only mode event inside an open turn without re-entering the session.
@@ -249,7 +288,7 @@ export class PlanModeController extends Service {
       text: (context) => {
         if (context.agent === undefined) return ''
         const pending = this.pendingIntents.get(context.agent.session)
-        return (pending?.active ?? foldPlanMode(context.agent.session.events)) ? this.section : ''
+        return (pending?.active ?? this.fold(context.agent.session.events)) ? this.section : ''
       },
     })
 
@@ -265,7 +304,7 @@ export class PlanModeController extends Service {
       projectionCtx.sessionProjections.register<'plan', PlanUnitState>({
         key: 'plan',
         stateSchema: planUnitStateSchema,
-        init: () => ({ active: DEFAULT_PLAN_MODE_ACTIVE, wanted: null, running: null }),
+        init: () => ({ active: this.startInPlanMode(), wanted: null, running: null }),
         apply: (state, event) => {
           if (event.type === 'command/run' && event.data.name === 'plan') {
             if (event.data.args === undefined) return state
@@ -317,7 +356,7 @@ export class PlanModeController extends Service {
                 // Repeat the queued wording while an exit still awaits the
                 // next accepted pre-step; only a truly inactive session reads
                 // idempotent.
-                return foldPlanMode(agent.session.events)
+                return this.fold(agent.session.events)
                   ? { kind: 'success', text: 'Leaving plan mode (applies from the next step).' }
                   : { kind: 'success', text: 'Plan mode is already inactive.' }
             }
@@ -361,7 +400,7 @@ export class PlanModeController extends Service {
       execute: async (args, exec) => {
         const agent = exec.agent
         if (agent === undefined) throw new Error(`${EXIT_PLAN_MODE} requires a calling agent (no session to switch)`)
-        if (!foldPlanMode(agent.session.events)) {
+        if (!this.fold(agent.session.events)) {
           throw new Error(`${EXIT_PLAN_MODE} is only available in plan mode`)
         }
         if (!/^#\s+\S/.test(args.plan.trim())) {
@@ -441,7 +480,7 @@ export class PlanModeController extends Service {
    * @returns Current logged state plus a pending selection, when present.
    */
   get(agent: Agent): { active: boolean; pending?: boolean } {
-    const active = foldPlanMode(agent.session.events)
+    const active = this.fold(agent.session.events)
     const pending = this.pendingIntents.get(agent.session)
     return pending === undefined ? { active } : { active, pending: pending.active }
   }
@@ -465,15 +504,15 @@ export class PlanModeController extends Service {
   set(agent: Agent, active: boolean): 'committed' | 'queued' | 'cancelled' | 'noop' {
     const session = agent.session
     const pending = this.pendingIntents.get(session)
-    const target = pending?.active ?? foldPlanMode(session.events)
+    const target = pending?.active ?? this.fold(session.events)
     if (active === target) return 'noop'
     if (hasOpenTurn(session.events)) {
       this.pendingIntents.set(session, { active, narrate: true })
-      return foldPlanMode(session.events) === active ? 'cancelled' : 'queued'
+      return this.fold(session.events) === active ? 'cancelled' : 'queued'
     }
     // No open turn: commit now. Delete only after append succeeds so a
     // failed durable write leaves the selection retryable, not dropped.
-    if (active === foldPlanMode(session.events)) {
+    if (active === this.fold(session.events)) {
       this.pendingIntents.delete(session)
       return 'cancelled'
     }
@@ -489,7 +528,7 @@ export class PlanModeController extends Service {
     const pending = this.pendingIntents.get(session)
     if (pending === undefined) return
     const target = pending.active
-    if (target === foldPlanMode(session.events)) {
+    if (target === this.fold(session.events)) {
       this.pendingIntents.delete(session)
       return
     }
@@ -501,7 +540,7 @@ export class PlanModeController extends Service {
 
   /** Build a user-switch notice when the last logged header described the other mode. */
   private narration(session: Session, target: boolean): UserMessage | undefined {
-    const told = planModeAtLastHeader(session.events)
+    const told = planModeAtLastHeader(session.events, this.startInPlanMode())
     if (told === undefined || told === target) return
     const text = target
       ? 'The user switched this session to plan mode.'
@@ -511,6 +550,11 @@ export class PlanModeController extends Service {
       // The narration is already one sentence, so it is its own summary.
       source: { kind: 'plugin', plugin: 'plan-mode', form: 'notice', summary: text },
     })
+  }
+
+  /** Fold one session prefix using the current new-chat preference. */
+  private fold(events: readonly SessionEvent[], end = events.length): boolean {
+    return foldPlanMode(events, end, this.startInPlanMode())
   }
 }
 

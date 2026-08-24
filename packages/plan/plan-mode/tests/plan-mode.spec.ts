@@ -166,20 +166,22 @@ describe('resolveConfig', () => {
   it('returns a detached plan config', () => {
     const config = { section: TEST_PLAN_SECTION }
     const resolved = resolveConfig(config)
-    expect(resolved).toEqual(config)
+    expect(resolved).toEqual({ ...config, startInPlanMode: false })
     expect(resolved).not.toBe(config)
   })
 
   it('rejects fields outside the plan policy config', () => {
     expect(() => resolveConfig({ section: TEST_PLAN_SECTION, tools: ['read'] } as unknown as PlanModeConfig))
-      .toThrow('unknown key(s) tools — config is { section }')
+      .toThrow('unknown key(s) tools — config is { section, startInPlanMode? }')
+    expect(() => resolveConfig({ section: TEST_PLAN_SECTION, startInPlanMode: 'yes' } as unknown as PlanModeConfig))
+      .toThrow('needs a boolean `startInPlanMode`')
   })
 })
 
 describe('foldPlanMode', () => {
-  it('folds an empty log to the active default and takes the last plan/mode otherwise', () => {
+  it('folds an empty log to the inactive default and takes the last plan/mode otherwise', () => {
     const session = Session.create(SessionId('fold'))
-    expect(foldPlanMode(session.events)).toBe(true)
+    expect(foldPlanMode(session.events)).toBe(false)
     session.append('plan/mode', { active: true })
     session.append('plan/mode', { active: false })
     session.append('plan/mode', { active: true })
@@ -191,7 +193,8 @@ describe('foldPlanMode', () => {
     session.append('plan/mode', { active: true })
     session.append('plan/mode', { active: false })
     expect(foldPlanMode(session.events, 1)).toBe(true)
-    expect(foldPlanMode(session.events, 0)).toBe(true)
+    expect(foldPlanMode(session.events, 0)).toBe(false)
+    expect(foldPlanMode(session.events, 0, false)).toBe(false)
   })
 })
 
@@ -204,10 +207,16 @@ describe('ctx.planMode: get/set', () => {
     expect(ctx.planMode.get(agent)).toEqual({ active: true })
   })
 
-  it('starts an unlogged session in plan mode', async () => {
+  it('uses the startup setting for an unlogged session', async () => {
+    const ctx = await setup({ ...PLAN_CONFIG, startInPlanMode: false })
+    const agent = await agentWithSession(ctx, 'agent-manual', { seed: false })
+    expect(ctx.planMode.get(agent)).toEqual({ active: false })
+  })
+
+  it('starts an unlogged session outside plan mode', async () => {
     const ctx = await setup()
     const agent = await agentWithSession(ctx, 'agent-default', { seed: false })
-    expect(ctx.planMode.get(agent)).toEqual({ active: true })
+    expect(ctx.planMode.get(agent)).toEqual({ active: false })
   })
 
   it('selects inactive as the plan exit target during an open turn', async () => {

@@ -15,6 +15,7 @@ import { ConfigurablePluginsTabController } from '../src/client/tab-store.ts'
 import { TokenLimitHandlerRowController, type TokenLimitHandlerSettings } from '../src/client/token-limit-handler-controller.ts'
 import { CompletionCheckerRowController, type CompletionCheckerSettings } from '../src/client/completion-checker-controller.ts'
 import { WebSearchCardController, type WebSearchSettings } from '../src/client/web-search-card-controller.ts'
+import { BooleanSettingRowController, type BooleanSetting } from '../src/client/boolean-setting-controller.ts'
 
 /** Make the stub behave like a Host that accepts every write. */
 function acceptWrites<T>(host: StubSettingsScope<T>): void {
@@ -430,6 +431,27 @@ describe('CompletionCheckerRowController', () => {
     const face = controller.inject()
 
     expect(face.hooks.completionChecker.getSnapshot()).toMatchObject({ enabled: { text: 'on' } })
+    face.edit('enabled', 'off')
+    face.save()
+    await vi.waitFor(() => { expect(host.set).toHaveBeenCalledWith('enabled', false) })
+  })
+})
+
+describe('BooleanSettingRowController', () => {
+  it('projects and saves the configured field', async () => {
+    const host = stubSettingsScope<BooleanSetting>()
+    acceptWrites(host)
+    const controller = new BooleanSettingRowController(host.scope, 'enabled')
+    host.publish({
+      status: 'ready',
+      writable: true,
+      value: { enabled: true },
+      base: { enabled: true },
+      user: {},
+    })
+    const face = controller.inject()
+
+    expect(face.hooks.booleanSetting.getSnapshot().value).toMatchObject({ text: 'on' })
     face.edit('enabled', 'off')
     face.save()
     await vi.waitFor(() => { expect(host.set).toHaveBeenCalledWith('enabled', false) })

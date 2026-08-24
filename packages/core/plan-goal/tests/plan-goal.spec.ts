@@ -6,7 +6,6 @@ import { mountAgentLoopTestDependencies } from '@deepseek-ai/dsh-agent-loop-test
 import { createUserMessage } from '@deepseek-ai/dsh-llm'
 import { SessionId } from '@deepseek-ai/dsh-session'
 import GoalService from '@deepseek-ai/dsh-goal'
-import PlanModeController from '@ddonofrio/littlewhale-plan-mode'
 import type { SubagentResult, SubagentRun, SubagentStartRequest } from '@deepseek-ai/dsh-subagent'
 import * as PlanGoal from '../src/index.ts'
 import { MockAdapter, textResponse } from '../../agent-loop/tests/mock-adapter.ts'
@@ -26,6 +25,7 @@ afterEach(async () => {
 async function harness(
   structuredGoal: string,
   parentResponses = 2,
+  planGoalConfig: PlanGoal.Config = { provider: 'spawn' },
 ): Promise<Harness> {
   const ctx = new Context()
   contexts.push(ctx)
@@ -52,13 +52,12 @@ async function harness(
 
   await ctx.plugin(AgentLoop, { agents: [] })
   await ctx.plugin(GoalService)
-  await ctx.plugin(PlanModeController, { section: 'Plan-mode test policy.' })
-  await ctx.plugin(PlanGoal, { provider: 'spawn' })
+  await ctx.plugin(PlanGoal, planGoalConfig)
   ctx.llm.registerAdapter(['mock'], new MockAdapter(
     Array.from({ length: parentResponses }, (_, index) => textResponse(`parent answer ${index + 1}`)),
   ))
   const agent = ctx.agentLoop.create(SessionId('plan-goal-parent'), { provider: 'mock', model: 'mock' })
-  agent.session.append('plan/mode', { active: true })
+  agent.session.append('plan/mode', { active: false })
   return { ctx, agent, starts }
 }
 
@@ -96,6 +95,10 @@ describe('plan-goal', () => {
       objective: 'Reply to the user with a friendly greeting.',
       phase: 'active',
     })
+    const userMessage = agent.session.events.find(event => event.type === 'user/message' && event.data.source.kind === 'user')
+    expect(userMessage?.type === 'user/message' && userMessage.data.content).toEqual([
+      { type: 'text', text: 'Reply to the user with a friendly greeting.' },
+    ])
   })
 
   it('derives later goals from the clean transcript and the newly received request', async () => {
@@ -112,7 +115,7 @@ describe('plan-goal', () => {
     })
     const prompt = (starts[1]?.prompt[0] as { type: 'text'; text: string }).text
     expect(prompt).toContain('Clean conversation transcript:')
-    expect(prompt).toContain('User:\nBuild a small house')
+    expect(prompt).toContain('User:\nImplement the next house iteration in one focused pass.')
     expect(prompt).toContain('Agent:\nparent answer 1')
     expect(prompt).toContain('Latest user request:\nNow add a garage')
     expect(ctx.goals.get(agent)).toMatchObject({
@@ -120,9 +123,8 @@ describe('plan-goal', () => {
     })
   })
 
-  it('does not derive or create goals outside plan mode', async () => {
-    const { ctx, agent, starts } = await harness('should not be used', 1)
-    agent.session.append('plan/mode', { active: false })
+  it('does not derive or create goals when automatic assignment is disabled', async () => {
+    const { ctx, agent, starts } = await harness('should not be used', 1, { enabled: false, provider: 'spawn' })
     start(agent, 'Answer normally')
     await waitForIdle(ctx, agent)
 

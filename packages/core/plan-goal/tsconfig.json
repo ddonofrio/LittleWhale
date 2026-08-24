@@ -13,7 +13,7 @@
     { "path": "../../core/tools" },
     { "path": "../../core/session" },
     { "path": "../../goal/goal" },
-    { "path": "../../plan/plan-mode" },
+    { "path": "../../settings/settings" },
     { "path": "../../subagent/subagent" },
     { "path": "../../runtime-diagnostics/invariants" }
   ]

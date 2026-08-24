@@ -127,7 +127,7 @@ export function resolveTargetPolicy(
 /**
  * Scale one routed policy into concrete token budgets for its model capacity.
  * @param policy - merged policy for the exact routed target.
- * @param contextWindow - positive adapter-owned capacity for that target.
+ * @param contextWindow - positive input capacity after the routed output budget is reserved.
  * @returns detached immutable pressure and retention budgets.
  */
 export function resolveCompactSpec(

@@ -95,12 +95,6 @@
   isolate:
     planMode: true
   config:
-    - id: plan-goal
-      name: '@ddonofrio/littlewhale-plan-goal'
-      config:
-        enabled: true
-        provider: spawn
-
     - id: plan-mode
       name: '@ddonofrio/littlewhale-plan-mode'
       config:

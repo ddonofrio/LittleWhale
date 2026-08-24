@@ -59,6 +59,7 @@ import type { AttachmentStore } from '@deepseek-ai/dsh-attachment'
 import { idleWatchdog, timeoutOf } from '@deepseek-ai/dsh-timeout'
 import type { ResolvedPiAiProviderProfile } from './config.ts'
 import { toPiContext } from './context.ts'
+import { discoverModels } from './discovery.ts'
 import { toStreamChunks } from './stream.ts'
 
 /** One resolution's frozen view: the profiles and the collection built from them. */
@@ -68,6 +69,9 @@ interface PiAiSnapshot {
   /** Providers for exactly those profiles; never mutated once published. */
   models: Models
 }
+
+/** Bound one model-list refresh so metadata cannot indefinitely delay a settled response. */
+const CAPACITY_REFRESH_TIMEOUT_MS = 5_000
 
 /** Constructor options for {@link PiAiAdapter}: the two resolution hooks the plugin owns. */
 export interface PiAiAdapterOptions {
@@ -215,6 +219,8 @@ function requestHeaders(headers: Readonly<Record<string, string>> | undefined): 
  */
 export class PiAiAdapter extends LlmAdapter {
   private snapshot: PiAiSnapshot | undefined
+  /** Last provider-advertised context capacity, isolated to an immutable route profile. */
+  private readonly refreshedContexts = new WeakMap<ResolvedPiAiProviderProfile, Map<string, number>>()
 
   constructor(private readonly config: PiAiAdapterOptions) {
     super()
@@ -301,7 +307,7 @@ export class PiAiAdapter extends LlmAdapter {
       id: model,
       name: resolvedModel.name,
       inputModalities: [...resolvedModel.input],
-      context: { contextWindow: resolvedModel.contextWindow },
+      context: { contextWindow: this.contextWindowFor(profile, model, resolvedModel.contextWindow) },
       ...configuredMaxTokens === undefined ? {} : { defaultMaxTokens: configuredMaxTokens },
       ...reasoningInfo(resolvedModel, defaultLevel),
     }
@@ -309,9 +315,11 @@ export class PiAiAdapter extends LlmAdapter {
 
   override prepareCall(provider: string, model: string, _signal?: AbortSignal): Promise<PreparedAdapterCall> {
     const snapshot = this.current()
+    let refreshed: Promise<{ contextWindow: number } | undefined> | undefined
     return Promise.resolve({
       model: this.modelInfo(snapshot, provider, model),
-      stream: options => this.streamWithSnapshot(options, snapshot),
+      stream: options => this.streamWithSnapshot(options, snapshot, (result) => { refreshed = result }),
+      afterResponse: () => refreshed ?? Promise.resolve(undefined),
     })
   }
 
@@ -319,9 +327,47 @@ export class PiAiAdapter extends LlmAdapter {
     return this.streamWithSnapshot(options, this.current())
   }
 
+  /** Return the last capacity this exact configured route received from its provider. */
+  private contextWindowFor(
+    profile: ResolvedPiAiProviderProfile,
+    model: string,
+    configured: number,
+  ): number {
+    return this.refreshedContexts.get(profile)?.get(model) ?? configured
+  }
+
+  /** Refresh a model capacity without turning a completed response into a metadata failure. */
+  private async refreshContext(
+    profile: ResolvedPiAiProviderProfile,
+    model: string,
+    apiKey: string | undefined,
+  ): Promise<{ contextWindow: number } | undefined> {
+    if (profile.baseURL === undefined) return undefined
+    try {
+      const models = await discoverModels({
+        baseURL: profile.baseURL,
+        ...profile.api === undefined ? {} : { api: profile.api },
+        ...apiKey === undefined ? {} : { apiKey },
+        signal: AbortSignal.timeout(CAPACITY_REFRESH_TIMEOUT_MS),
+      })
+      const contextWindow = models.find(candidate => candidate.id === model)?.contextWindow
+      if (contextWindow === undefined) return undefined
+      let contexts = this.refreshedContexts.get(profile)
+      if (contexts === undefined) {
+        contexts = new Map()
+        this.refreshedContexts.set(profile, contexts)
+      }
+      contexts.set(model, contextWindow)
+      return { contextWindow }
+    } catch {
+      return undefined
+    }
+  }
+
   private async * streamWithSnapshot(
     options: GenerateOptions,
     snapshot: PiAiSnapshot,
+    onContextRefresh?: (result: Promise<{ contextWindow: number } | undefined>) => void,
   ): AsyncIterable<StreamChunk> {
     if (options.stop !== undefined) {
       throw new LlmError('llm-pi-ai does not support GenerateOptions.stop', 'UNSUPPORTED_OPTION')
@@ -333,6 +379,7 @@ export class PiAiAdapter extends LlmAdapter {
     // the one it started with and the next call picks up the new one.
     const profile = this.profileOf(snapshot, options.provider)
     const model = this.modelOf(snapshot, options.provider, options.model)
+    const contextWindow = this.contextWindowFor(profile, options.model, model.contextWindow)
     const reasoning = resolveReasoningLevel(
       model,
       options.reasoningEffort ?? profile.reasoning,
@@ -374,8 +421,9 @@ export class PiAiAdapter extends LlmAdapter {
         // Harness-owned and therefore win collisions.
         headers: requestHeaders(profile.headers),
       })
-      const iterator = toStreamChunks(events, model.contextWindow)[Symbol.asyncIterator]()
+      const iterator = toStreamChunks(events, contextWindow)[Symbol.asyncIterator]()
       let exhausted = false
+      let finished = false
       try {
         while (true) {
           const result = await watchdog.next(iterator)
@@ -385,6 +433,7 @@ export class PiAiAdapter extends LlmAdapter {
             exhausted = true
             return
           }
+          finished ||= result.value.type === 'finish'
           yield result.value
         }
       } finally {
@@ -395,6 +444,11 @@ export class PiAiAdapter extends LlmAdapter {
           } catch (_abortedSdkTeardown) {
             // The stable signal already owns SDK termination; return-time abort cannot add an outcome.
           }
+        }
+        if (finished) {
+          const refresh = this.refreshContext(profile, options.model, apiKey)
+          onContextRefresh?.(refresh)
+          await refresh
         }
       }
     } catch (error: unknown) {

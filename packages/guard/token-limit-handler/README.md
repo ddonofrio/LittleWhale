@@ -1,6 +1,6 @@
 # @deepseek-ai/dsh-token-limit-handler
 
-The token-limit handler responds at the `agent/turn-stopping` extension point when a model step ends with `max-tokens`. Its default policy sends `continue` up to five consecutive times in the same recovery chain. `stop` leaves the turn at the existing terminal boundary, and `custom-prompt` sends the configured text instead. A non-`max-tokens` turn ending resets the chain.
+The token-limit handler responds at the `agent/turn-stopping` extension point when a model step ends with `max-tokens`. Its default policy sends `continue` up to five consecutive times in the same recovery chain. `stop` leaves the turn at the existing terminal boundary, and `custom-prompt` sends the configured text instead. A normal response or tool call resets the chain, so the count only applies to consecutive output-token limits.
 
 ## Configuration
 
@@ -33,5 +33,5 @@ Append-only; each recovery adds a new message after the existing request history
 
 ## Known Limitations and Deferred Work
 
-- **One live chain per agent** — the continuation count is in memory and resets when a non-`max-tokens` turn ending occurs or the handler is unloaded; it is not restored from persisted history.
+- **One live chain per agent** — the continuation count is in memory and resets after a normal response or tool call, or when the handler is unloaded; it is not restored from persisted history.
 - **No partial-response editing** — the handler preserves the truncated assistant message and adds a follow-up prompt; it does not merge model responses.

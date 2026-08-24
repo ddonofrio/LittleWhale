@@ -259,6 +259,13 @@ function recordContext(session: Session, model: string, contextWindow?: number):
   })
 }
 
+function recordHeader(session: Session, system: string): void {
+  session.append('request/header', {
+    header: { config: { provider: 'mock', model: 'mock' }, system },
+    reason: 'change',
+  })
+}
+
 /** Append one model-visible user turn and return its surface seq. */
 function appendUser(session: Session, text: string): number {
   return session.append('user/message', createUserMessage({
@@ -324,7 +331,7 @@ describe('contextPressure session projection', () => {
     expect(pressure(ctx, session).pressureTokens).toBe(250)
   })
 
-  it('carries the newest recorded capacity and replaces it on a model switch', async () => {
+  it('clears a provider sample when the route changes', async () => {
     const { ctx, session } = await harness()
     startStep(session, 1, 1)
     recordContext(session, 'small', 64_000)
@@ -333,9 +340,7 @@ describe('contextPressure session projection', () => {
       pressureTokens: 100, projectedTokens: 100, contextWindow: 64_000,
     })
     recordContext(session, 'large', 256_000)
-    expect(pressure(ctx, session)).toEqual({
-      pressureTokens: 100, projectedTokens: 100, contextWindow: 256_000,
-    })
+    expect(pressure(ctx, session)).toEqual({ contextWindow: 256_000 })
   })
 
   it('removes an older capacity when the newest route advertises none', async () => {
@@ -344,7 +349,21 @@ describe('contextPressure session projection', () => {
     recordContext(session, 'small', 64_000)
     usageChunk(session, { inputTokens: 100, outputTokens: 10 }, 1, 1)
     recordContext(session, 'unknown')
-    expect(pressure(ctx, session)).toEqual({ pressureTokens: 100, projectedTokens: 100 })
+    expect(pressure(ctx, session)).toEqual({})
+  })
+
+  it('reprices system and tool envelope changes after a provider sample', async () => {
+    const { ctx, session } = await harness()
+    recordHeader(session, 'small system')
+    recordContext(session, 'mock', 64_000)
+    startStep(session, 1, 1)
+    usageChunk(session, { inputTokens: 100, outputTokens: 1 }, 1, 1)
+    const before = pressure(ctx, session)
+
+    recordHeader(session, 'larger system '.repeat(200))
+    const after = pressure(ctx, session)
+    expect(after.pressureTokens).toBe(100)
+    expect(after.projectedTokens).toBeGreaterThan(before.projectedTokens!)
   })
 
   it('pushes no change for unrelated events or a restated capacity', async () => {
@@ -375,7 +394,7 @@ describe('contextPressure session projection', () => {
     const checkpoint = JSON.parse(JSON.stringify(
       ctx.sessionProjections.checkpoint(session),
     )) as ReturnType<typeof ctx.sessionProjections.checkpoint>
-    expect(checkpoint.contextPressure?.ver).toBe(4)
+    expect(checkpoint.contextPressure?.ver).toBe(5)
 
     await meterFiber.dispose()
     expect(ctx.sessionProjections.snapshot(session).values).not.toHaveProperty('contextPressure')

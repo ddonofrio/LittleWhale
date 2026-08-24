@@ -550,6 +550,25 @@ export class ReactLoopAgent implements Agent {
             }
           }
         }
+        try {
+          const refreshedContext = await preparedCall?.afterResponse?.()
+          if (refreshedContext !== undefined) {
+            const previousContext = this.session.requestContext()
+            if (previousContext?.provider !== request.provider
+              || previousContext.model !== request.model
+              || previousContext.contextWindow !== refreshedContext.contextWindow) {
+              this.session.append('request/context', {
+                provider: request.provider,
+                model: request.model,
+                contextWindow: refreshedContext.contextWindow,
+              })
+            }
+          }
+        } catch (error: unknown) {
+          this.loopCtx.logger.warn(
+            `model capacity refresh failed after response: ${error instanceof Error ? error.message : String(error)}`,
+          )
+        }
         requestAbort.abort()
         if (detectedLoop !== undefined) {
           const loopCount = detectedLoopIsToolCall

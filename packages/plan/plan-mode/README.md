@@ -4,7 +4,7 @@ Logged, per-agent plan collaboration state with deployment-owned guidance, direc
 
 ## Durable state
 
-`plan/mode` (`{ active: boolean }`) is a log-only, whole-value-replace `SessionEventMap` member. `foldPlanMode(events)` returns the last logged value or the active default, so new sessions start in plan mode and resume, fork, and compaction recover later changes directly from the session log. UIs observe committed flips through `session/event`.
+`plan/mode` (`{ active: boolean }`) is a log-only, whole-value-replace `SessionEventMap` member. `foldPlanMode(events)` returns the last logged value or the configured startup default, so an unlogged chat follows the General setting while resume, fork, and compaction recover later changes directly from the session log. UIs observe committed flips through `session/event`.
 
 `ctx.planMode.set(agent, active)` appends the standalone `plan/mode` event immediately when the agent is idle, because no in-turn pre-step runs before the next prompt. While the agent is running, it holds a pending selection for the next accepted in-turn pre-step. It returns which happened (`committed`/`queued`), a `cancelled` reversal, or a `noop`. `get(agent)` returns `{ active, pending? }`, separating the logged state used to assemble the current step from a user's mid-turn selection. Initial and continuation pre-steps both apply pending selections; a same-step request-recovery retry reuses its frozen assembly and leaves the selection pending for the next pre-step. A changed user selection contributes one plugin-sourced `user/message` notice when the last logged request header described the other state (both commit paths).
 
@@ -28,12 +28,13 @@ When the composition mounts `ctx.sessionProjections` ([`@deepseek-ai/dsh-session
 - id: plan-mode
   name: '@ddonofrio/littlewhale-plan-mode'
   config:
+    startInPlanMode: false
     section: |
       You are in plan mode. Explore and design before presenting the complete
       plan through exit_plan_mode.
 ```
 
-`section` is required and non-empty. Unknown keys fail at load. The package does not accept arbitrary named modes, tool filters, sandbox settings, or approval policy.
+`section` is required and non-empty. `startInPlanMode` defaults to `false` and supplies the composition layer for the `plan-mode` General setting; the user setting applies to chats without a logged mode selection. Unknown keys fail at load. The package does not accept arbitrary named modes, tool filters, sandbox settings, or approval policy.
 
 Design: [plan-specific collaboration state](../../../.agents/notes/implemented/simplification/2026-07-22-plan-specific-collaboration-state.md).
 
@@ -91,6 +92,6 @@ Mode transitions do not change the tool catalog; plan arguments and review resul
 
 - Plan mode guides rather than enforces; deployments that need enforced restrictions must configure sandbox and approval controls independently.
 - A selection made after the turn's final accepted pre-step is lost if the process exits before another accepted in-turn pre-step, so the UI must reapply it.
-- Forked agents inherit logged plan state, while newly spawned agents begin in plan mode; `/plan off` is the explicit exit.
+- Forked agents inherit logged plan state, while chats without a logged selection follow the startup preference; `/plan off` is the explicit exit.
 - A live child owned by another agent cannot open the `exit_plan_mode` review. The failed call tells the child to include the unresolved decision in its final result; durable fork lineage alone does not prevent a session resumed as a runtime root from opening the review.
 - Only the Web UI has a specialized `plan-review` renderer; another interaction provider may present the same request through its generic option flow.

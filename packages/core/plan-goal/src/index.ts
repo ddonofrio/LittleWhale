@@ -1,8 +1,7 @@
 /**
- * Establish the next durable goal before a user request reaches a plan-mode
- * agent. Every direct user request is given to a fresh structured-output
- * subagent together with the same clean transcript used by the completion
- * checker.
+ * Establish the next durable goal before a user request reaches the agent.
+ * Every direct user request is given to a fresh structured-output subagent
+ * together with the same clean transcript used by the completion checker.
  *
  * @module @ddonofrio/littlewhale-plan-goal
  */
@@ -14,12 +13,12 @@ import type { UserMessage } from '@deepseek-ai/dsh-session'
 import type {} from '@deepseek-ai/dsh-goal'
 import type { ObjectJsonSchema } from '@deepseek-ai/dsh-tools'
 import type { SubagentResult, SubagentRun } from '@deepseek-ai/dsh-subagent'
+import { installSettingsSection, settingsNamespace } from '@deepseek-ai/dsh-settings'
 import z from '@deepseek-ai/schemastery'
-import type {} from '@ddonofrio/littlewhale-plan-mode'
 
 /** Plugin configuration. */
 export interface Config {
-  /** Whether plan-goal processing is enabled. */
+  /** Whether automatic goal assignment is enabled by default. */
   enabled?: boolean
   /** Registry name of the one-shot subagent provider. */
   provider?: string
@@ -28,14 +27,31 @@ export interface Config {
 /** Default provider used by the shipped composition. */
 export const DEFAULT_PLAN_GOAL_PROVIDER = 'spawn'
 
+/** Settings namespace exposed on the General settings surface. */
+export const PLAN_GOAL_SETTINGS_NAMESPACE = settingsNamespace('plan-goal')
+
+/** Whether automatic goal assignment is enabled when no user override exists. */
+export const DEFAULT_PLAN_GOAL_ENABLED = true
+
 /** Schema for the plugin's composition configuration. */
 export const Config: z<Config> = z.object({
-  enabled: z.boolean().default(true),
+  enabled: z.boolean().default(DEFAULT_PLAN_GOAL_ENABLED),
   provider: z.string().default(DEFAULT_PLAN_GOAL_PROVIDER),
 })
 
+/** User-selectable automatic goal assignment settings. */
+export interface PlanGoalSettings {
+  /** Whether every direct user request receives a derived goal. */
+  enabled: boolean
+}
+
+/** Schema for the user-owned General settings section. */
+export const PLAN_GOAL_SETTINGS_SCHEMA: z<PlanGoalSettings> = z.object({
+  enabled: z.boolean().default(DEFAULT_PLAN_GOAL_ENABLED),
+})
+
 /** Services used by the pre-step policy. */
-export const inject = ['subagents', 'goals', 'planMode']
+export const inject = ['subagents', 'goals']
 
 const PLUGIN_NAME = 'plan-goal'
 const PLAN_GOAL_OUTPUT_SCHEMA: ObjectJsonSchema = {
@@ -50,7 +66,6 @@ const PLAN_GOAL_OUTPUT_SCHEMA: ObjectJsonSchema = {
 const OMITTED_TOOL_ARGUMENT_KEYS = new Set(['content', 'patch', 'body'])
 
 type PlanGoalState = {
-  readonly enabled: boolean
   readonly provider: string
 }
 
@@ -132,11 +147,6 @@ function isNestedAgent(agent: Agent): boolean {
   return agent.session.header.parentSession !== undefined
 }
 
-function isPlanActive(ctx: Context, agent: Agent): boolean {
-  const state = ctx.planMode.get(agent)
-  return state.pending ?? state.active
-}
-
 function hasDirectUserInput(messages: readonly UserMessage[]): boolean {
   return messages.some(message => message.source.kind === 'user')
 }
@@ -166,6 +176,34 @@ function structuredGoal(result: SubagentResult): string | undefined {
   return value.trim()
 }
 
+/** Replace the current direct user request with the derived goal instruction. */
+function goalInstruction(messages: readonly UserMessage[], objective: string): UserMessage[] {
+  let target = -1
+  for (let index = messages.length - 1; index >= 0; index -= 1) {
+    if (messages[index]?.source.kind === 'user') {
+      target = index
+      break
+    }
+  }
+  if (target < 0) return [...messages]
+
+  return messages.map((message, index) => {
+    if (index !== target) return message
+    let inserted = false
+    const content: ContentBlock[] = []
+    for (const block of message.content) {
+      if (block.type !== 'text') {
+        content.push(block)
+      } else if (!inserted) {
+        inserted = true
+        content.push({ type: 'text', text: objective })
+      }
+    }
+    if (!inserted) content.push({ type: 'text', text: objective })
+    return { ...message, content }
+  })
+}
+
 function renderError(error: unknown): string {
   return error instanceof Error ? error.message : String(error)
 }
@@ -187,7 +225,7 @@ async function deriveGoal(
   messages: readonly UserMessage[],
   signal: AbortSignal,
 ): Promise<string | undefined> {
-  if (!state.enabled || ctx.subagents.getProvider(state.provider) === undefined) return undefined
+  if (ctx.subagents.getProvider(state.provider) === undefined) return undefined
   let run: SubagentRun | undefined
   try {
     run = await ctx.subagents.start(state.provider, {
@@ -214,8 +252,16 @@ async function deriveGoal(
 
 /** Install goal derivation at the model-step boundary. */
 export function apply(ctx: Context, config: Config = {}): void {
+  const entry: PlanGoalSettings = {
+    enabled: config.enabled ?? DEFAULT_PLAN_GOAL_ENABLED,
+  }
+  let source: () => PlanGoalSettings = () => entry
+  installSettingsSection(ctx, PLAN_GOAL_SETTINGS_NAMESPACE, PLAN_GOAL_SETTINGS_SCHEMA, entry, {
+    setSource: (current) => { source = current },
+    onChange: () => {},
+  })
+
   const state: PlanGoalState = {
-    enabled: config.enabled ?? true,
     provider: config.provider ?? DEFAULT_PLAN_GOAL_PROVIDER,
   }
 
@@ -224,8 +270,7 @@ export function apply(ctx: Context, config: Config = {}): void {
     if (decision.kind === 'reject'
       || signal.aborted
       || isNestedAgent(agent)
-      || !state.enabled
-      || !isPlanActive(ctx, agent)
+      || !source().enabled
       || !hasDirectUserInput(messages)) {
       return decision
     }
@@ -238,7 +283,7 @@ export function apply(ctx: Context, config: Config = {}): void {
     } catch (error: unknown) {
       ctx.logger.warn(`plan-goal: could not persist goal: ${renderError(error)}`)
     }
-    return decision
+    return { kind: 'enter', messages: goalInstruction(decision.messages, objective) }
   })
 }
 

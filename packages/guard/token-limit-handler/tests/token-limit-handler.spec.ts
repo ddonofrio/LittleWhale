@@ -2,11 +2,12 @@ import { describe, expect, it } from 'vitest'
 import { Context } from '@deepseek-ai/cordis'
 import { createUserMessage } from '@deepseek-ai/dsh-llm'
 import { SessionId, type SessionEvent } from '@deepseek-ai/dsh-session'
+import { defineContentToolFixture } from '@deepseek-ai/dsh-tools'
 import AgentLoop from '@deepseek-ai/dsh-agent-loop'
 import { mountAgentLoopTestDependencies } from '@deepseek-ai/dsh-agent-loop-testkit'
 import * as TokenLimitHandler from '@deepseek-ai/dsh-token-limit-handler'
 import type { Agent } from '@deepseek-ai/dsh-agent'
-import { maxTokensResponse, MockAdapter, textResponse } from '../../../core/agent-loop/tests/mock-adapter.ts'
+import { maxTokensResponse, MockAdapter, textResponse, toolCallResponse } from '../../../core/agent-loop/tests/mock-adapter.ts'
 
 /** Mount the real agent loop with the token-limit policy. */
 async function harness(config: TokenLimitHandler.Config = {}): Promise<Context> {
@@ -94,6 +95,35 @@ describe('token-limit-handler', () => {
       'user', 'user', 'user', 'user',
     ])
     expect(adapter.requests).toHaveLength(4)
+  })
+
+  it('resets the chain after a tool call within the same turn', async () => {
+    const ctx = await harness({ continueCount: 2 })
+    ctx.tools.register(defineContentToolFixture({
+      name: 'probe',
+      description: 'Probe tool',
+      parameters: {},
+      async execute() {
+        return [{ type: 'text', text: 'probe result' }]
+      },
+    }))
+    const adapter = new MockAdapter([
+      maxTokensResponse('reasoning part one'),
+      maxTokensResponse('reasoning part two'),
+      toolCallResponse('probe-1', 'probe', {}),
+      maxTokensResponse('tool follow-up part one'),
+      maxTokensResponse('tool follow-up part two'),
+      maxTokensResponse('terminal part'),
+    ])
+    ctx.llm.registerAdapter(['mock'], adapter)
+    const agent = ctx.agentLoop.create(SessionId('tool-reset'), { provider: 'mock', model: 'mock' })
+
+    start(agent)
+    await waitForIdle(ctx, agent)
+
+    expect(recoveryMessages(agent)).toEqual(['continue', 'continue', 'continue', 'continue'])
+    expect(adapter.requests).toHaveLength(5)
+    expect(agent.session.events.filter(event => event.type === 'tool/call')).toHaveLength(1)
   })
 
   it('rejects an empty custom prompt when that action is selected', async () => {

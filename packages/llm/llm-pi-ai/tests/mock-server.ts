@@ -4,6 +4,7 @@ import type { IncomingMessage, Server, ServerResponse } from 'node:http'
 export interface MockServer {
   url: string
   paths: string[]
+  modelPaths: string[]
   requests: unknown[]
   headers: IncomingMessage['headers'][]
   readonly closedResponses: number
@@ -32,8 +33,9 @@ export async function mockServer(script: {
   body?: string
   delayMs?: number
   headers?: Record<string, string>
-}[]): Promise<MockServer> {
+}[], modelListing?: unknown): Promise<MockServer> {
   const paths: string[] = []
+  const modelPaths: string[] = []
   const requests: unknown[] = []
   const headers: IncomingMessage['headers'][] = []
   let closedResponses = 0
@@ -46,6 +48,16 @@ export async function mockServer(script: {
     let body = ''
     request.on('data', (chunk: Buffer) => { body += chunk.toString('utf8') })
     request.on('end', () => {
+      if (request.method === 'GET' && request.url?.endsWith('/models')) {
+        modelPaths.push(request.url)
+        const listing = JSON.stringify(modelListing ?? { data: [] })
+        response.writeHead(200, {
+          'content-type': 'application/json',
+          'content-length': String(Buffer.byteLength(listing)),
+        })
+        response.end(listing)
+        return
+      }
       paths.push(request.url ?? '')
       requests.push(body.length === 0 ? undefined : JSON.parse(body))
       headers.push(request.headers)
@@ -74,6 +86,7 @@ export async function mockServer(script: {
   return {
     url: `http://127.0.0.1:${address.port}`,
     paths,
+    modelPaths,
     requests,
     headers,
     responseClosed: responseClosed.promise,

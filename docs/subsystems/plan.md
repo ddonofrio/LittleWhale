@@ -6,7 +6,7 @@ Source: [`packages/plan/plan-mode/src/index.ts`](../../packages/plan/plan-mode/s
 
 ## Logged state and recovery
 
-`plan/mode` (`{ active: boolean }`) is a log-only, whole-value-replace [session event](session.md): durable and replayable, never in the model transcript. `foldPlanMode(events, end?)` returns the last logged value in the prefix, or the active default when there is none — the state in force is always a pure fold of the session log, so new sessions start in plan mode and resume, fork, and compaction recover later changes with no live mirror. UIs observe committed flips through `session/event`. The complete event declaration is in the [persistence log event catalog](../persistence-catalog.md).
+`plan/mode` (`{ active: boolean }`) is a log-only, whole-value-replace [session event](session.md): durable and replayable, never in the model transcript. `foldPlanMode(events, end?, defaultActive?)` returns the last logged value in the prefix, or the configured startup default when there is none. The state in force is always a pure fold of the session log, so a chat without a mode event follows the `startInPlanMode` General setting and resume, fork, and compaction recover later changes with no live mirror. UIs observe committed flips through `session/event`. The complete event declaration is in the [persistence log event catalog](../persistence-catalog.md).
 
 ## Pending selections and the pre-step append
 
@@ -21,10 +21,12 @@ The only append point while an agent is running is a prepended `agent/pre-step` 
 interface PlanModeConfig {
   /** Guidance rendered as the `plan:policy` prompt section while plan mode is active. */
   section: string
+  /** Whether new chats start in plan mode when no user setting overrides it. */
+  startInPlanMode?: boolean
 }
 ```
 
-A missing, blank, or non-string `section` and any unknown key fail at plugin load rather than being ignored. While plan mode is active, the exact `section` text renders as the `plan:policy` [system-prompt section](system-prompt.md) at order 50; inactive plan mode contributes no text.
+A missing, blank, or non-string `section`, a non-boolean `startInPlanMode`, and any unknown key fail at plugin load rather than being ignored. The `startInPlanMode` composition value defaults to `false` and is exposed as the `plan-mode` General setting. While plan mode is active, the exact `section` text renders as the `plan:policy` [system-prompt section](system-prompt.md) at order 50; inactive plan mode contributes no text.
 
 ## The exit tool and the `/plan` command
 

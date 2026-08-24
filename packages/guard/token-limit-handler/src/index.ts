@@ -106,6 +106,13 @@ export function apply(ctx: Context, config: Config): void {
   })
 
   const counts = new WeakMap<Agent, number>()
+  const agentsBySession = new WeakMap<object, Agent>()
+  ctx.on('agent/created', ({ agent }) => { agentsBySession.set(agent.session, agent) })
+  ctx.on('session/event', (session, event) => {
+    if (event.type !== 'tool/call') return
+    const agent = agentsBySession.get(session)
+    if (agent !== undefined) counts.delete(agent)
+  })
   ctx.on('agent/turn-stopping', ({ agent, stepReason, signal }) => {
     if (stepReason.kind !== 'max-tokens') {
       counts.delete(agent)

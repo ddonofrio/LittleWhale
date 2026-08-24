@@ -12,8 +12,7 @@
   <img alt="Local model first" src="https://img.shields.io/badge/models-local--first-8b5cf6">
 </p>
 
-> [!IMPORTANT]
-> Little Whale is an independent fork of [DeepSeek Harness](https://github.com/deepseek-ai/deepseek-harness). It is not an official DeepSeek product and is not affiliated with or endorsed by DeepSeek.
+> [!IMPORTANT] Little Whale is an independent fork of [DeepSeek Harness](https://github.com/deepseek-ai/deepseek-harness). It is not an official DeepSeek product and is not affiliated with or endorsed by DeepSeek.
 
 ## Why Little Whale?
 

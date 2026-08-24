@@ -61,6 +61,38 @@ beforeEach(() => {
 })
 
 describe('PiAiAdapter provider routing', () => {
+  it('refreshes an advertised context capacity after each settled response', async () => {
+    const server = await mockServer(
+      [{ events: textEvents }],
+      { data: [{ id: 'acme-large', context_length: 131_072 }] },
+    )
+    const ctx = new Context()
+    await ctx.plugin(LlmRuntime)
+    await ctx.plugin(LlmPiAi, {
+      providers: {
+        'acme-gateway': {
+          apiKeyEnv: 'PI_TEST_KEY',
+          api: 'openai-completions',
+          baseURL: `${server.url}/v1`,
+          models: [{ id: 'acme-large' }],
+        },
+      },
+    })
+
+    const first = await ctx.llm.prepareCall({ provider: 'acme-gateway', model: 'acme-large' })
+    expect(first.context).toEqual({ contextWindow: 262_144 })
+    for await (const _chunk of first.stream({ ...first.config, messages: [] })) {
+      // Consume the complete response so the adapter refreshes its metadata.
+    }
+    const afterResponse = first.afterResponse
+    if (afterResponse === undefined) throw new Error('prepared call did not expose a capacity refresh')
+    await expect(afterResponse()).resolves.toEqual({ contextWindow: 131_072 })
+    await expect(ctx.llm.prepareCall({ provider: 'acme-gateway', model: 'acme-large' }))
+      .resolves.toMatchObject({ context: { contextWindow: 131_072 } })
+    expect(server.paths).toEqual(['/v1/chat/completions'])
+    expect(server.modelPaths).toEqual(['/v1/models'])
+  })
+
   it('resolves a catalog model dynamically and uses a private endpoint', async () => {
     const server = await mockServer([{ events: textEvents }])
     const ctx = await harness(server.url)

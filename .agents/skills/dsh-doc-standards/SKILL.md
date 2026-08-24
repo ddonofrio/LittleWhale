@@ -10,16 +10,14 @@ The documentation rules live in [docs/AGENTS.md](../../../docs/AGENTS.md). Use t
 ## Sources of truth
 
 - [docs/AGENTS.md](../../../docs/AGENTS.md) — hierarchy, tutorial/reference forms, taxonomy, budgets, and the slop checklist.
-- [.agents/notes/README.md](../../notes/README.md) — when a decision earns an Agent Note and what it contains.
 - [docs/postmortem/README.md](../../../docs/postmortem/README.md) — when an incident earns a postmortem.
 - Root [AGENTS.md](../../../AGENTS.md) — standing repository orders.
-- [Archived Agent Notes](../../notes/archived/AGENTS.md) — frozen historical snapshots excluded from editorial maintenance.
 
 Documentation is canonical and English-only. Do not create language-suffixed Markdown files, localization sidecars, language switchers, translated counterparts, or translation automation. Keep Unicode-capable rendering and user/model content tests when they test runtime behavior rather than documentation policy.
 
 ## Review structure before prose
 
-Apply the standard's authoring order to every human-facing document in scope. Do not apply this structural pass to Agent Notes. Classify a postmortem as a reference scoped to one incident; preserve its chronological evidence.
+Apply the standard's authoring order to every human-facing document in scope. Classify a postmortem as a reference scoped to one incident; preserve its chronological evidence.
 
 1. Locate the document in the repository and navigation trees. State its subject and identify its direct children.
 2. Set the permitted level of detail. Keep full detail about the subject, summarize direct children by purpose and high-level behavior, and link to their owning documents.
@@ -31,13 +29,12 @@ Before renaming or moving a document, grep for inbound references. `verify-md-li
 
 ## Audit the corpus
 
-Exclude `vendor/` and `.agents/notes/archived/` from corpus audits and edits. Archived Agent Notes are frozen snapshots; inspect an exact target only to understand a historical inbound citation.
+Exclude `vendor/` from corpus audits and edits.
 
 1. Measure with `pnpm run verify-doc-budgets --list` and a Markdown word-count scan.
 2. Hunt reasoning-transcript leakage with [dsh-trim-cot-leakage](../dsh-trim-cot-leakage/SKILL.md).
 3. Hunt duplication by grepping distinctive phrases. Keep one home and link other copies.
 4. Replace hand-written catalogs, inventories, and JSDoc restatements with their authoritative source or generator.
-5. Keep implemented Agent Notes in present tense with durable rationale and verification evidence.
 
 Keep every load-bearing rule, preferably as one to three lines plus a link to its rationale. Cut stories, duplicates, status notes, and the path used to derive the rule.
 

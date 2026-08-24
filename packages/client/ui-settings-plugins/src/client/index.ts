@@ -24,6 +24,7 @@ import { AgentLoopCard } from './AgentLoopCard.tsx'
 import { LoopDetectionRow } from './LoopDetectionRow.tsx'
 import { TokenLimitHandlerRow } from './TokenLimitHandlerRow.tsx'
 import { CompletionCheckerRow } from './CompletionCheckerRow.tsx'
+import { BooleanSettingRow } from './BooleanSettingRow.tsx'
 import { BashCard } from './BashCard.tsx'
 import { ConfigurablePluginsTab } from './ConfigurablePluginsTab.tsx'
 import { PluginsSettingsSection } from './PluginsSettingsSection.tsx'
@@ -34,6 +35,7 @@ import {
 } from './agent-loop-card-controller.ts'
 import { TOKEN_LIMIT_HANDLER_NS, TokenLimitHandlerRowController } from './token-limit-handler-controller.ts'
 import { COMPLETION_CHECKER_NS, CompletionCheckerRowController } from './completion-checker-controller.ts'
+import { BooleanSettingRowController } from './boolean-setting-controller.ts'
 import { SHELL_NS, BashCardController } from './bash-card-controller.ts'
 import { ConfigurablePluginsTabController } from './tab-store.ts'
 import { WEB_SEARCH_NS, WebSearchCardController } from './web-search-card-controller.ts'
@@ -53,8 +55,10 @@ export type {
 } from './agent-loop-card-controller.ts'
 export type { TokenLimitHandlerRowFace, TokenLimitHandlerRowState } from './token-limit-handler-controller.ts'
 export type { CompletionCheckerRowFace, CompletionCheckerRowState } from './completion-checker-controller.ts'
+export type { BooleanSetting, BooleanSettingRowFace, BooleanSettingRowState } from './boolean-setting-controller.ts'
 export type { BashCardFace, BashCardState } from './bash-card-controller.ts'
 export type { WebSearchCardFace, WebSearchCardState } from './web-search-card-controller.ts'
+export type { BooleanSettingRowProps } from './BooleanSettingRow.tsx'
 
 /** Dictionary namespace owned by this plugin. */
 const NS = 'settings.plugins'
@@ -76,6 +80,8 @@ export function apply(ctx: ClientContext): void {
   const loopDetection = new LoopDetectionRowController(ctx.settingsScope.bind({ namespace: AGENT_LOOP_NS }))
   const tokenLimitHandler = new TokenLimitHandlerRowController(ctx.settingsScope.bind({ namespace: TOKEN_LIMIT_HANDLER_NS }))
   const completionChecker = new CompletionCheckerRowController(ctx.settingsScope.bind({ namespace: COMPLETION_CHECKER_NS }))
+  const planGoal = new BooleanSettingRowController(ctx.settingsScope.bind({ namespace: 'plan-goal' }), 'enabled')
+  const planModeStartup = new BooleanSettingRowController(ctx.settingsScope.bind({ namespace: 'plan-mode' }), 'startInPlanMode')
   const webSearch = new WebSearchCardController(ctx.settingsScope.bind({ namespace: WEB_SEARCH_NS }), api)
 
   // The credential a card reports is not part of any settings section, so its
@@ -204,4 +210,34 @@ export function apply(ctx: ClientContext): void {
     locale: NS,
     inject: () => completionChecker.inject(),
   }, CompletionCheckerRow))
+
+  ctx.slots.inject('settings.general.item', () => ctx.slots.register({
+    name: 'settings.general.item',
+    id: 'plan-goal',
+    order: 60,
+    locale: NS,
+    inject: () => ({
+      ...planGoal.inject(),
+      titleKey: 'planGoalTitle' as const,
+      descriptionKey: 'planGoalDescription' as const,
+      fieldKey: 'planGoalEnabled' as const,
+      field: 'enabled',
+      id: 'general-plan-goal-enabled',
+    }),
+  }, BooleanSettingRow))
+
+  ctx.slots.inject('settings.general.item', () => ctx.slots.register({
+    name: 'settings.general.item',
+    id: 'plan-mode-startup',
+    order: 70,
+    locale: NS,
+    inject: () => ({
+      ...planModeStartup.inject(),
+      titleKey: 'planModeStartupTitle' as const,
+      descriptionKey: 'planModeStartupDescription' as const,
+      fieldKey: 'planModeStartupEnabled' as const,
+      field: 'startInPlanMode',
+      id: 'general-plan-mode-startup-enabled',
+    }),
+  }, BooleanSettingRow))
 }

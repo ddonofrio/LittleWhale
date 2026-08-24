@@ -75,7 +75,7 @@ function commitPlanMode(session: Session, active: boolean, turn: number): void {
 describe('plan projection unit', () => {
   it('serves the active default/not-pending for the empty log', async () => {
     const bench = await harness(true, null)
-    expect(bench.values()).toEqual({ plan: { active: true, pending: false } })
+    expect(bench.values()).toEqual({ plan: { active: false, pending: false } })
   })
 
   it('a logged /plan selection reads pending until plan/mode records it', async () => {

@@ -21,6 +21,9 @@ import { PluginsSettingsSection } from '../src/client/PluginsSettingsSection.tsx
 import type { PluginsSettingsSectionProps, PluginsSettingsTabEntry } from '../src/client/PluginsSettingsSection.tsx'
 import { WebSearchCard } from '../src/client/WebSearchCard.tsx'
 import type { WebSearchCardProps } from '../src/client/WebSearchCard.tsx'
+import { BooleanSettingRow } from '../src/client/BooleanSettingRow.tsx'
+import type { BooleanSettingRowProps } from '../src/client/BooleanSettingRow.tsx'
+import type { BooleanSettingRowState } from '../src/client/boolean-setting-controller.ts'
 import type { AgentLoopCardState } from '../src/client/agent-loop-card-controller.ts'
 import type { LoopDetectionRowState } from '../src/client/agent-loop-card-controller.ts'
 import type { BashCardState } from '../src/client/bash-card-controller.ts'
@@ -116,6 +119,27 @@ function renderLoopDetection(state: Partial<LoopDetectionRowState> = {}) {
   const actions = cardActions()
   const props = { ...actions, t, useLoopDetection: bindSnapshotSelector(store) } as unknown as LoopDetectionRowProps
   render(<LoopDetectionRow {...props} />)
+  return actions
+}
+
+function renderBooleanSetting(state: Partial<BooleanSettingRowState> = {}) {
+  const store = createSnapshotStore<BooleanSettingRowState>({
+    ...settled,
+    value: field('on'),
+    ...state,
+  })
+  const actions = cardActions()
+  const props = {
+    ...actions,
+    t,
+    titleKey: 'planGoalTitle',
+    descriptionKey: 'planGoalDescription',
+    fieldKey: 'planGoalEnabled',
+    field: 'enabled',
+    id: 'general-plan-goal-enabled',
+    useBooleanSetting: bindSnapshotSelector(store),
+  } as unknown as BooleanSettingRowProps
+  render(<BooleanSettingRow {...props} />)
   return actions
 }
 
@@ -407,6 +431,17 @@ describe('LoopDetectionRow', () => {
     expect(screen.queryByRole('checkbox', { name: en.loopDetectionDetectOnToolCall })).toBeNull()
     expect(screen.queryByLabelText(en.loopDetectionMaxToolCallDetections)).toBeNull()
     expect(screen.queryByRole('checkbox', { name: en.loopDetectionCompactBeforeFailing })).toBeNull()
+  })
+})
+
+describe('BooleanSettingRow', () => {
+  it('renders a checked preference and stages its edit', () => {
+    const actions = renderBooleanSetting()
+    fireEvent.click(screen.getByText(en.planGoalTitle))
+    expect(screen.getByRole('checkbox', { name: en.planGoalEnabled })).toHaveProperty('checked', true)
+
+    fireEvent.click(screen.getByRole('checkbox', { name: en.planGoalEnabled }))
+    expect(actions.edit).toHaveBeenCalledWith('enabled', 'off')
   })
 })
 

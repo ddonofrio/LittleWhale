@@ -526,12 +526,12 @@ Source: [`packages/interaction/permission-presets/src/index.ts:50`](../packages/
 /**
  * Whether plan mode is in force from this point on: log-only, non-surface,
  * whole-value replace. The last `plan/mode` wins; a log with none folds to
- * inactive through {@link foldPlanMode}.
+ * the configured startup default through {@link foldPlanMode}.
  */
 'plan/mode': { active: boolean }
 ```
 
-Source: [`packages/plan/plan-mode/src/index.ts:53`](../packages/plan/plan-mode/src/index.ts)
+Source: [`packages/plan/plan-mode/src/index.ts:56`](../packages/plan/plan-mode/src/index.ts)
 
 ### `request/*`
 

@@ -8,7 +8,7 @@
 import { describe, expect, it } from 'vitest'
 import { Context } from '@deepseek-ai/cordis'
 import LlmRuntime, { createUserMessage, LlmError, ReasoningEffortId  } from '@deepseek-ai/dsh-llm'
-import type { GenerateOptions, LlmModelReasoningInfo, LlmResolvedModelInfo, StreamChunk } from '@deepseek-ai/dsh-llm'
+import type { GenerateOptions, LlmModelReasoningInfo, LlmResolvedModelInfo, PreparedAdapterCall, StreamChunk } from '@deepseek-ai/dsh-llm'
 import SessionStore, { Session, SessionId, foldRequestHeader } from '@deepseek-ai/dsh-session'
 import SystemPrompt from '@ddonofrio/littlewhale'
 import ToolRuntime, { defineContentToolFixture } from '@deepseek-ai/dsh-tools'
@@ -646,6 +646,27 @@ describe('request/context capacity records', () => {
     // (the type system rejects a surfaceOp here; the session invariant also
     // requires the record to sit inside its open turn).
     expect(agent.session.surface.nodes).not.toContain(records[0]?.seq)
+  })
+
+  it('replaces a request capacity with the adapter value refreshed after its response', async () => {
+    const adapter = new class extends MockAdapter {
+      override prepareCall(provider: string, model: string): Promise<PreparedAdapterCall> {
+        return Promise.resolve({
+          model: { provider, id: model, name: model, context: { contextWindow: 262_144 } },
+          stream: options => this.stream(options),
+          afterResponse: () => Promise.resolve({ contextWindow: 131_072 }),
+        })
+      }
+    }([textResponse('a')])
+    const ctx = await harness(adapter)
+    const agent = ctx.agentLoop.create(SessionId('capacity-refresh'), { provider: 'mock', model: 'mock' })
+
+    send(agent, 'first')
+    await waitForIdle(ctx, agent)
+
+    expect(agent.session.events
+      .filter(event => event.type === 'request/context')
+      .map(event => event.data.contextWindow)).toEqual([262_144, 131_072])
   })
 
   it('records a second capacity when the route changes mid-session', async () => {

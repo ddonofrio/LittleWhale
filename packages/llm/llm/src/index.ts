@@ -164,6 +164,8 @@ export interface PreparedLlmCall {
   readonly inputModalities?: readonly ModelModality[]
   /** Config fields materialized by the captured adapter rather than proposed by the caller. */
   readonly adapterDefaults: LlmCallConfigAdapterDefaults
+  /** Refresh route capacity after this call's terminal provider response. */
+  afterResponse?(): Promise<LlmModelContext | undefined>
   /**
    * Dispatch this call once through the registration captured during
    * preparation. The request's call-config fields must match {@link config};
@@ -180,6 +182,8 @@ export interface PreparedAdapterCall {
   readonly model: LlmResolvedModelInfo
   /** Dispatch through that generation without re-reading dynamic connection facts. */
   stream(options: GenerateOptions): AsyncIterable<StreamChunk>
+  /** Best-effort capacity observed after this stream's terminal provider response. */
+  afterResponse?(): Promise<LlmModelContext | undefined>
 }
 
 /**
@@ -838,12 +842,26 @@ export class LlmRuntime extends Service {
         ? { maxTokens: true }
         : {},
     })
+    const afterResponse = adapterCall.afterResponse === undefined
+      ? undefined
+      : async (): Promise<LlmModelContext | undefined> => {
+        const refreshed = await adapterCall.afterResponse?.()
+        if (refreshed === undefined) return undefined
+        if (!Number.isInteger(refreshed.contextWindow) || refreshed.contextWindow <= 0) {
+          throw new LlmError(
+            `adapter returned invalid refreshed context metadata for provider "${resolvedConfig.provider}" model "${resolvedConfig.model}"`,
+            'INVALID_MODEL_CONTEXT',
+          )
+        }
+        return Object.freeze({ contextWindow: refreshed.contextWindow })
+      }
     let dispatched = false
     return Object.freeze({
       config: resolvedConfig,
       retryPolicy: registration.retryPolicy,
       adapterDefaults,
       ...context === undefined ? {} : { context },
+      ...afterResponse === undefined ? {} : { afterResponse },
       ...modelInfo.inputModalities === undefined
         ? {}
         : { inputModalities: Object.freeze([...modelInfo.inputModalities]) },
