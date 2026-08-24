@@ -9,7 +9,7 @@
 
 import { Context } from '@deepseek-ai/cordis'
 import type { Agent, PreStepDecision } from '@deepseek-ai/dsh-agent'
-import { BlockAssembler, createUserMessage, deepFreeze, LlmError } from '@deepseek-ai/dsh-llm'
+import { BlockAssembler, createAssistantMessage, createUserMessage, deepFreeze, LlmError } from '@deepseek-ai/dsh-llm'
 import type { ContentBlock, FinishReason, GenerateOptions, Message, ToolSchema } from '@deepseek-ai/dsh-llm'
 import type { UserMessage } from '@deepseek-ai/dsh-session'
 import type { GoalRef, GoalView } from '@deepseek-ai/dsh-goal'
@@ -27,7 +27,7 @@ export interface Config {
 }
 
 /** Default deadline for the auxiliary goal-description request. */
-export const DEFAULT_PLAN_GOAL_TIMEOUT_MS = 60000
+export const DEFAULT_PLAN_GOAL_TIMEOUT_MS = 300000
 
 /** Settings namespace exposed on the General settings surface. */
 export const PLAN_GOAL_SETTINGS_NAMESPACE = settingsNamespace('plan-goal')
@@ -57,9 +57,14 @@ export const inject = ['llm', 'goals', 'systemPrompt', 'tools']
 
 const PLUGIN_NAME = 'plan-goal'
 const GOAL_RESULT_TOOL_NAME = 'emit_goal'
-const MAX_GOAL_PLAN_RETRIES = 10
+const MAX_GOAL_PLAN_ATTEMPTS = 10
 const GOAL_VALIDATION_TIMEOUT_CODE = 'GOAL_VALIDATION_TIMEOUT'
 const GOAL_VALIDATION_NOTICE = 'Validating response…'
+const AUXILIARY_TEMPERATURE = 0
+const PLAN_GOAL_OUTPUT_LIMIT_CODE = 'PLAN_GOAL_OUTPUT_LIMIT'
+const PLAN_GOAL_INVALID_OUTPUT_CODE = 'PLAN_GOAL_INVALID_OUTPUT'
+const GOAL_VALIDATION_OUTPUT_LIMIT_CODE = 'GOAL_VALIDATION_OUTPUT_LIMIT'
+const GOAL_VALIDATION_INVALID_OUTPUT_CODE = 'GOAL_VALIDATION_INVALID_OUTPUT'
 
 const GOAL_RESULT_TOOL: ToolSchema = {
   name: GOAL_RESULT_TOOL_NAME,
@@ -95,6 +100,8 @@ interface GoalValidation {
   readonly status: GoalValidationStatus
   readonly reason: string
 }
+
+type GoalValidationInterruption = 'edited' | 'paused' | 'cleared' | 'stopped'
 
 /** One auxiliary planner promise per agent and claimed request. */
 const inFlightPlans = new WeakMap<Agent, Map<GoalPlanKey, Promise<string>>>()
@@ -194,7 +201,19 @@ function plannerUserPrompt(
   agent: Agent,
   messages: readonly UserMessage[],
   retryFeedback?: string,
+  retryAttempt?: number,
 ): string {
+  if (retryFeedback !== undefined) {
+    return [
+      'The previous assistant response in this same goal conversation was rejected by the local validator.',
+      `This is retry attempt ${retryAttempt ?? 2} of ${MAX_GOAL_PLAN_ATTEMPTS}. Pay close attention to the output contract and do not repeat the previous response.`,
+      'Retry the same request; do not start a new task and do not return visible text.',
+      'Local validator feedback:',
+      retryFeedback,
+      'The goal field must be one sentence that starts with As and contains exactly one I want and exactly one so that.',
+      `FINAL OUTPUT: call ${GOAL_RESULT_TOOL_NAME} exactly once now with the corrected result. Do not write JSON, analysis, Markdown, or any text before or after the native tool call.`,
+    ].join('\n')
+  }
   const prompt = [
     'Understand the latest user request and convert it into exactly one user story.',
     'Preserve the user’s intent, constraints, scope, and requested outcome. Correct spelling and improve clarity, but do not add requirements or invent motivation.',
@@ -205,14 +224,6 @@ function plannerUserPrompt(
     'Latest user request:',
     currentRequest(messages),
   ]
-  if (retryFeedback !== undefined) {
-    prompt.push(
-      '',
-      'Retry correction from the local validator:',
-      retryFeedback,
-      `This is a correction request, not a new user request. Call ${GOAL_RESULT_TOOL_NAME} again with a corrected result and no visible text.`,
-    )
-  }
   return prompt.join('\n')
 }
 
@@ -320,6 +331,19 @@ function renderError(error: unknown): string {
   return error instanceof Error ? error.message : String(error)
 }
 
+function formatElapsed(milliseconds: number): string {
+  const totalSeconds = Math.max(0, Math.floor(milliseconds / 1000))
+  const minutes = Math.floor(totalSeconds / 60)
+  const seconds = totalSeconds % 60
+  return minutes === 0
+    ? `${seconds}s`
+    : `${minutes}m ${String(seconds).padStart(2, '0')}s`
+}
+
+function planGoalExhaustedError(message: string, startedAt: number, code: string): LlmError {
+  return new LlmError(`${message} (elapsed ${formatElapsed(Date.now() - startedAt)})`, code)
+}
+
 function validationSystemPrompt(): string {
   return [
     'You are the mandatory completion validator for a coding assistant goal.',
@@ -335,7 +359,22 @@ function validationSystemPrompt(): string {
   ].join('\n')
 }
 
-function validationUserPrompt(agent: Agent, goal: GoalView, retryFeedback?: string): string {
+function validationUserPrompt(
+  agent: Agent,
+  goal: GoalView,
+  retryFeedback?: string,
+  retryAttempt?: number,
+): string {
+  if (retryFeedback !== undefined) {
+    return [
+      'The previous assistant response in this same validation conversation was rejected by the local validator.',
+      `This is retry attempt ${retryAttempt ?? 2} of ${MAX_GOAL_PLAN_ATTEMPTS}. Pay close attention to the output contract and do not repeat the previous response.`,
+      'Re-evaluate the same goal; do not start a new task or add any other output.',
+      'Local validator feedback:',
+      retryFeedback,
+      'FINAL OUTPUT: return exactly the two required lines now, with no preamble, explanation, Markdown, or extra text.',
+    ].join('\n')
+  }
   const lines = [
     'Validate the current goal using only the evidence below.',
     `Goal objective: ${JSON.stringify(goal.objective)}`,
@@ -345,15 +384,29 @@ function validationUserPrompt(agent: Agent, goal: GoalView, retryFeedback?: stri
     '',
     'Use the exact output format from the system instruction. Prefer DONE or UNCOMPLETE over UNKNOWN when the transcript supports either conclusion.',
   ]
-  if (retryFeedback !== undefined) {
-    lines.push(
-      '',
-      'Local format correction:',
-      retryFeedback,
-      'This is a correction request. Re-evaluate the same goal and return exactly the two required lines.',
-    )
-  }
   return lines.join('\n')
+}
+
+/**
+ * Continue one auxiliary chat after a response failed local validation.
+ *
+ * Keep the conversation shape valid, but do not feed malformed free-form
+ * output back to the model. A compact synthetic assistant marker preserves
+ * the turn boundary without reinforcing analysis or JSON written as text.
+ */
+function appendRejectedAssistantTurn(
+  conversation: Message[],
+  route: { readonly provider: string; readonly model: string },
+  feedback: string,
+): void {
+  conversation.push(createAssistantMessage({
+    content: [{ type: 'text', text: 'Local validation rejected the previous response.' }],
+    source: { provider: route.provider, model: route.model },
+  }))
+  conversation.push(createUserMessage({
+    content: [{ type: 'text', text: feedback }],
+    source: { kind: 'plugin', plugin: PLUGIN_NAME },
+  }))
 }
 
 function parseGoalValidation(blocks: readonly ContentBlock[]): GoalValidation {
@@ -473,39 +526,52 @@ async function deriveGoal(
     throw new Error('plan-goal: no model route is available for goal resolution')
   }
 
-  using callDeadline = deadline(signal, state.timeoutMs, 'PLAN_GOAL_TIMEOUT')
+  const conversation: Message[] = [createUserMessage({
+    content: [{ type: 'text', text: plannerUserPrompt(agent, messages) }],
+    source: { kind: 'plugin', plugin: PLUGIN_NAME },
+  })]
+  const startedAt = Date.now()
   let retryFeedback: string | undefined
-  for (let retry = 0; retry <= MAX_GOAL_PLAN_RETRIES; retry += 1) {
-    const requestMessages: Message[] = [createUserMessage({
-      content: [{ type: 'text', text: plannerUserPrompt(agent, messages, retryFeedback) }],
-      source: { kind: 'plugin', plugin: PLUGIN_NAME },
-    })]
+  for (let attempt = 0; attempt < MAX_GOAL_PLAN_ATTEMPTS; attempt += 1) {
+    using attemptDeadline = deadline(signal, state.timeoutMs, 'PLAN_GOAL_TIMEOUT')
     const options: GenerateOptions = deepFreeze({
       ...route,
-      messages: requestMessages,
+      messages: [...conversation],
       system: plannerSystemPrompt(),
       tools: [GOAL_RESULT_TOOL],
       sessionId: agent.session.id,
       purpose: 'goal',
-      signal: callDeadline.signal,
+      temperature: AUXILIARY_TEMPERATURE,
+      signal: attemptDeadline.signal,
     })
     const assembler = new BlockAssembler()
     for await (const chunk of ctx.llm.stream(options)) {
-      throwIfPlannerAborted(callDeadline.signal)
+      throwIfPlannerAborted(attemptDeadline.signal)
       assembler.push(chunk)
     }
-    throwIfPlannerAborted(callDeadline.signal)
+    throwIfPlannerAborted(attemptDeadline.signal)
     const error = finishError(assembler.finish)
-    if (error !== undefined) throw error
+    const outputLimit = assembler.finish.kind === 'max-tokens'
+    if (error !== undefined && !outputLimit) throw error
     try {
+      if (error !== undefined) throw error
       return generatedGoal(assembler.blocks(), currentRequest(messages))
     } catch (validationError: unknown) {
-      if (retry === MAX_GOAL_PLAN_RETRIES) {
-        throw new Error(`plan-goal: could not derive a valid goal after ${MAX_GOAL_PLAN_RETRIES + 1} attempts`)
+      if (attempt === MAX_GOAL_PLAN_ATTEMPTS - 1) {
+        throw planGoalExhaustedError(
+          renderError(validationError),
+          startedAt,
+          outputLimit ? PLAN_GOAL_OUTPUT_LIMIT_CODE : PLAN_GOAL_INVALID_OUTPUT_CODE,
+        )
       }
       retryFeedback = validationError instanceof Error
         ? validationError.message
         : 'The previous structured result was rejected by the local validator.'
+      appendRejectedAssistantTurn(
+        conversation,
+        route,
+        plannerUserPrompt(agent, messages, retryFeedback, attempt + 2),
+      )
     }
   }
   /* v8 ignore next -- the bounded loop always returns or throws. */
@@ -528,38 +594,51 @@ async function validateGoal(
       : undefined
   if (route === undefined) throw new Error('plan-goal: no model route is available for goal validation')
 
-  using callDeadline = deadline(signal, state.timeoutMs, GOAL_VALIDATION_TIMEOUT_CODE)
+  const conversation: Message[] = [createUserMessage({
+    content: [{ type: 'text', text: validationUserPrompt(agent, goal) }],
+    source: { kind: 'plugin', plugin: PLUGIN_NAME },
+  })]
+  const startedAt = Date.now()
   let retryFeedback: string | undefined
-  for (let retry = 0; retry <= MAX_GOAL_PLAN_RETRIES; retry += 1) {
-    const requestMessages: Message[] = [createUserMessage({
-      content: [{ type: 'text', text: validationUserPrompt(agent, goal, retryFeedback) }],
-      source: { kind: 'plugin', plugin: PLUGIN_NAME },
-    })]
+  for (let attempt = 0; attempt < MAX_GOAL_PLAN_ATTEMPTS; attempt += 1) {
+    using attemptDeadline = deadline(signal, state.timeoutMs, GOAL_VALIDATION_TIMEOUT_CODE)
     const options: GenerateOptions = deepFreeze({
       ...route,
-      messages: requestMessages,
+      messages: [...conversation],
       system: validationSystemPrompt(),
       sessionId: agent.session.id,
       purpose: 'goal',
-      signal: callDeadline.signal,
+      temperature: AUXILIARY_TEMPERATURE,
+      signal: attemptDeadline.signal,
     })
     const assembler = new BlockAssembler()
     for await (const chunk of ctx.llm.stream(options)) {
-      throwIfValidationAborted(callDeadline.signal)
+      throwIfValidationAborted(attemptDeadline.signal)
       assembler.push(chunk)
     }
-    throwIfValidationAborted(callDeadline.signal)
+    throwIfValidationAborted(attemptDeadline.signal)
     const error = finishError(assembler.finish)
-    if (error !== undefined) throw error
+    const outputLimit = assembler.finish.kind === 'max-tokens'
+    if (error !== undefined && !outputLimit) throw error
     try {
+      if (error !== undefined) throw error
       return parseGoalValidation(assembler.blocks())
     } catch (validationError: unknown) {
-      if (retry === MAX_GOAL_PLAN_RETRIES) {
-        throw new Error(`plan-goal: could not validate the goal after ${MAX_GOAL_PLAN_RETRIES + 1} attempts`)
+      if (attempt === MAX_GOAL_PLAN_ATTEMPTS - 1) {
+        throw planGoalExhaustedError(
+          renderError(validationError),
+          startedAt,
+          outputLimit ? GOAL_VALIDATION_OUTPUT_LIMIT_CODE : GOAL_VALIDATION_INVALID_OUTPUT_CODE,
+        )
       }
       retryFeedback = validationError instanceof Error
         ? validationError.message
         : 'The previous validation result was rejected by the local validator.'
+      appendRejectedAssistantTurn(
+        conversation,
+        route,
+        validationUserPrompt(agent, goal, retryFeedback, attempt + 2),
+      )
     }
   }
   /* v8 ignore next -- the bounded loop always returns or throws. */
@@ -574,34 +653,83 @@ async function validateCompletedTurn(
   signal: AbortSignal,
 ): Promise<void> {
   if (signal.aborted || isNestedAgent(agent)) return
-  const goal = ctx.goals.get(agent)
+  let goal = ctx.goals.get(agent)
   if (goal === undefined || goal.phase !== 'active' || goal.activation !== 'armed') return
 
-  appendNotice(agent, GOAL_VALIDATION_NOTICE, 'validating response')
-  let validation: GoalValidation
+  let validationController: AbortController | undefined
+  let interruption: GoalValidationInterruption | undefined
+  const disposeGoalChanged = ctx.on('goal/changed', ({ agent: changedAgent, change }) => {
+    if (changedAgent !== agent || validationController === undefined || change.ref.id !== goal?.id) return
+    interruption = change.operation === 'edit'
+      ? 'edited'
+      : change.operation === 'pause'
+        ? 'paused'
+        : change.operation === 'clear'
+          ? 'cleared'
+          : 'stopped'
+    validationController.abort(new Error(`goal validation interrupted by ${change.operation}`))
+  })
+
   try {
-    validation = await validateGoal(ctx, state, agent, goal, signal)
-  } catch (error: unknown) {
-    if (signal.aborted) throw error
-    validation = { status: 'UNKNOWN', reason: validationFailureReason(error) }
-  }
+    while (!signal.aborted) {
+      goal = ctx.goals.get(agent)
+      if (goal === undefined || goal.phase !== 'active' || goal.activation !== 'armed') return
 
-  const current = ctx.goals.get(agent)
-  if (current === undefined || current.id !== goal.id || current.revision !== goal.revision
-    || current.phase !== 'active' || current.activation !== 'armed') return
+      const controller = new AbortController()
+      validationController = controller
+      interruption = undefined
+      appendNotice(agent, GOAL_VALIDATION_NOTICE, 'validating response')
 
-  if (validation.status === 'DONE') {
-    try {
-      ctx.goals.complete(agent, goalRef(current))
-    } catch (error: unknown) {
-      questionAgent(agent, validationFailureReason(error))
+      let validation: GoalValidation | undefined
+      try {
+        validation = await validateGoal(ctx, state, agent, goal, AbortSignal.any([signal, controller.signal]))
+      } catch (error: unknown) {
+        if (signal.aborted) throw error
+        if (controller.signal.aborted) {
+          if (interruption === 'edited') {
+            appendNotice(agent, 'Goal edited. Restarting response validation.', 'goal validation restarted')
+            continue
+          }
+          const reason = interruption === 'paused'
+            ? 'because the goal was paused'
+            : interruption === 'cleared'
+              ? 'because the goal was deleted'
+              : 'because the goal changed'
+          appendNotice(agent, `Goal validation cancelled ${reason}.`, 'goal validation cancelled')
+          return
+        }
+        validation = { status: 'UNKNOWN', reason: validationFailureReason(error) }
+      } finally {
+        if (validationController === controller) validationController = undefined
+      }
+
+      if (interruption === 'edited') {
+        appendNotice(agent, 'Goal edited. Restarting response validation.', 'goal validation restarted')
+        continue
+      }
+      if (interruption === 'stopped' || validation === undefined) return
+
+      const current = ctx.goals.get(agent)
+      if (current === undefined || current.id !== goal.id || current.revision !== goal.revision
+        || current.phase !== 'active' || current.activation !== 'armed') return
+
+      if (validation.status === 'DONE') {
+        try {
+          ctx.goals.complete(agent, goalRef(current))
+        } catch (error: unknown) {
+          questionAgent(agent, validationFailureReason(error))
+          return
+        }
+        appendNotice(agent, `Goal completed: ${validation.reason}`, 'goal completed')
+        return
+      }
+
+      questionAgent(agent, validation.reason)
       return
     }
-    appendNotice(agent, `Goal completed: ${validation.reason}`, 'goal completed')
-    return
+  } finally {
+    disposeGoalChanged()
   }
-
-  questionAgent(agent, validation.reason)
 }
 
 /** Share a planner call when duplicate pre-step middleware races the same input. */

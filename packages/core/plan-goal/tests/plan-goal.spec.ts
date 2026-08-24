@@ -9,7 +9,7 @@ import type { GenerateOptions, StreamChunk } from '@deepseek-ai/dsh-llm'
 import { SessionId } from '@deepseek-ai/dsh-session'
 import GoalService from '@deepseek-ai/dsh-goal'
 import * as PlanGoal from '../src/index.ts'
-import { MockAdapter, textResponse, toolCallResponse } from '../../agent-loop/tests/mock-adapter.ts'
+import { MockAdapter, maxTokensResponse, textResponse, toolCallResponse } from '../../agent-loop/tests/mock-adapter.ts'
 
 interface Harness {
   readonly ctx: Context
@@ -217,17 +217,83 @@ describe('plan-goal', () => {
     await waitForIdle(ctx, agent)
 
     expect(requests).toHaveLength(6)
+    expect(requests[2]?.temperature).toBe(0)
     expect(requests[3]?.purpose).toBe('goal')
     expect(requests[3]?.tools).toBeUndefined()
-    const retryPrompt = (requests[3]?.messages[0]?.content[0] as { type: 'text'; text: string }).text
-    expect(retryPrompt).toContain('Local format correction:')
+    expect(requests[3]?.messages.map(message => message.role)).toEqual(['user', 'assistant', 'user'])
+    expect(requests[3]?.temperature).toBe(0)
+    expect((requests[3]?.messages[1]?.content[0] as { type: 'text'; text: string }).text)
+      .toBe('Local validation rejected the previous response.')
+    expect(JSON.stringify(requests[3]?.messages)).not.toContain('not a validator result')
+    const retryPrompt = (requests[3]?.messages[2]?.content[0] as { type: 'text'; text: string }).text
+    expect(retryPrompt).toContain('This is retry attempt 2 of 10')
+    expect(retryPrompt).toContain('Local validator feedback:')
     expect(retryPrompt).toContain('goal validation must return STATUS and REASON only')
+    expect(retryPrompt).toMatch(/FINAL OUTPUT: return exactly the two required lines now[\s\S]*extra text\.$/u)
     expect(ctx.goals.get(agent)).toMatchObject({ phase: 'complete' })
     expect(agent.session.events.some(event => event.type === 'user/message'
       && event.data.source.kind === 'plugin'
       && event.data.source.plugin === 'plan-goal'
       && event.data.content[0]?.type === 'text'
       && event.data.content[0].text === 'Questioning agent: The transcript does not establish the requested evidence.')).toBe(true)
+  })
+
+  it('cancels in-flight validation when the goal is paused or cleared', async () => {
+    const goal = 'As the user, I want the response checked, so that the result is trustworthy.'
+    for (const operation of ['pause', 'clear'] as const) {
+      const { ctx, agent, requests } = await harness(goal, 1, {}, goalPlannerResponse(goal), [], [
+        goalPlannerResponse(goal),
+        textResponse('first answer'),
+        'hang',
+      ])
+      start(agent, `Run ${operation} validation`)
+      await vi.waitFor(() => expect(requests).toHaveLength(3))
+
+      const current = ctx.goals.get(agent)
+      if (current === undefined) throw new Error('expected a goal before mutation')
+      if (operation === 'pause') ctx.goals.pause(agent, { id: current.id, revision: current.revision })
+      else ctx.goals.clear(agent, { id: current.id, revision: current.revision })
+      await waitForIdle(ctx, agent)
+
+      expect(requests).toHaveLength(3)
+      expect(ctx.goals.get(agent)).toMatchObject(operation === 'pause' ? { phase: 'paused' } : {})
+      expect(agent.session.events.some(event => event.type === 'user/message'
+        && event.data.source.kind === 'plugin'
+        && event.data.source.plugin === 'plan-goal'
+        && event.data.content[0]?.type === 'text'
+        && event.data.content[0].text === (operation === 'pause'
+          ? 'Goal validation cancelled because the goal was paused.'
+          : 'Goal validation cancelled because the goal was deleted.'))).toBe(true)
+    }
+  })
+
+  it('cancels and restarts validation against an edited goal', async () => {
+    const goal = 'As the user, I want the response checked, so that the result is trustworthy.'
+    const editedGoal = 'As the user, I want the response checked against the new objective, so that the result is trustworthy.'
+    const { ctx, agent, requests } = await harness(goal, 1, {}, goalPlannerResponse(goal), [], [
+      goalPlannerResponse(goal),
+      textResponse('first answer'),
+      'hang',
+      goalValidationResponse('DONE', 'The edited objective is satisfied.'),
+    ])
+    start(agent, 'Run validation')
+    await vi.waitFor(() => expect(requests).toHaveLength(3))
+
+    const current = ctx.goals.get(agent)
+    if (current === undefined) throw new Error('expected a goal before editing')
+    ctx.goals.edit(agent, { id: current.id, revision: current.revision }, { objective: editedGoal })
+    await waitForIdle(ctx, agent)
+
+    expect(requests).toHaveLength(4)
+    expect(requests[0]?.temperature).toBe(0)
+    expect((requests[3]?.messages[0]?.content[0] as { type: 'text'; text: string }).text)
+      .toContain(`Goal objective: "${editedGoal}"`)
+    expect(ctx.goals.get(agent)).toMatchObject({ phase: 'complete', objective: editedGoal })
+    expect(agent.session.events.some(event => event.type === 'user/message'
+      && event.data.source.kind === 'plugin'
+      && event.data.source.plugin === 'plan-goal'
+      && event.data.content[0]?.type === 'text'
+      && event.data.content[0].text === 'Goal edited. Restarting response validation.')).toBe(true)
   })
 
   it('shares one planner call when duplicate pre-step delivery races the same request', async () => {
@@ -299,12 +365,12 @@ describe('plan-goal', () => {
       1,
       {},
       textResponse('<SYSTEM PROMPT>\n<goal_round>bad goal</goal_round>'),
-      Array.from({ length: 11 }, () => textResponse('<SYSTEM PROMPT>\n<goal_round>bad goal</goal_round>')),
+      Array.from({ length: 10 }, () => textResponse('<SYSTEM PROMPT>\n<goal_round>bad goal</goal_round>')),
     )
     start(agent, 'Do not persist this')
     await waitForIdle(ctx, agent)
 
-    expect(requests).toHaveLength(11)
+    expect(requests).toHaveLength(10)
     expect(ctx.goals.get(agent)).toBeUndefined()
     expect(agent.session.events.find(event => event.type === 'assistant/message')).toBeUndefined()
   })
@@ -318,7 +384,7 @@ describe('plan-goal', () => {
         goal: '<SYSTEM PROMPT> <goal_round> As the user, I want current news, so that I stay informed. </goal_round>',
         source_excerpt: 'current news',
       }),
-      Array.from({ length: 11 }, () => toolCallResponse('goal-call', 'emit_goal', {
+      Array.from({ length: 10 }, () => toolCallResponse('goal-call', 'emit_goal', {
         goal: '<SYSTEM PROMPT> <goal_round> As the user, I want current news, so that I stay informed. </goal_round>',
         source_excerpt: 'current news',
       })),
@@ -326,7 +392,7 @@ describe('plan-goal', () => {
     start(agent, 'Fetch current news')
     await waitForIdle(ctx, agent)
 
-    expect(requests).toHaveLength(11)
+    expect(requests).toHaveLength(10)
     expect(ctx.goals.get(agent)).toBeUndefined()
     expect(agent.session.events.find(event => event.type === 'assistant/message')).toBeUndefined()
   })
@@ -347,13 +413,83 @@ describe('plan-goal', () => {
 
     expect(requests).toHaveLength(4)
     expect(requests[1]?.messages[0]?.content[0]).toMatchObject({ type: 'text' })
-    const retryPrompt = (requests[1]?.messages[0]?.content[0] as { type: 'text'; text: string }).text
-    expect(retryPrompt).toContain('Retry correction from the local validator:')
+    expect(requests[1]?.messages.map(message => message.role)).toEqual(['user', 'assistant', 'user'])
+    expect(requests[1]?.temperature).toBe(0)
+    expect((requests[1]?.messages[1]?.content[0] as { type: 'text'; text: string }).text)
+      .toBe('Local validation rejected the previous response.')
+    expect(JSON.stringify(requests[1]?.messages)).not.toContain('free-form planner output')
+    const retryPrompt = (requests[1]?.messages[2]?.content[0] as { type: 'text'; text: string }).text
+    expect(retryPrompt).toContain('This is retry attempt 2 of 10')
+    expect(retryPrompt).toContain('Local validator feedback:')
     expect(retryPrompt).toContain('expected exactly one emit_goal call with no visible text')
+    expect(retryPrompt).toMatch(/FINAL OUTPUT: call emit_goal exactly once now[\s\S]*native tool call\.$/u)
     expect(ctx.goals.get(agent)).toMatchObject({
       objective: 'As the user, I want verified output, so that the requested outcome is achieved.',
     })
     expect(agent.session.events.some(event => event.type === 'assistant/message')).toBe(true)
+  })
+
+  it('retries planner output-limit responses like other invalid structured output', async () => {
+    const goal = 'As the user, I want verified output, so that the requested outcome is achieved.'
+    const { ctx, agent, requests } = await harness(
+      goal,
+      1,
+      {},
+      goalPlannerResponse(goal),
+      [maxTokensResponse('partial planner output'), goalPlannerResponse(goal)],
+    )
+    start(agent, 'Return verified output')
+    await waitForIdle(ctx, agent)
+
+    expect(requests).toHaveLength(4)
+    expect(requests[1]?.messages.map(message => message.role)).toEqual(['user', 'assistant', 'user'])
+    expect(JSON.stringify(requests[1]?.messages)).not.toContain('partial planner output')
+    const retryPrompt = (requests[1]?.messages[2]?.content[0] as { type: 'text'; text: string }).text
+    expect(retryPrompt).toContain('goal description reached the model output limit')
+    expect(ctx.goals.get(agent)).toMatchObject({ objective: goal })
+  })
+
+  it('does not replay an invalid tool call into the planner retry', async () => {
+    const goal = 'As the user, I want verified output, so that the requested outcome is achieved.'
+    const invalid = toolCallResponse('bad-call', 'emit_goal', {
+      goal: 'This is not a user story.',
+      source_excerpt: 'Return verified output',
+    })
+    const { ctx, agent, requests } = await harness(
+      goal,
+      1,
+      {},
+      goalPlannerResponse(goal),
+      [invalid, goalPlannerResponse(goal)],
+    )
+    start(agent, 'Return verified output')
+    await waitForIdle(ctx, agent)
+
+    expect(requests).toHaveLength(4)
+    expect(JSON.stringify(requests[1]?.messages)).not.toContain('This is not a user story.')
+    expect(requests[1]?.messages.map(message => message.role)).toEqual(['user', 'assistant', 'user'])
+  })
+
+  it('reports a structured output-limit error after ten planner attempts with elapsed time', async () => {
+    const { ctx, agent, requests } = await harness(
+      'unused',
+      1,
+      {},
+      maxTokensResponse('partial planner output'),
+      Array.from({ length: 10 }, () => maxTokensResponse('partial planner output')),
+    )
+    start(agent, 'Do not persist this')
+    await waitForIdle(ctx, agent)
+
+    expect(requests).toHaveLength(10)
+    const end = agent.session.events.findLast(event => event.type === 'turn/end')
+    expect(end?.type === 'turn/end' && end.data.reason.kind === 'error' && end.data.reason.error).toMatchObject({
+      code: 'PLAN_GOAL_OUTPUT_LIMIT',
+    })
+    if (end?.type === 'turn/end' && end.data.reason.kind === 'error') {
+      expect(end.data.reason.error.message).toMatch(/elapsed \d+s/u)
+    }
+    expect(ctx.goals.get(agent)).toBeUndefined()
   })
 
   it('rejects a structured result whose source excerpt is not from the request', async () => {
@@ -365,7 +501,7 @@ describe('plan-goal', () => {
         goal: 'As the user, I want verified output, so that the requested outcome is achieved.',
         source_excerpt: 'not in the request',
       }),
-      Array.from({ length: 11 }, () => toolCallResponse('goal-call', 'emit_goal', {
+      Array.from({ length: 10 }, () => toolCallResponse('goal-call', 'emit_goal', {
         goal: 'As the user, I want verified output, so that the requested outcome is achieved.',
         source_excerpt: 'not in the request',
       })),
@@ -373,7 +509,7 @@ describe('plan-goal', () => {
     start(agent, 'Return verified output')
     await waitForIdle(ctx, agent)
 
-    expect(requests).toHaveLength(11)
+    expect(requests).toHaveLength(10)
     expect(ctx.goals.get(agent)).toBeUndefined()
     expect(agent.session.events.find(event => event.type === 'assistant/message')).toBeUndefined()
   })
