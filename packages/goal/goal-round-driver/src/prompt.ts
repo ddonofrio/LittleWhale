@@ -30,7 +30,8 @@ export function renderGoalRoundPrompt(
   const goalTools = goalRoundToolSchemas(tools)
   return [{
     type: 'text',
-    text: '<goal_round>\n'
+    text: '<SYSTEM PROMPT>\n'
+      + '<goal_round>\n'
       + `Objective: ${JSON.stringify(goal.objective)}\n`
       + `Round: ${round}/${goal.maxGoalRounds}\n\n`
       + '<goal_tools>\n'
@@ -45,6 +46,8 @@ export function renderGoalRoundPrompt(
       + 'claiming completion, gather evidence that the whole objective is achieved, read the current '
       + 'goal, and mark it complete. If work remains, leave the goal active for the next round. Follow '
       + 'the configured goal-tool policy before reporting a blocker.\n'
-      + '</goal_round>',
+      + '</goal_round>\n'
+      + 'REMEMBER: THIS IS NOT AN USERS MESSAGE! DO NOT ANSWER AS IF IT WERE. THIS IS A SYSTEM INSTRUCTION FOR YOU TO FOLLOW.\n'
+      + '</SYSTEM PROMPT>',
   }]
 }

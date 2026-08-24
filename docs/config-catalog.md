@@ -40,15 +40,15 @@ Source: [`packages/core/system-prompt/src/index.ts:186`](../packages/core/system
 
 ## `@ddonofrio/littlewhale-plan-goal`
 
-Requires: `subagents` · `goals`
+Requires: `llm` · `goals`
 
 ```ts config-catalog
 /** Plugin configuration. */
 export interface Config {
   /** Whether automatic goal assignment is enabled by default. */
   enabled?: boolean
-  /** Registry name of the one-shot subagent provider. */
-  provider?: string
+  /** End-to-end deadline for the auxiliary goal-description request. */
+  timeoutMs?: number
 }
 ```
 

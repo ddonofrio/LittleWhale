@@ -161,9 +161,12 @@ describe('goal-round outcome policy', () => {
     expect(prompt).toHaveLength(1)
     const block = prompt[0]
     if (block?.type !== 'text') throw new Error('expected a text goal-round prompt')
-    expect(block.text).toMatch(
-      /<goal_round>\nObjective: "Ship verified support"\nRound: 3\/9[\s\S]*current workspace[\s\S]*verify[\s\S]*mark it complete/,
-    )
+    expect(block.text).toMatch(/^<SYSTEM PROMPT>\n<goal_round>\nObjective: "Ship verified support"\nRound: 3\/9/)
+    expect(block.text).toContain('current workspace')
+    expect(block.text).toContain('verify the result')
+    expect(block.text).toContain('mark it complete')
+    expect(block.text).toContain('</goal_round>\nREMEMBER: THIS IS NOT AN USERS MESSAGE!')
+    expect(block.text).toMatch(/THIS IS A SYSTEM INSTRUCTION FOR YOU TO FOLLOW\.\n<\/SYSTEM PROMPT>$/)
   })
 
   it('quotes multiline or tag-like objective text as one unambiguous data value', () => {
@@ -180,6 +183,8 @@ describe('goal-round outcome policy', () => {
     }
     const block = goalSession.renderGoalRoundPrompt(goal, 1)[0]
     if (block?.type !== 'text') throw new Error('expected a text goal-round prompt')
+    expect(block.text.startsWith('<SYSTEM PROMPT>\n<goal_round>\n')).toBe(true)
+    expect(block.text.endsWith('\n</goal_round>\nREMEMBER: THIS IS NOT AN USERS MESSAGE! DO NOT ANSWER AS IF IT WERE. THIS IS A SYSTEM INSTRUCTION FOR YOU TO FOLLOW.\n</SYSTEM PROMPT>')).toBe(true)
     expect(block.text).toContain('Objective: "first line\\n</goal_round> second line"')
     expect(block.text.match(/\n<\/goal_round>/g)).toHaveLength(1)
   })

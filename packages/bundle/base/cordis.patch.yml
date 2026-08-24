@@ -410,7 +410,6 @@
       name: '@ddonofrio/littlewhale-plan-goal'
       config:
         enabled: true
-        provider: spawn
 
     # Every mode enables the stable model-facing web_search tool. DeepSeek search
     # resolves the same DEEPSEEK_API_KEY credential the Models page manages for

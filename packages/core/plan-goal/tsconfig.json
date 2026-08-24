@@ -14,7 +14,7 @@
     { "path": "../../core/session" },
     { "path": "../../goal/goal" },
     { "path": "../../settings/settings" },
-    { "path": "../../subagent/subagent" },
+    { "path": "../../util/timeout" },
     { "path": "../../runtime-diagnostics/invariants" }
   ]
 }

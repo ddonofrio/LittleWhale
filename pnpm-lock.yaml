@@ -3769,15 +3769,9 @@ importers:
       '@deepseek-ai/dsh-settings':
         specifier: workspace:^
         version: link:../../settings/settings
-      '@deepseek-ai/dsh-subagent':
+      '@deepseek-ai/dsh-timeout':
         specifier: workspace:^
-        version: link:../../subagent/subagent
-      '@deepseek-ai/dsh-subagent-spawn-in-process':
-        specifier: workspace:^
-        version: link:../../subagent/subagent-spawn-in-process
-      '@deepseek-ai/dsh-tools':
-        specifier: workspace:^
-        version: link:../tools
+        version: link:../../util/timeout
 
   packages/core/scope:
     devDependencies:
