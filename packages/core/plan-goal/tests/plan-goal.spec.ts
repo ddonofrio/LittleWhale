@@ -1,4 +1,4 @@
-import { afterEach, describe, expect, it } from 'vitest'
+import { afterEach, describe, expect, it, vi } from 'vitest'
 import { Context } from '@deepseek-ai/cordis'
 import type { Agent } from '@deepseek-ai/dsh-agent'
 import AgentLoop from '@deepseek-ai/dsh-agent-loop'
@@ -16,7 +16,7 @@ interface Harness {
   readonly requests: GenerateOptions[]
 }
 
-type PlannerResponse = StreamChunk[] | ((options: GenerateOptions) => StreamChunk[])
+type PlannerResponse = StreamChunk[] | ((options: GenerateOptions) => StreamChunk[]) | 'hang'
 
 const contexts: Context[] = []
 
@@ -105,12 +105,17 @@ describe('plan-goal', () => {
     expect(requests[0]?.system).toContain('Start with “As” and use “I want” exactly once')
     expect(requests[0]?.system).toContain('Do not invent requirements')
     expect(requests[0]?.messages[0]?.content[0]).toMatchObject({ type: 'text' })
-    expect((requests[0]?.messages[0]?.content[0] as { type: 'text'; text: string }).text).toContain('Latest user request:')
+    const plannerPrompt = (requests[0]?.messages[0]?.content[0] as { type: 'text'; text: string }).text
+    expect(plannerPrompt).toContain('Latest user request:')
+    expect(plannerPrompt.split('Hi there')).toHaveLength(2)
     expect(ctx.goals.get(agent)).toMatchObject({
       objective: 'As the user, I want a friendly greeting, so that I receive a helpful response.',
       phase: 'active',
     })
-    const userMessage = agent.session.events.find(event => event.type === 'user/message' && event.data.source.kind === 'user')
+    const userMessages = agent.session.events.filter(event => event.type === 'user/message'
+      && event.data.source.kind === 'user')
+    expect(userMessages).toHaveLength(1)
+    const userMessage = userMessages[0]
     expect(userMessage?.type === 'user/message' && userMessage.data.content).toEqual([
       { type: 'text', text: 'Hi there' },
     ])
@@ -130,6 +135,22 @@ describe('plan-goal', () => {
       .map(block => block.text)
     expect(parentTexts).toContain('Hi there')
     expect(parentTexts).toContain('SYSTEM: Just created the goal: As the user, I want a friendly greeting, so that I receive a helpful response.\nPLEASE STICK TO YOUR GOAL.')
+  })
+
+  it('publishes the user message while goal planning is still running', async () => {
+    const { ctx, agent, requests } = await harness('unused', 1, {}, 'hang')
+    start(agent, 'Show this immediately')
+
+    await vi.waitFor(() => expect(requests).toHaveLength(1))
+    const userMessage = agent.session.events.find(event => event.type === 'user/message'
+      && event.data.source.kind === 'user')
+    expect(userMessage?.type === 'user/message' && userMessage.data.content).toEqual([
+      { type: 'text', text: 'Show this immediately' },
+    ])
+
+    const idle = waitForIdle(ctx, agent)
+    agent.cancel({ kind: 'user' })
+    await idle
   })
 
   it('derives later goals from the clean transcript and the newly received request', async () => {

@@ -97,11 +97,12 @@ function textContent(blocks: readonly ContentBlock[]): string {
 }
 
 /** Render the same user-visible transcript shape as completion_check. */
-function cleanConversation(agent: Agent): string {
+function cleanConversation(agent: Agent, excludedMessageIds: ReadonlySet<UserMessage['id']> = new Set()): string {
   const entries: string[] = []
   for (const event of agent.session.events) {
     switch (event.type) {
       case 'user/message': {
+        if (excludedMessageIds.has(event.data.id)) break
         if (event.data.source.kind !== 'user') break
         const text = textContent(event.data.content)
         if (text !== '') entries.push(`User:\n${text}`)
@@ -184,7 +185,7 @@ function plannerUserPrompt(
     'Preserve the user’s intent, constraints, scope, and requested outcome. Correct spelling and improve clarity, but do not add requirements or invent motivation.',
     `Call ${GOAL_RESULT_TOOL_NAME} exactly once with two fields: goal and source_excerpt. The goal must use this exact structure: As <role>, I want <desired outcome>, so that <value or reason>. The source_excerpt must be copied verbatim from the latest user request.`,
     'Clean conversation transcript:',
-    cleanConversation(agent),
+    cleanConversation(agent, new Set(messages.map(message => message.id))),
     '',
     'Latest user request:',
     currentRequest(messages),
@@ -270,7 +271,7 @@ function generatedGoal(blocks: readonly ContentBlock[], request: string): string
   return goal
 }
 
-/** Preserve the direct user request and append the derived goal instruction. */
+/** Append the derived goal instruction to the messages entering the step. */
 function goalInstruction(messages: readonly UserMessage[], objective: string): UserMessage[] {
   return [
     ...messages,
@@ -287,6 +288,17 @@ function goalInstruction(messages: readonly UserMessage[], objective: string): U
       },
     }),
   ]
+}
+
+/** Publish claimed user input before the auxiliary planner starts waiting. */
+function publishDirectUserMessages(agent: Agent, messages: readonly UserMessage[]): Set<UserMessage['id']> {
+  const published = new Set<UserMessage['id']>()
+  for (const message of messages) {
+    if (message.source.kind !== 'user') continue
+    agent.session.append('user/message', message, { surfaceOp: 'append' })
+    published.add(message.id)
+  }
+  return published
 }
 
 function renderError(error: unknown): string {
@@ -374,12 +386,15 @@ export function apply(ctx: Context, config: Config = {}): void {
   }
 
   ctx.on('agent/pre-step', async ({ agent, messages, signal }, next): Promise<PreStepDecision> => {
+    const eligible = !signal.aborted
+      && !isNestedAgent(agent)
+      && source().enabled
+      && hasDirectUserInput(messages)
+    const published = eligible ? publishDirectUserMessages(agent, messages) : new Set<UserMessage['id']>()
     const decision = await next()
     if (decision.kind === 'reject'
       || signal.aborted
-      || isNestedAgent(agent)
-      || !source().enabled
-      || !hasDirectUserInput(messages)) {
+      || !eligible) {
       return decision
     }
 
@@ -390,7 +405,8 @@ export function apply(ctx: Context, config: Config = {}): void {
     } catch (error: unknown) {
       ctx.logger.warn(`plan-goal: could not persist goal: ${renderError(error)}`)
     }
-    return { kind: 'enter', messages: goalInstruction(decision.messages, objective) }
+    const remaining = decision.messages.filter(message => !published.has(message.id))
+    return { kind: 'enter', messages: goalInstruction(remaining, objective) }
   })
 }
 
