@@ -64,10 +64,16 @@ const tokenUsageStateSchema = z.object({
 type TokenUsageState = z.infer<typeof tokenUsageStateSchema>
 
 const pressureSchema: z.ZodType<ContextPressureProjection> = z.object({
+  provider: z.string().optional(),
+  model: z.string().optional(),
   pressureTokens: z.number().int().nonnegative().optional(),
   projectedTokens: z.number().int().nonnegative().optional(),
   contextWindow: z.number().int().positive().optional(),
-}).strict().transform(({ pressureTokens, projectedTokens, contextWindow }) => ({
+}).strict().transform(({ provider, model, pressureTokens, projectedTokens, contextWindow }) => ({
+  // Route identity is paired with capacity so browser controls can resolve
+  // the same per-model compaction policy as the Host backend.
+  ...provider === undefined ? {} : { provider },
+  ...model === undefined ? {} : { model },
   ...pressureTokens === undefined ? {} : { pressureTokens },
   ...projectedTokens === undefined ? {} : { projectedTokens },
   ...contextWindow === undefined ? {} : { contextWindow },
@@ -179,7 +185,7 @@ export const tokenUsageProjectionDefinition = {
  */
 export const contextPressureProjectionDefinition = {
   key: 'contextPressure',
-  stateVersion: 5,
+  stateVersion: 6,
   stateSchema: contextPressureStateSchema,
   init: () => ({ headerTokens: 0, surfaceTokens: 0 }),
   apply: (state, event) => {
@@ -241,8 +247,9 @@ export const contextPressureProjectionDefinition = {
   wire: {
     viewSchema: pressureSchema,
     view: ({
-      contextWindow, pressureTokens, headerTokens, surfaceTokens, sampledHeaderTokens, sampledSurfaceTokens,
+      route, contextWindow, pressureTokens, headerTokens, surfaceTokens, sampledHeaderTokens, sampledSurfaceTokens,
     }) => ({
+      ...route === undefined ? {} : { provider: route.provider, model: route.model },
       ...contextWindow === undefined ? {} : { contextWindow },
       ...pressureTokens === undefined ? {} : { pressureTokens },
       ...pressureTokens === undefined

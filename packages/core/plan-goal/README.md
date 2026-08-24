@@ -18,11 +18,11 @@ The planner is skipped for nested agents, plugin messages, and disabled configur
 - id: plan-goal
   name: '@ddonofrio/littlewhale-plan-goal'
   config:
-    enabled: true
+    enabled: false
     timeoutMs: 300000
 ```
 
-The `enabled` value is also exposed as the `plan-goal` General setting. It defaults to `true` and applies live to direct user requests. The timeout applies to both the planner and the mandatory active-goal validator.
+The `enabled` value is also exposed as the `plan-goal` General setting. It defaults to `false` and applies live to direct user requests. The timeout applies to both the planner and the mandatory active-goal validator.
 
 ## Model Experience
 

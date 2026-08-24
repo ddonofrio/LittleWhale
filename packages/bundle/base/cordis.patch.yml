@@ -285,6 +285,11 @@
     - id: compaction-basic
       name: '@deepseek-ai/dsh-compaction-basic'
 
+    - id: compaction-policy
+      name: '@deepseek-ai/dsh-compaction-policy'
+      config:
+        compactAtRatio: 0.75
+
     # Human `/compact`: one useful reduction below the automatic threshold. Backend
     # independent, so it follows whichever compaction service this leaf mounts.
     - id: command-compact

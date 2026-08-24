@@ -26,6 +26,9 @@ export interface TokenUsageProjection {
  * than a billing record or a compaction input.
  */
 export interface ContextPressureProjection {
+  /** Exact provider/model route that supplied the current capacity. */
+  provider?: string
+  model?: string
   /**
    * Provider-reported prompt size of the most recent request: uncached input
    * plus cache reads and writes. Response output is excluded, so this does not

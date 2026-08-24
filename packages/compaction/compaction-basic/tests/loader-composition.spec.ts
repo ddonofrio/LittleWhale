@@ -10,6 +10,7 @@ import LlmRuntime from '@deepseek-ai/dsh-llm'
 import SessionStore from '@deepseek-ai/dsh-session'
 import TokenMeter from '@deepseek-ai/dsh-token-meter'
 import BasicCompactionEngine from '@deepseek-ai/dsh-compaction-basic'
+import CompactionPolicy from '@deepseek-ai/dsh-compaction-policy'
 import ToolResultPruner from '@deepseek-ai/dsh-compaction-tool-result-pruner'
 
 let root: string | undefined
@@ -36,6 +37,7 @@ async function loadYaml(lines: readonly string[]): Promise<Context> {
     ['@deepseek-ai/dsh-session', SessionStore],
     ['@deepseek-ai/dsh-token-meter', TokenMeter],
     ['@deepseek-ai/dsh-compaction-tool-result-pruner', ToolResultPruner],
+    ['@deepseek-ai/dsh-compaction-policy', CompactionPolicy],
     ['@deepseek-ai/dsh-compaction-basic', BasicCompactionEngine],
   ])
   context.loader.internal = {
@@ -64,6 +66,7 @@ describe('real Loader composition', () => {
       '    thresholdChars: 100',
       '    headChars: 20',
       '    tailChars: 10',
+      "- name: '@deepseek-ai/dsh-compaction-policy'",
       "- name: '@deepseek-ai/dsh-compaction-basic'",
       '  config:',
       '    thresholdRatio: 0.5',
@@ -76,6 +79,7 @@ describe('real Loader composition', () => {
       .map(entry => entry.options.name)
     expect(unloaded).toEqual([])
     expect(loaded.get('toolResultPruner')).toBeInstanceOf(ToolResultPruner)
+    expect(loaded.get('compactionPolicy')).toBeInstanceOf(CompactionPolicy)
     expect(loaded.get('compaction')).toBeInstanceOf(BasicCompactionEngine)
     expect((loaded.compaction as unknown as BasicCompactionEngine).config).toMatchObject({
       thresholdRatio: 0.5,

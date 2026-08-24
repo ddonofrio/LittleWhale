@@ -495,7 +495,13 @@ export class ReactLoopAgent implements Agent {
       const { request, preparedCall } = await this.buildRequest(
         turn, step, assembly.tools, system, this.session.deriveMessages(), signal,
       )
-      if (preparedCall?.context?.contextWindow !== undefined) {
+      // Some adapters publish capacity through the durable request/context
+      // projection before a later prepareCall omits it. The compaction
+      // backend resolves the current model itself, so that durable capacity is
+      // enough to admit the pressure check instead of silently skipping it.
+      const contextWindow = preparedCall?.context?.contextWindow
+        ?? this.session.requestContext()?.contextWindow
+      if (contextWindow !== undefined) {
         const compaction = this.ctx.get('compaction')
           ?? (this.loopCtx.reflect.get('agentPresets') as AgentPresetServiceLookup | undefined)
             ?.serviceFor(this, 'compaction')

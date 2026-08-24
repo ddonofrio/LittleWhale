@@ -26,6 +26,7 @@ import SessionStore, { Session, SessionId } from '@deepseek-ai/dsh-session'
 import TokenMeter from '@deepseek-ai/dsh-token-meter'
 import { agentEvents, type Agent, type RequestErrorAction } from '@deepseek-ai/dsh-agent'
 import ToolResultPruner from '@deepseek-ai/dsh-compaction-tool-result-pruner'
+import CompactionPolicy from '@deepseek-ai/dsh-compaction-policy'
 
 const SIGNAL = new AbortController().signal
 const MODEL = 'test-model'
@@ -486,6 +487,34 @@ describe('pressure measurement and retention', () => {
     thresholdRatio: 0.5,
     retainTokens: 180,
   }
+
+  it('uses the shared policy service threshold instead of the backend default', async () => {
+    const ctx = createContext(1_000)
+    new CompactionPolicy(ctx, { compactAtRatio: 0.01 })
+    const agentRealm = ctx.isolate('compaction', Symbol('test-compaction'))
+    const compact = service({
+      auto: false,
+      thresholdRatio: 0.99,
+      retainRatio: 0.001,
+    }, agentRealm)
+    await expect(compactIfNeeded(compact, conversation(4, 'fixture '.repeat(200))))
+      .rejects.toThrow(/summary is not smaller/)
+    expect(compact.calls).not.toHaveLength(0)
+  })
+
+  it('keeps a low user threshold usable with the inherited recent-tail ratio', async () => {
+    const ctx = createContext(10_000)
+    new CompactionPolicy(ctx, { compactAtRatio: 0.15 })
+    const compact = service({
+      auto: false,
+      thresholdRatio: 0.99,
+    }, ctx)
+    compact.summary = [{ type: 'text', text: 'x' }]
+
+    await expect(compactIfNeeded(compact, conversation(20, 'fixture '.repeat(200))))
+      .resolves.not.toBeNull()
+    expect(compact.calls).not.toHaveLength(0)
+  })
 
   it('skips when no durable routed model exists instead of using AgentOptions fallback', async () => {
     const compact = service(compactConfig)

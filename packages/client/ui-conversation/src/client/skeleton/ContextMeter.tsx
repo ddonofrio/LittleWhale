@@ -6,12 +6,15 @@
 
 import { useEffect, useRef, useState } from 'react'
 import type { UseProjection } from '@deepseek-ai/dsh-client-runtime/client'
+import type { CompactionPolicySettings } from '@deepseek-ai/dsh-compaction-policy/client'
 // Type-only: the `contextPressure` / `contextBreakdown` projection key merges.
 import type {} from '@deepseek-ai/dsh-token-meter/client'
 import { Tooltip } from '@deepseek-ai/dsh-client-ui-primitives'
 import type { ComposerBarProps } from '../contract/slots.ts'
 import { contextOccupancy, formatTokens } from '../chat/StatsLine.tsx'
 import css from './ContextMeter.module.css'
+
+const DEFAULT_COMPACT_AT_RATIO = 0.75
 
 /** Ring geometry: 14px viewBox, 2px stroke. */
 const RADIUS = 5.5
@@ -35,21 +38,68 @@ export interface ContextMeterProps {
   useProjection: UseProjection
   /** The owning bar's locale seat, passed down as a plain prop. */
   t: ComposerBarProps['t']
+  /** Current durable global/per-route policy value. */
+  policy?: CompactionPolicySettings | undefined
+  /** Save the active route's pending override. */
+  setOverride?: (provider: string, model: string, ratio: number) => Promise<void>
+  /** Remove the active route's override. */
+  clearOverride?: (provider: string, model: string) => Promise<void>
 }
 
-export function ContextMeter({ useProjection, t }: ContextMeterProps) {
+export function ContextMeter({
+  useProjection,
+  t,
+  policy,
+  setOverride = async () => {},
+  clearOverride = async () => {},
+}: ContextMeterProps) {
   const pressure = useProjection('contextPressure')
   const breakdown = useProjection('contextBreakdown')
   const [open, setOpen] = useState(false)
+  const [pendingRatio, setPendingRatio] = useState<number | undefined>(undefined)
+  const [saving, setSaving] = useState(false)
   const rootRef = useRef<HTMLSpanElement | null>(null)
   const context = contextOccupancy(pressure)
   const available = context !== null
+  const provider = pressure?.provider
+  const model = pressure?.model
+  const routeKey = provider === undefined || model === undefined ? undefined : `${provider}/${model}`
+  const override = provider === undefined || model === undefined
+    ? undefined
+    : policy?.overrides.find(value => value.provider === provider && value.model === model)
+  const effectiveRatio = override?.compactAtRatio ?? policy?.compactAtRatio ?? DEFAULT_COMPACT_AT_RATIO
+  const ratio = pendingRatio ?? effectiveRatio
 
   // A model switch can temporarily remove capacity while this component stays
   // mounted. Close the now-unavailable panel instead of preserving stale UI.
   useEffect(() => {
     if (!available && open) setOpen(false)
   }, [available, open])
+
+  useEffect(() => {
+    setPendingRatio(undefined)
+  }, [routeKey, effectiveRatio])
+
+  const apply = async (): Promise<void> => {
+    if (pendingRatio === undefined || provider === undefined || model === undefined) return
+    setSaving(true)
+    try {
+      await setOverride(provider, model, pendingRatio)
+      setPendingRatio(undefined)
+    } finally {
+      setSaving(false)
+    }
+  }
+
+  const reset = async (): Promise<void> => {
+    if (provider === undefined || model === undefined) return
+    setSaving(true)
+    try {
+      await clearOverride(provider, model)
+    } finally {
+      setSaving(false)
+    }
+  }
 
   // Outside click / Escape close, one document listener while open (Menu's pattern).
   useEffect(() => {
@@ -87,6 +137,7 @@ export function ContextMeter({ useProjection, t }: ContextMeterProps) {
     ? [{ key: 'total', color: undefined, width: percent }]
     : ROWS.map(row => ({ key: row.key, color: row.color, width: percent * breakdown[row.key] / breakdownTotal }))
   const segments = parts.filter(part => part.width > 0)
+  const compactAtTokens = Math.floor(context.contextWindow * ratio)
 
   return (
     <span ref={rootRef} className={css.root}>
@@ -124,14 +175,35 @@ export function ContextMeter({ useProjection, t }: ContextMeterProps) {
               {`~${formatTokens(context.usedTokens)} / ${formatTokens(context.contextWindow)}`}
             </span>
           </div>
-          <div className={css.bar}>
-            {segments.map(segment => (
-              <div
-                key={segment.key}
-                className={segment.color === undefined ? css.segment : `${css.segment} ${segment.color}`}
-                style={{ width: `${segment.width}%` }}
-              />
-            ))}
+          <div className={css.barShell}>
+            <div className={css.bar}>
+              {segments.map(segment => (
+                <div
+                  key={segment.key}
+                  className={segment.color === undefined ? css.segment : `${css.segment} ${segment.color}`}
+                  style={{ width: `${segment.width}%` }}
+                />
+              ))}
+            </div>
+            <span className={css.marker} style={{ left: `${ratio * 100}%` }} aria-hidden />
+            <input
+              className={css.thresholdInput}
+              type="range"
+              min={1}
+              max={100}
+              step={1}
+              value={Math.round(ratio * 100)}
+              aria-label={t('context.compactAtAria')}
+              disabled={provider === undefined || model === undefined || saving}
+              onChange={(event) => { setPendingRatio(Number(event.target.value) / 100) }}
+            />
+          </div>
+          <div className={css.thresholdRow}>
+            <span>
+              <span className={css.thresholdSwatch} aria-hidden />
+              {t('context.compactAt')}
+            </span>
+            <span className={css.thresholdValue}>{`${Math.round(ratio * 100)}% · ~${formatTokens(compactAtTokens)}`}</span>
           </div>
           {breakdown !== undefined && (
             <dl className={css.rows}>
@@ -145,6 +217,20 @@ export function ContextMeter({ useProjection, t }: ContextMeterProps) {
                 </div>
               ))}
             </dl>
+          )}
+          {(pendingRatio !== undefined || override !== undefined) && provider !== undefined && model !== undefined && (
+            <div className={css.actions}>
+              {pendingRatio !== undefined && (
+                <button type="button" className={css.apply} disabled={saving} onClick={() => { void apply() }}>
+                  {t('context.apply')}
+                </button>
+              )}
+              {pendingRatio === undefined && override !== undefined && (
+                <button type="button" className={css.reset} disabled={saving} onClick={() => { void reset() }}>
+                  {t('context.useGlobal')}
+                </button>
+              )}
+            </div>
           )}
         </div>
       )}

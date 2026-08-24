@@ -45,7 +45,7 @@ afterEach(async () => {
 async function harness(
   structuredGoal: string,
   parentResponses = 2,
-  planGoalConfig: PlanGoal.Config = {},
+  planGoalConfig: PlanGoal.Config = { enabled: true },
   plannerResponse: PlannerResponse = goalPlannerResponse(structuredGoal),
   retryPlannerResponses: PlannerResponse[] = [],
   scriptedResponses?: PlannerResponse[],
@@ -95,6 +95,10 @@ function start(agent: Agent, text: string): void {
 }
 
 describe('plan-goal', () => {
+  it('defaults automatic goal assignment to off', () => {
+    expect(PlanGoal.DEFAULT_PLAN_GOAL_ENABLED).toBe(false)
+  })
+
   it('always starts a planner and defines a goal, including for a greeting', async () => {
     const { ctx, agent, requests } = await harness(
       'As the user, I want a friendly greeting, so that I receive a helpful response.',
@@ -164,7 +168,7 @@ describe('plan-goal', () => {
   })
 
   it('publishes the user message while goal planning is still running', async () => {
-    const { ctx, agent, requests } = await harness('unused', 1, {}, 'hang')
+    const { ctx, agent, requests } = await harness('unused', 1, { enabled: true }, 'hang')
     start(agent, 'Show this immediately')
 
     await vi.waitFor(() => expect(requests).toHaveLength(1))
@@ -181,7 +185,7 @@ describe('plan-goal', () => {
 
   it('questions the agent when the validator finds unfinished work, then rechecks the follow-up', async () => {
     const goal = 'As the user, I want verified output, so that the requested outcome is achieved.'
-    const { ctx, agent, requests } = await harness(goal, 1, {}, goalPlannerResponse(goal), [], [
+    const { ctx, agent, requests } = await harness(goal, 1, { enabled: true }, goalPlannerResponse(goal), [], [
       goalPlannerResponse(goal),
       textResponse('first answer'),
       goalValidationResponse('UNCOMPLETE', 'The requested verification is still missing.'),
@@ -205,7 +209,7 @@ describe('plan-goal', () => {
 
   it('uses UNKNOWN sparingly and retries malformed validator output with the same goal call policy', async () => {
     const goal = 'As the user, I want an answer with evidence, so that I can trust the result.'
-    const { ctx, agent, requests } = await harness(goal, 1, {}, goalPlannerResponse(goal), [], [
+    const { ctx, agent, requests } = await harness(goal, 1, { enabled: true }, goalPlannerResponse(goal), [], [
       goalPlannerResponse(goal),
       textResponse('first answer'),
       textResponse('not a validator result'),
@@ -241,7 +245,7 @@ describe('plan-goal', () => {
   it('cancels in-flight validation when the goal is paused or cleared', async () => {
     const goal = 'As the user, I want the response checked, so that the result is trustworthy.'
     for (const operation of ['pause', 'clear'] as const) {
-      const { ctx, agent, requests } = await harness(goal, 1, {}, goalPlannerResponse(goal), [], [
+      const { ctx, agent, requests } = await harness(goal, 1, { enabled: true }, goalPlannerResponse(goal), [], [
         goalPlannerResponse(goal),
         textResponse('first answer'),
         'hang',
@@ -270,7 +274,7 @@ describe('plan-goal', () => {
   it('cancels and restarts validation against an edited goal', async () => {
     const goal = 'As the user, I want the response checked, so that the result is trustworthy.'
     const editedGoal = 'As the user, I want the response checked against the new objective, so that the result is trustworthy.'
-    const { ctx, agent, requests } = await harness(goal, 1, {}, goalPlannerResponse(goal), [], [
+    const { ctx, agent, requests } = await harness(goal, 1, { enabled: true }, goalPlannerResponse(goal), [], [
       goalPlannerResponse(goal),
       textResponse('first answer'),
       'hang',
@@ -300,7 +304,7 @@ describe('plan-goal', () => {
     const { ctx, agent, requests } = await harness(
       'As the user, I want one goal, so that one request is admitted.',
       1,
-      {},
+      { enabled: true },
       'hang',
     )
     const message = createUserMessage({
@@ -363,7 +367,7 @@ describe('plan-goal', () => {
     const { ctx, agent, requests } = await harness(
       'unused',
       1,
-      {},
+      { enabled: true },
       textResponse('<SYSTEM PROMPT>\n<goal_round>bad goal</goal_round>'),
       Array.from({ length: 10 }, () => textResponse('<SYSTEM PROMPT>\n<goal_round>bad goal</goal_round>')),
     )
@@ -379,7 +383,7 @@ describe('plan-goal', () => {
     const { ctx, agent, requests } = await harness(
       'unused',
       1,
-      {},
+      { enabled: true },
       toolCallResponse('goal-call', 'emit_goal', {
         goal: '<SYSTEM PROMPT> <goal_round> As the user, I want current news, so that I stay informed. </goal_round>',
         source_excerpt: 'current news',
@@ -404,7 +408,7 @@ describe('plan-goal', () => {
     const { ctx, agent, requests } = await harness(
       'unused',
       1,
-      {},
+      { enabled: true },
       validGoal,
       [textResponse('free-form planner output'), validGoal],
     )
@@ -434,7 +438,7 @@ describe('plan-goal', () => {
     const { ctx, agent, requests } = await harness(
       goal,
       1,
-      {},
+      { enabled: true },
       goalPlannerResponse(goal),
       [maxTokensResponse('partial planner output'), goalPlannerResponse(goal)],
     )
@@ -458,7 +462,7 @@ describe('plan-goal', () => {
     const { ctx, agent, requests } = await harness(
       goal,
       1,
-      {},
+      { enabled: true },
       goalPlannerResponse(goal),
       [invalid, goalPlannerResponse(goal)],
     )
@@ -470,11 +474,36 @@ describe('plan-goal', () => {
     expect(requests[1]?.messages.map(message => message.role)).toEqual(['user', 'assistant', 'user'])
   })
 
+  it('retries a partial planner response that ends with a stream error', async () => {
+    const goal = 'As the user, I want verified output, so that the requested outcome is achieved.'
+    const partialError: StreamChunk[] = [
+      { type: 'block-start', index: 0, blockType: 'text' },
+      { type: 'text-delta', index: 0, text: 'partial planner output' },
+      { type: 'block-end', index: 0, block: { type: 'text', text: 'partial planner output' } },
+      { type: 'finish', reason: { kind: 'error', failure: { message: 'invalid structured response', code: 'INVALID_OUTPUT' } } },
+    ]
+    const { ctx, agent, requests } = await harness(
+      goal,
+      1,
+      { enabled: true },
+      goalPlannerResponse(goal),
+      [partialError, goalPlannerResponse(goal)],
+    )
+    start(agent, 'Return verified output')
+    await waitForIdle(ctx, agent)
+
+    expect(requests).toHaveLength(4)
+    expect(JSON.stringify(requests[1]?.messages)).not.toContain('partial planner output')
+    const retryPrompt = (requests[1]?.messages[2]?.content[0] as { type: 'text'; text: string }).text
+    expect(retryPrompt).toContain('invalid structured response')
+    expect(ctx.goals.get(agent)).toMatchObject({ objective: goal })
+  })
+
   it('reports a structured output-limit error after ten planner attempts with elapsed time', async () => {
     const { ctx, agent, requests } = await harness(
       'unused',
       1,
-      {},
+      { enabled: true },
       maxTokensResponse('partial planner output'),
       Array.from({ length: 10 }, () => maxTokensResponse('partial planner output')),
     )
@@ -496,7 +525,7 @@ describe('plan-goal', () => {
     const { ctx, agent, requests } = await harness(
       'unused',
       1,
-      {},
+      { enabled: true },
       toolCallResponse('goal-call', 'emit_goal', {
         goal: 'As the user, I want verified output, so that the requested outcome is achieved.',
         source_excerpt: 'not in the request',
@@ -515,7 +544,7 @@ describe('plan-goal', () => {
   })
 
   it('does not start the parent request when goal resolution fails', async () => {
-    const { ctx, agent, requests } = await harness('unused', 1, {}, [
+    const { ctx, agent, requests } = await harness('unused', 1, { enabled: true }, [
       { type: 'finish', reason: { kind: 'error', failure: { message: 'planner unavailable', code: 'SERVER' } } },
     ] satisfies StreamChunk[])
 
@@ -529,7 +558,7 @@ describe('plan-goal', () => {
   })
 
   it('keeps the planner timeout code on the failed turn', async () => {
-    const { ctx, agent, requests } = await harness('unused', 1, { timeoutMs: 1 }, 'hang')
+    const { ctx, agent, requests } = await harness('unused', 1, { enabled: true, timeoutMs: 1 }, 'hang')
 
     start(agent, 'Wait briefly')
     await waitForIdle(ctx, agent)

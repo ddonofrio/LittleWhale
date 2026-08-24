@@ -21,6 +21,7 @@ import type { createChatStore } from '../stores.ts'
 import type { ComposerSubmitGesture, InputSubmitMode } from './composer-submission.ts'
 import type { ChatNode, ChatNodeKind } from './chat-nodes.ts'
 import type { CallId, SelectionTarget, ViewTab } from './views.ts'
+import type { CompactionPolicySettings } from '@deepseek-ai/dsh-compaction-policy/client'
 
 /** Browser-owned image that has not crossed the durable host boundary. */
 export interface ComposerAttachment {
@@ -589,8 +590,17 @@ export interface ComposerBarInjected {
     lexicon: ObservableSnapshot<ReadonlyMap<'/' | '@', readonly string[]>>
     /** Source name opened by the programmatic menu launcher, or null. */
     menuLauncher: ObservableSnapshot<string | null>
+    /** Durable global/per-route automatic-compaction policy settings. */
+    compactionPolicy: ObservableSnapshot<SettingsScopeValue<CompactionPolicySettings>>
   }
+  /** Save one override for the active provider/model route. */
+  setCompactionOverride?: (provider: string, model: string, ratio: number) => Promise<void>
+  /** Remove one route override so it inherits the global default. */
+  clearCompactionOverride?: (provider: string, model: string) => Promise<void>
 }
+
+/** Settings-scope value state exposed through the standard hook compartment. */
+export type SettingsScopeValue<T> = T | undefined
 
 /**
  * Owner share of the two named composer control seats (plan / model): the
@@ -607,7 +617,8 @@ export type ComposerBarProps =
   & PropsRenderSlots<
     'conversation.input.attachments' | 'conversation.input.plan' | 'conversation.input.model'
   >
-  & InjectFace<ComposerBarInjected>
+  & Omit<InjectFace<ComposerBarInjected>, 'useCompactionPolicy'>
+  & { useCompactionPolicy?: SnapshotSelectorHook<SettingsScopeValue<CompactionPolicySettings>> }
   & PropsLocale<'conversation'>
 
 /**

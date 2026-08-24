@@ -33,7 +33,7 @@ export const DEFAULT_PLAN_GOAL_TIMEOUT_MS = 300000
 export const PLAN_GOAL_SETTINGS_NAMESPACE = settingsNamespace('plan-goal')
 
 /** Whether automatic goal assignment is enabled when no user override exists. */
-export const DEFAULT_PLAN_GOAL_ENABLED = true
+export const DEFAULT_PLAN_GOAL_ENABLED = false
 
 /** Schema for the plugin's composition configuration. */
 export const Config: z<Config> = z.object({
@@ -552,10 +552,15 @@ async function deriveGoal(
     throwIfPlannerAborted(attemptDeadline.signal)
     const error = finishError(assembler.finish)
     const outputLimit = assembler.finish.kind === 'max-tokens'
-    if (error !== undefined && !outputLimit) throw error
+    const blocks = assembler.blocks()
+    // A provider can finish a partially emitted structured response with an
+    // error. Keep the existing fail-fast behaviour for errors with no model
+    // output, but let a partial response go through the same bounded retry
+    // path as any other malformed planner result.
+    if (error !== undefined && !outputLimit && blocks.length === 0) throw error
     try {
       if (error !== undefined) throw error
-      return generatedGoal(assembler.blocks(), currentRequest(messages))
+      return generatedGoal(blocks, currentRequest(messages))
     } catch (validationError: unknown) {
       if (attempt === MAX_GOAL_PLAN_ATTEMPTS - 1) {
         throw planGoalExhaustedError(
@@ -619,10 +624,11 @@ async function validateGoal(
     throwIfValidationAborted(attemptDeadline.signal)
     const error = finishError(assembler.finish)
     const outputLimit = assembler.finish.kind === 'max-tokens'
-    if (error !== undefined && !outputLimit) throw error
+    const blocks = assembler.blocks()
+    if (error !== undefined && !outputLimit && blocks.length === 0) throw error
     try {
       if (error !== undefined) throw error
-      return parseGoalValidation(assembler.blocks())
+      return parseGoalValidation(blocks)
     } catch (validationError: unknown) {
       if (attempt === MAX_GOAL_PLAN_ATTEMPTS - 1) {
         throw planGoalExhaustedError(

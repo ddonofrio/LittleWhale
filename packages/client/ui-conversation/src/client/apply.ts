@@ -11,6 +11,8 @@ import type {} from '@deepseek-ai/dsh-client-ui-layout/client'
 // Type-only: pulls the locale plugin's Context merge (ctx.locale).
 import type {} from '@deepseek-ai/dsh-client-locale/client'
 import type { ViewTab } from './contract/views.ts'
+import type { ObservableSnapshot } from '@deepseek-ai/dsh-client-runtime/client'
+import type { CompactionPolicySettings } from '@deepseek-ai/dsh-compaction-policy/client'
 import type {
   ApprovalWait, ChatNodeTurnDataInjected, ChatScrollPosition, ChatViewInjected, ComposerBarInjected,
   ComposerChainProps, ConversationInjected, ConversationSessionHeaderInjected, ConversationSessionInjected,
@@ -27,6 +29,8 @@ import { ComposerSubmissionPolicy } from './input/submission-policy.ts'
 import { InputBar } from './skeleton/InputBar.tsx'
 import { EnterBehaviorRow } from './settings/EnterBehaviorRow.tsx'
 import type { EnterBehaviorRowInjected } from './settings/EnterBehaviorRow.tsx'
+import { CompactionPolicyRow } from './settings/CompactionPolicyRow.tsx'
+import type { CompactionPolicyRowInjected } from './settings/CompactionPolicyRow.tsx'
 import { ChatView } from './chat/ChatView.tsx'
 import { StatsLine } from './chat/StatsLine.tsx'
 import { ApprovalPanel } from './skeleton/ApprovalPanel.tsx'
@@ -39,6 +43,8 @@ import { en, NS, zh, type ConversationKey } from './locales.ts'
 import { registerConversationNodes } from './conversation-nodes/register.ts'
 import { registerChatNodeRenderers } from './chat/register-node-renderers.ts'
 import { CONVERSATION_SETTINGS_NAMESPACE, type ConversationSettings } from '../submission-settings.ts'
+
+const COMPACTION_POLICY_NAMESPACE = 'compaction-policy'
 
 declare module '@deepseek-ai/dsh-client-ui-slots' {
   interface LocaleNamespaceMap {
@@ -133,6 +139,24 @@ export function apply(ctx: Context): void {
   const submissionPolicy = new ComposerSubmissionPolicy(
     ctx.settingsScope.bind<ConversationSettings>({ namespace: CONVERSATION_SETTINGS_NAMESPACE }),
   )
+  const compactionPolicy = ctx.settingsScope.bind<CompactionPolicySettings>({ namespace: COMPACTION_POLICY_NAMESPACE })
+  const compactionPolicyValue: ObservableSnapshot<CompactionPolicySettings | undefined> = {
+    getSnapshot: () => compactionPolicy.getSnapshot().value,
+    subscribe: listener => compactionPolicy.subscribe(listener),
+  }
+
+  const compactPolicyFace = (): CompactionPolicyRowInjected => ({
+    hooks: { settings: compactionPolicyValue },
+    setGlobalRatio: (ratio) => { void compactionPolicy.set('compactAtRatio', ratio) },
+  })
+
+  ctx.slots.inject('settings.general.item', () => ctx.slots.register({
+    name: 'settings.general.item',
+    id: 'compaction-policy',
+    order: 25,
+    locale: NS,
+    inject: compactPolicyFace,
+  }, CompactionPolicyRow))
 
   ctx.slots.inject('settings.general.item', () => ctx.slots.register({
     name: 'settings.general.item',
@@ -300,7 +324,14 @@ export function apply(ctx: Context): void {
           toggleCommandMenu: undefined,
           stop: undefined,
           command: undefined,
-          hooks: { notices: ABSENT_NOTICES, lexicon: ABSENT_LEXICON, menuLauncher: ABSENT_MENU_LAUNCHER },
+          hooks: {
+            notices: ABSENT_NOTICES,
+            lexicon: ABSENT_LEXICON,
+            menuLauncher: ABSENT_MENU_LAUNCHER,
+            compactionPolicy: compactionPolicyValue,
+          },
+          setCompactionOverride: async () => {},
+          clearCompactionOverride: async () => {},
         }
       }
       const conversation = concreteConversation(ctx)
@@ -359,6 +390,22 @@ export function apply(ctx: Context): void {
           notices: shell.notices,
           lexicon: shell.lexicon,
           menuLauncher: inputTriggers?.launcher ?? ABSENT_MENU_LAUNCHER,
+          compactionPolicy: compactionPolicyValue,
+        },
+        setCompactionOverride: async (provider, model, ratio) => {
+          const current = compactionPolicy.getSnapshot().value
+          const overrides = (current?.overrides ?? []).filter(
+            override => override.provider !== provider || override.model !== model,
+          )
+          overrides.push({ provider, model, compactAtRatio: ratio })
+          await compactionPolicy.set('overrides', overrides)
+        },
+        clearCompactionOverride: async (provider, model) => {
+          const current = compactionPolicy.getSnapshot().value
+          const overrides = (current?.overrides ?? []).filter(
+            override => override.provider !== provider || override.model !== model,
+          )
+          await compactionPolicy.set('overrides', overrides)
         },
       }
     },

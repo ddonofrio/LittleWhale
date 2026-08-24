@@ -45,6 +45,9 @@
       "path": "../../llm/token-meter"
     },
     {
+      "path": "../../compaction/compaction-policy"
+    },
+    {
       "path": "../../llm/llm-retry"
     },
     {

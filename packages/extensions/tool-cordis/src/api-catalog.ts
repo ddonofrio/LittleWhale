@@ -620,6 +620,25 @@ export const SERVICE_API: readonly ServiceApiEntry[] = [
     ],
   },
   {
+    key: 'compactionPolicy',
+    summary: 'Public service consumed by automatic compaction and policy-aware UI hosts.',
+    description: 'Public service consumed by automatic compaction and policy-aware UI hosts.',
+    methods: [
+      {
+        signature: 'ratioFor(target: CompactionPolicyTarget): number',
+        description: 'Resolve the effective ratio for one exact provider/model route.',
+        parameters: [{ name: 'target', description: 'provider/model route to resolve.' }],
+        returns: 'effective compaction ratio.',
+      },
+      {
+        signature: 'overrideFor(target: CompactionPolicyTarget): CompactionPolicyOverride | undefined',
+        description: 'Return the explicit override, if one exists for the route.',
+        parameters: [{ name: 'target', description: 'provider/model route to inspect.' }],
+        returns: 'matching override, if present.',
+      },
+    ],
+  },
+  {
     key: 'credentials',
     summary: 'Abstract credential service over two key spaces that answer two questions.',
     description: 'Abstract credential service over two key spaces that answer two questions.\n\nA CredentialRef answers "what is behind this environment-variable name", layered over the process environment, the provider-managed store, and `.env` files. One seam-wide rule binds that half: an empty stored value is absent everywhere — `resolve` skips it, `describe` reports it unconfigured — so a blank never masquerades as a configured secret.\n\nA CredentialKey answers "what credential does this plugin hold for this id". Nothing can layer here — an authorization grant has no environment to be read from — so presence of the record is the whole fact, and modifyRecord is the only write path because a correct write depends on the current value (a token refresh is read-decide-replace under one lock).',
@@ -3096,6 +3115,14 @@ export const TYPE_API: readonly TypeApiEntry[] = [
   {
     name: 'CompactionId',
     declaration: 'export type CompactionId = Branded<\'CompactionId\'>;',
+  },
+  {
+    name: 'CompactionPolicyOverride',
+    declaration: 'export interface CompactionPolicyOverride extends CompactionPolicyTarget {\n    compactAtRatio: number;\n}',
+  },
+  {
+    name: 'CompactionPolicyTarget',
+    declaration: 'export interface CompactionPolicyTarget {\n    provider: string;\n    model: string;\n}',
   },
   {
     name: 'CompactionResult',

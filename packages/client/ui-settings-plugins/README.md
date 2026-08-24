@@ -8,7 +8,7 @@ The configurable tab reads which settings namespaces the Host serves and dispatc
 
 The cards this package ships cover the shell executor (`bash`), the agent loop's tool-call parallelism (`agent-loop`), and the DeepSeek search provider (`web-search-deepseek`). The agent-loop plugin also contributes the LLM loop recovery preference to General settings, immediately after the busy-Enter Composer preference; it edits the same `agent-loop` namespace and applies to new agents unless an explicit agent option overrides it. Its stream controls monitor text, reasoning, and tool calls by default, and keep at least one stream selected. When tool calls are selected, their maximum detection count and three recovery prompts appear directly below the Tool calls control; the generic prompts remain separate, and compact-before-failing stays at the bottom for all streams.
 
-The final General settings rows control automatic goal assignment (`plan-goal`) and whether new chats start in plan mode (`plan-mode`). Automatic goal assignment defaults to enabled, while new chats start outside plan mode by default. Both settings apply to later requests or chats without changing an explicit per-session `/plan` selection.
+The final General settings rows control automatic goal assignment (`plan-goal`) and whether new chats start in plan mode (`plan-mode`). Automatic goal assignment is off by default, while new chats start outside plan mode by default. Both settings apply to later requests or chats without changing an explicit per-session `/plan` selection.
 
 ## Extension point
 

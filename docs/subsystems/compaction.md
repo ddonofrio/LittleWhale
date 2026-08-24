@@ -193,6 +193,30 @@ Types: [CommandId](commands.md)
 
 Source: [`packages/compaction/compaction/src/index.ts`](../../packages/compaction/compaction/src/index.ts)
 
+<a id="ctxcompactionpolicy--icompactionpolicy"></a>
+
+### `ctx.compactionPolicy` — `ICompactionPolicy`
+
+Public service consumed by automatic compaction and policy-aware UI hosts.
+
+```ts cordis-catalog
+/**
+ * Resolve the effective ratio for one exact provider/model route.
+ * @param target provider/model route to resolve.
+ * @returns effective compaction ratio.
+ */
+ratioFor(target: CompactionPolicyTarget): number
+
+/**
+ * Return the explicit override, if one exists for the route.
+ * @param target provider/model route to inspect.
+ * @returns matching override, if present.
+ */
+overrideFor(target: CompactionPolicyTarget): CompactionPolicyOverride | undefined
+```
+
+Source: [`packages/compaction/compaction-policy/src/index.ts`](../../packages/compaction/compaction-policy/src/index.ts)
+
 <a id="ctxtoolresultpruner--toolresultpruner"></a>
 
 ### `ctx.toolResultPruner` — `ToolResultPruner`

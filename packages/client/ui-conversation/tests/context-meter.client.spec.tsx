@@ -2,7 +2,7 @@
 // ContextMeter (composer trailing control): occupancy ring gating, the
 // click-open breakdown panel, and its close gestures.
 
-import { afterEach, describe, expect, it } from 'vitest'
+import { afterEach, describe, expect, it, vi } from 'vitest'
 import { cleanup, fireEvent, render } from '@testing-library/react'
 import { makeTranslate } from '@deepseek-ai/dsh-client-test-runtime'
 import { en as commonEn, zh as commonZh } from '@deepseek-ai/dsh-client-locale/src/locales/index.ts'
@@ -110,6 +110,40 @@ describe('ContextMeter', () => {
     expect(panel.textContent).not.toContain('对话消息')
     // Without composition shares, the bar falls back to one plain segment.
     expect(panel.getElementsByClassName(segmentClass)).toHaveLength(1)
+  })
+
+  it('shows the route threshold in tokens and applies a dragged override', async () => {
+    const setOverride = vi.fn().mockResolvedValue(undefined)
+    const view = meter({
+      contextPressure: {
+        provider: 'mock', model: 'small', pressureTokens: 32_000, contextWindow: 128_000,
+      },
+      contextBreakdown: BREAKDOWN,
+    }, tEn)
+    view.rerender(
+      <ContextMeter
+        useProjection={projections({
+          contextPressure: {
+            provider: 'mock', model: 'small', pressureTokens: 32_000, contextWindow: 128_000,
+          },
+          contextBreakdown: BREAKDOWN,
+        })}
+        t={tEn}
+        policy={{ compactAtRatio: 0.75, overrides: [] }}
+        setOverride={setOverride}
+      />,
+    )
+    fireEvent.click(view.getByRole('button', { name: '25% of context used' }))
+    const panel = view.container.querySelector('[role="dialog"]')!
+    expect(panel.textContent).toContain('Compact at')
+    expect(panel.textContent).toContain('75% · ~96K')
+    const slider = view.getByRole('slider', { name: 'Automatic compaction position' })
+    fireEvent.change(slider, { target: { value: '60' } })
+    expect(panel.textContent).toContain('60% · ~76.8K')
+    expect(view.getByRole('button', { name: 'Apply' })).toBeDefined()
+    fireEvent.click(view.getByRole('button', { name: 'Apply' }))
+    expect(setOverride).toHaveBeenCalledWith('mock', 'small', 0.6)
+    await Promise.resolve()
   })
 
   it('closes when capacity disappears and stays closed when it returns', () => {

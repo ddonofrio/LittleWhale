@@ -9,6 +9,7 @@ import z from '@deepseek-ai/schemastery'
 import { CompactionEngine, ManualCompactionError } from '@deepseek-ai/dsh-compaction'
 import type { CompactionResult, CompactionTrigger } from '@deepseek-ai/dsh-compaction'
 import type { TokenMeter } from '@deepseek-ai/dsh-token-meter'
+import type { ICompactionPolicy } from '@deepseek-ai/dsh-compaction-policy'
 import type { Session } from '@deepseek-ai/dsh-session'
 import { CONTEXT_WINDOW_EXCEEDED_CODE, assertNever } from '@deepseek-ai/dsh-llm'
 import type { LlmCallConfig } from '@deepseek-ai/dsh-llm'
@@ -33,6 +34,7 @@ import type {
   BasicCompactionConfig,
   ModelCompactPolicyConfig,
   ResolvedConfig,
+  ResolvedTargetPolicy,
 } from './types.ts'
 
 export type {
@@ -103,6 +105,27 @@ const summarizationModelSchema = z.string()
 const maxTokensSchema = z.number().step(1).min(1)
 const compactionRetriesSchema = z.number().step(1).min(0)
 const maxOverflowRetriesSchema = z.number().step(1).min(0)
+
+/**
+ * Keep the inherited recent-tail budget below a user-selected automatic
+ * threshold. The browser policy changes only the trigger position; when it is
+ * below the backend's default 16% tail, retaining 80% of the selected
+ * threshold preserves the same useful headroom without making compaction
+ * impossible. Explicit absolute retention remains strictly validated.
+ */
+function policyForAutomaticThreshold(
+  policy: ResolvedTargetPolicy,
+  thresholdRatio: number,
+): ResolvedTargetPolicy {
+  if (policy.retainTokens !== undefined || policy.retainRatio < thresholdRatio) {
+    return { ...policy, thresholdRatio }
+  }
+  return {
+    ...policy,
+    thresholdRatio,
+    retainRatio: thresholdRatio * 0.8,
+  }
+}
 
 const modelPolicy: z<ModelCompactPolicyConfig> = z.object({
   provider: z.string().required(),
@@ -327,10 +350,31 @@ export class BasicCompactionEngine extends CompactionEngine {
         + 'configure contextWindow on that adapter model',
       )
     }
-    const spec = resolveCompactSpec(
-      policy,
-      inputCapacity(context.contextWindow, modelInfo.defaultMaxTokens, agent, targetKey),
+    const compactAtRatio = (this.ctx.get('compactionPolicy') as ICompactionPolicy | undefined)?.ratioFor(target)
+    const inputContextWindow = inputCapacity(
+      context.contextWindow,
+      modelInfo.defaultMaxTokens,
+      agent,
+      targetKey,
     )
+    const pressurePolicy = compactAtRatio === undefined
+      ? policy
+      : policyForAutomaticThreshold(policy, compactAtRatio)
+    const resolvedSpec = resolveCompactSpec(
+      pressurePolicy,
+      inputContextWindow,
+    )
+    // The user-facing policy is a fraction of the complete context window.
+    // The reserved output budget remains a hard safety ceiling for dispatch.
+    const spec = compactAtRatio === undefined
+      ? resolvedSpec
+      : {
+        ...resolvedSpec,
+        thresholdTokens: Math.min(
+          Math.floor(context.contextWindow * compactAtRatio),
+          inputContextWindow,
+        ),
+      }
     if (measurement.totalTokens < spec.thresholdTokens) return null
 
     // Once pressure qualifies, land the model-free pass before choosing a

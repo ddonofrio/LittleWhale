@@ -241,6 +241,7 @@ describe('the shipped Web composition', () => {
         'subagent', 'subagent_fork', 'todo_write', 'update_goal', 'web_search',
         'workflow', 'write',
       ])
+      expect(ctx.agentPresets.serviceFor(handle.agent, 'compaction')).toBeDefined()
     } finally {
       await handle.dispose()
     }

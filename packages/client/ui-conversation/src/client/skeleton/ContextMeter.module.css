@@ -93,6 +93,41 @@
   overflow: hidden;
 }
 
+.barShell {
+  position: relative;
+  margin: 10px 0 12px;
+  height: 12px;
+}
+
+.barShell .bar {
+  position: absolute;
+  inset: 4px 0 auto;
+  width: 100%;
+  margin: 0;
+}
+
+.marker {
+  position: absolute;
+  top: 1px;
+  z-index: 1;
+  width: 1px;
+  height: 10px;
+  transform: translateX(-50%);
+  background: var(--dsw-alias-label-primary);
+  pointer-events: none;
+}
+
+.thresholdInput {
+  position: absolute;
+  inset: 0;
+  z-index: 2;
+  width: 100%;
+  height: 12px;
+  margin: 0;
+  opacity: 0;
+  cursor: ew-resize;
+}
+
 .segment {
   flex: none;
   min-width: 2px;
@@ -144,4 +179,60 @@
   margin: 0;
   font-variant-numeric: tabular-nums;
   color: var(--dsw-alias-label-primary);
+}
+
+.thresholdRow {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 2px 0;
+}
+
+.thresholdSwatch {
+  display: inline-block;
+  margin-right: 6px;
+  width: 1px;
+  height: 12px;
+  background: var(--dsw-alias-label-primary);
+  vertical-align: -2px;
+}
+
+.thresholdValue {
+  font-variant-numeric: tabular-nums;
+  color: var(--dsw-alias-label-primary);
+}
+
+.actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 8px;
+  margin-top: 8px;
+}
+
+.apply,
+.reset {
+  height: 28px;
+  padding: 0 10px;
+  border: none;
+  border-radius: 14px;
+  font: inherit;
+  font-size: 12px;
+  cursor: pointer;
+}
+
+.apply {
+  background: var(--dsw-alias-interactive-bg-primary);
+  color: var(--dsw-alias-label-inverted);
+}
+
+.reset {
+  background: var(--dsw-alias-interactive-bg-hover);
+  color: var(--dsw-alias-label-primary);
+}
+
+.apply:disabled,
+.reset:disabled {
+  cursor: default;
+  opacity: 0.6;
 }
