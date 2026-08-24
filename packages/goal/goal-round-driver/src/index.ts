@@ -9,7 +9,7 @@ import type { Context } from '@deepseek-ai/cordis'
 import type { Agent, PreStepDecision } from '@deepseek-ai/dsh-agent'
 import type { GoalMessageSource, GoalRef, GoalView } from '@deepseek-ai/dsh-goal'
 import { createUserMessage } from '@deepseek-ai/dsh-llm'
-import type { ContentBlock, MessageId, MessageSource } from '@deepseek-ai/dsh-llm'
+import type { ContentBlock, MessageId, MessageSource, ToolSchema } from '@deepseek-ai/dsh-llm'
 import type { Session, SessionEvent, UserMessage } from '@deepseek-ai/dsh-session'
 import { renderGoalRoundPrompt } from './prompt.ts'
 
@@ -43,6 +43,17 @@ interface DriverState {
   requested: boolean
   run: Promise<void> | undefined
   stopping: boolean
+}
+
+/** Optional tool-registry surface used to snapshot model-visible goal schemas. */
+interface GoalToolSchemaProvider {
+  schemas(scope?: object): ToolSchema[]
+}
+
+/** Read goal schemas without making the driver require the optional tool runtime. */
+function goalToolSchemas(ctx: Context, agent: Agent): ToolSchema[] {
+  const tools = (ctx as unknown as { get(name: string): unknown }).get('tools') as GoalToolSchemaProvider | undefined
+  return tools?.schemas(agent) ?? []
 }
 
 /** Whether a source identifies an automatic, positive-numbered goal round. */
@@ -172,7 +183,7 @@ export function apply(ctx: Context): void {
     }
 
     const round = goal.roundsStarted + 1
-    const content = renderGoalRoundPrompt(goal, round)
+    const content = renderGoalRoundPrompt(goal, round, goalToolSchemas(ctx, agent))
     const message = createUserMessage({
       content,
       source: { kind: 'goal', goalId: goal.id, revision: goal.revision, round },

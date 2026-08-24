@@ -2,12 +2,19 @@
 
 import { isDeepStrictEqual } from 'node:util'
 import type { Context } from '@deepseek-ai/cordis'
+import type {} from '@deepseek-ai/dsh-agent'
 import { foldGoal, type FoldedGoal, type GoalMessageSource, type GoalView } from '@deepseek-ai/dsh-goal'
 import type { InvariantFailure, InvariantInstaller } from '@deepseek-ai/dsh-invariants'
+import type { ToolSchema } from '@deepseek-ai/dsh-llm'
 import type { Session, SessionEvent } from '@deepseek-ai/dsh-session'
 import { renderGoalRoundPrompt } from './prompt.ts'
 
 const PACKAGE_NAME = '@deepseek-ai/dsh-goal-round-driver'
+
+/** Optional tool-registry surface used to reconstruct model-visible schemas. */
+interface GoalToolSchemaProvider {
+  schemas(scope?: object): ToolSchema[]
+}
 
 /** Cordis companion plugin name. */
 export const name = 'goal-round-driver-invariant'
@@ -42,8 +49,18 @@ function goalView(folded: FoldedGoal, source: GoalMessageSource, fail: Invariant
   }
 }
 
+/** Read live goal-control schemas when the owning runtime is available. */
+function goalToolsFor(ctx: Context, session: Session) {
+  const tools = (ctx as unknown as { get(name: string): unknown }).get('tools') as GoalToolSchemaProvider | undefined
+  if (tools === undefined) return []
+  const agents = (ctx as unknown as { get(name: string): { get(id: Session['id']): object | undefined } | undefined }).get('agents')
+  return tools.schemas(agents?.get(session.id))
+}
+
 /** Validate one package-owned continuation message against its durable prefix. */
 function validateEvent(
+  ctx: Context,
+  session: Session,
   prior: readonly SessionEvent[],
   event: SessionEvent,
   fail: InvariantFailure,
@@ -51,7 +68,11 @@ function validateEvent(
   if (event.type !== 'user/message') return
   const source = event.data.source
   if (source.kind !== 'goal' || source.round <= 0) return
-  const expected = renderGoalRoundPrompt(goalView(foldChecked(prior, fail), source, fail), source.round)
+  const expected = renderGoalRoundPrompt(
+    goalView(foldChecked(prior, fail), source, fail),
+    source.round,
+    goalToolsFor(ctx, session),
+  )
   if (!isDeepStrictEqual(event.data.content, expected)) {
     fail(`goal round ${source.round} content does not match the package-owned continuation prompt`)
   }
@@ -62,7 +83,7 @@ const install: InvariantInstaller = Object.assign((ctx: Context, fail: Invariant
   for (const session of ctx.sessions.list()) {
     const prior: SessionEvent[] = []
     for (const event of session.events) {
-      validateEvent(prior, event, fail)
+      validateEvent(ctx, session, prior, event, fail)
       prior.push(event)
     }
   }
@@ -70,7 +91,7 @@ const install: InvariantInstaller = Object.assign((ctx: Context, fail: Invariant
   ctx.on('internal/dispatch', (_mode, eventName, args) => {
     if (eventName !== 'session/event') return
     const [session, event] = args as [Session, SessionEvent]
-    validateEvent(session.events, event, fail)
+    validateEvent(ctx, session, session.events, event, fail)
   }, { global: true })
 }, { inject: ['sessions'] })
 

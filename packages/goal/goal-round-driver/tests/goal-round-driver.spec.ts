@@ -10,6 +10,7 @@ import { createUserMessage, LlmAdapter, LlmError  } from '@deepseek-ai/dsh-llm'
 import type { GenerateOptions, StreamChunk } from '@deepseek-ai/dsh-llm'
 import { SessionId } from '@deepseek-ai/dsh-session'
 import type { UserMessage } from '@deepseek-ai/dsh-session'
+import * as goalTools from '@deepseek-ai/dsh-tool-goal'
 import * as goalSession from '../src/index.ts'
 
 type ScriptEntry = StreamChunk[] | Error | 'hang' | ((options: GenerateOptions) => StreamChunk[])
@@ -90,6 +91,7 @@ async function harness(script: ScriptEntry[]): Promise<Harness> {
   contexts.push(ctx)
   await mountAgentLoopTestDependencies(ctx)
   await ctx.plugin(GoalService)
+  await ctx.plugin(goalTools)
   const driver = await ctx.plugin(goalSession)
   await ctx.plugin(AgentLoop, { agents: [] })
   const adapter = new ScriptedAdapter(script)
@@ -207,6 +209,12 @@ describe('same-session goal driving', () => {
     expect(rounds).toEqual([1, 2])
     expect(requestText(test.adapter.requests[0]!)).toContain('Round: 1/2')
     expect(requestText(test.adapter.requests[1]!)).toContain('Round: 2/2')
+    expect(requestText(test.adapter.requests[0]!)).toContain('<goal_tools>')
+    expect(requestText(test.adapter.requests[0]!)).toContain('"name":"get_goal"')
+    expect(requestText(test.adapter.requests[0]!)).toContain('"name":"update_goal"')
+    expect(test.adapter.requests[0]!.tools?.map(tool => tool.name)).toEqual(expect.arrayContaining([
+      'get_goal', 'update_goal',
+    ]))
   })
 
   it('never adopts activation from an already-live driver and waits for explicit resume', async () => {
