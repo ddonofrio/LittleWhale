@@ -1,6 +1,6 @@
 /**
  * Shared structural source of truth for the Agent Note tree. Lifecycle and class
- * sets are closed under `.agents/notes/README.md`; importing this module is pure.
+ * sets are closed; importing this module is pure.
  */
 
 import { existsSync, globSync, readdirSync } from 'node:fs'

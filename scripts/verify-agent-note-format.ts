@@ -2,7 +2,7 @@
  * Enforce Agent Note headers, lifecycle-specific sections, alternatives, and retired
  * marker rules. Classification and filenames belong to the sibling tree gate.
  * Exact format and
- * grandfathering rules live in `.agents/notes/README.md`.
+ * grandfathering rules live with this verifier.
  */
 
 import { readFileSync } from 'node:fs'
@@ -78,14 +78,14 @@ for (const note of notes) {
   const hasSection = h2s.includes('## Alternatives considered')
   const hasGrandfather = prose.includes(GRANDFATHER)
   if (hasSection && hasGrandfather) fail('carries both `## Alternatives considered` and the grandfather comment — drop the comment')
-  if (!hasSection && !hasGrandfather) fail('missing `## Alternatives considered` (a pre-format Agent Note whose alternatives are not reconstructible carries the grandfather comment instead — see .agents/notes/README.md § The file format)')
+  if (!hasSection && !hasGrandfather) fail('missing `## Alternatives considered` (a pre-format record whose alternatives are not reconstructible carries the grandfather comment instead)')
   if (hasGrandfather && note.date >= FORMAT_ADOPTED) fail(`the grandfather comment is only valid for Agent Notes dated before ${FORMAT_ADOPTED}`)
 
   if (prose.some(line => LEGACY_MARKERS.some(marker => line.includes(marker)))) fail('carries the retired legacy-format debt marker')
 }
 
 if (errors.length === 0) {
-  console.log(`verify-agent-note-format: ${notes.length} Agent Note(s) checked, all conform to .agents/notes/README.md § The file format.`)
+  console.log(`verify-agent-note-format: ${notes.length} record(s) checked.`)
   process.exit(0)
 }
 
