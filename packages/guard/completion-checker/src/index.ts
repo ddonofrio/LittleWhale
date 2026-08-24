@@ -210,17 +210,13 @@ export function apply(ctx: Context, config: Config): void {
     enabled: config.enabled ?? DEFAULT_COMPLETION_CHECKER_ENABLED,
   }
   let source: () => CompletionCheckerSettings = () => entry
-  installSettingsSection(ctx, COMPLETION_CHECKER_SETTINGS_NAMESPACE, COMPLETION_CHECKER_SETTINGS_SCHEMA, entry, {
-    setSource: (current) => { source = current },
-    onChange: () => {},
-  })
 
   const reviewStates = new WeakMap<Agent, { turn: number; review: CompletionReview }>()
   const providerName = config.provider ?? DEFAULT_COMPLETION_CHECKER_PROVIDER
 
   // Provider plugins can register after this plugin. Mount the visible tool,
-  // its prompt policy, and the terminal guard when the configured provider
-  // becomes available.
+  // its prompt policy, and the terminal guard only while the checker is
+  // enabled and the configured provider is available.
   let disposeTool: (() => void) | undefined
   let disposePrompt: (() => void) | undefined
   let disposeTurnStopping: (() => void) | undefined
@@ -236,8 +232,17 @@ export function apply(ctx: Context, config: Config): void {
     agent.steer(checkRequestMessage())
   }
 
-  const mount = () => {
-    if (disposeTool !== undefined || ctx.subagents.getProvider(providerName) === undefined) return
+  const unmount = () => {
+    disposeTool?.()
+    disposeTool = undefined
+    disposePrompt?.()
+    disposePrompt = undefined
+    disposeTurnStopping?.()
+    disposeTurnStopping = undefined
+  }
+
+  function mount(): void {
+    if (!source().enabled || disposeTool !== undefined || ctx.subagents.getProvider(providerName) === undefined) return
     const tool: ToolDefinition = {
       name: 'completion_check',
       description: 'Validate the current task with an independent reviewer before giving the final answer. Call this after completing the work and call it again after addressing any requested changes.',
@@ -291,17 +296,23 @@ export function apply(ctx: Context, config: Config): void {
     })
     disposeTurnStopping = ctx.on('agent/turn-stopping', onTurnStopping)
   }
+
+  function syncRegistration(): void {
+    if (source().enabled) mount()
+    else unmount()
+  }
+
+  installSettingsSection(ctx, COMPLETION_CHECKER_SETTINGS_NAMESPACE, COMPLETION_CHECKER_SETTINGS_SCHEMA, entry, {
+    setSource: (current) => { source = current },
+    onChange: syncRegistration,
+  })
+
   ctx.on('subagent/provider-added', (provider) => {
-    if (provider.name === providerName) mount()
+    if (provider.name === providerName) syncRegistration()
   })
   ctx.on('subagent/provider-removed', (name) => {
     if (name !== providerName) return
-    disposeTool?.()
-    disposeTool = undefined
-    disposePrompt?.()
-    disposePrompt = undefined
-    disposeTurnStopping?.()
-    disposeTurnStopping = undefined
+    unmount()
   })
   mount()
 }

@@ -12,7 +12,7 @@ The completion checker exposes a model-visible `completion_check` tool. Before g
     provider: spawn
 ```
 
-The `enabled` field is also available in the `completion-checker` General settings namespace and applies live. `provider` names a registered one-shot `ctx.subagents` provider. The shipped `spawn` provider is required by the default composition because the checker gives it a clean transcript instead of inherited history.
+The `enabled` field is also available in the `completion-checker` General settings namespace and applies live. When it is off, the checker removes both its model-visible tool and its prompt instruction. `provider` names a registered one-shot `ctx.subagents` provider. The shipped `spawn` provider is required by the default composition because the checker gives it a clean transcript instead of inherited history.
 
 ## Review protocol
 

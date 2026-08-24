@@ -10,6 +10,7 @@ import SubagentRuntime from '@deepseek-ai/dsh-subagent'
 import * as SpawnProvider from '@deepseek-ai/dsh-subagent-spawn-in-process'
 import type { SubagentStartRequest, SubagentResult, SubagentRun } from '@deepseek-ai/dsh-subagent'
 import { maxTokensResponse, MockAdapter, textResponse, toolCallResponse } from '../../../core/agent-loop/tests/mock-adapter.ts'
+import { MemorySettings } from '../../../settings/settings/tests/memory.ts'
 
 interface ReviewHarness {
   readonly ctx: Context
@@ -180,10 +181,29 @@ describe('completion-checker', () => {
 
   it('does not review when disabled', async () => {
     const { ctx, agent, starts } = await harness([], { enabled: false })
+    expect(ctx.tools.get('completion_check')).toBeUndefined()
+    expect(ctx.tools.schemas().map(tool => tool.name)).not.toContain('completion_check')
+    expect((await ctx.systemPrompt.assemble()).sections.map(section => section.name)).not.toContain('tool:completion-check')
     start(agent)
     await waitForIdle(ctx, agent)
 
     expect(starts).toHaveLength(0)
+  })
+
+  it('removes the tool and prompt when the live setting is disabled', async () => {
+    const { ctx } = await harness([])
+    await ctx.plugin(MemorySettings, { doc: { 'completion-checker': { enabled: false } } })
+
+    await vi.waitFor(() => {
+      expect(ctx.tools.get('completion_check')).toBeUndefined()
+    })
+    expect((await ctx.systemPrompt.assemble()).sections.map(section => section.name)).not.toContain('tool:completion-check')
+
+    await ctx.settings.update(CompletionChecker.COMPLETION_CHECKER_SETTINGS_NAMESPACE, { enabled: true })
+    await vi.waitFor(() => {
+      expect(ctx.tools.get('completion_check')).toBeDefined()
+    })
+    expect((await ctx.systemPrompt.assemble()).sections.map(section => section.name)).toContain('tool:completion-check')
   })
 
   it('does not review a turn already being recovered by the loop guard', async () => {
