@@ -1,6 +1,7 @@
 import { afterEach, describe, expect, it, vi } from 'vitest'
 import { Context } from '@deepseek-ai/cordis'
-import type { Agent } from '@deepseek-ai/dsh-agent'
+import { agentEvents } from '@deepseek-ai/dsh-agent'
+import type { Agent, PreStepDecision } from '@deepseek-ai/dsh-agent'
 import AgentLoop from '@deepseek-ai/dsh-agent-loop'
 import { mountAgentLoopTestDependencies } from '@deepseek-ai/dsh-agent-loop-testkit'
 import { createUserMessage } from '@deepseek-ai/dsh-llm'
@@ -153,6 +154,37 @@ describe('plan-goal', () => {
     await idle
   })
 
+  it('shares one planner call when duplicate pre-step delivery races the same request', async () => {
+    const { ctx, agent, requests } = await harness(
+      'As the user, I want one goal, so that one request is admitted.',
+      1,
+      {},
+      'hang',
+    )
+    const message = createUserMessage({
+      content: [{ type: 'text', text: 'Admit this once' }],
+      source: { kind: 'user' },
+    })
+    const decision = (): Promise<PreStepDecision> => Promise.resolve({ kind: 'enter', messages: [message] })
+    const firstAbort = new AbortController()
+    const secondAbort = new AbortController()
+    const dispatch = agentEvents(ctx, agent)
+    const calls = Promise.allSettled([
+      dispatch.waterfall('agent/pre-step', {
+        messages: [message], turn: 1, step: 1, signal: firstAbort.signal,
+      }, decision),
+      dispatch.waterfall('agent/pre-step', {
+        messages: [message], turn: 1, step: 1, signal: secondAbort.signal,
+      }, decision),
+    ])
+    await vi.waitFor(() => { expect(requests.filter(request => request.purpose === 'goal')).toHaveLength(1) })
+    firstAbort.abort()
+    secondAbort.abort()
+    await calls
+
+    expect(requests.filter(request => request.purpose === 'goal')).toHaveLength(1)
+  })
+
   it('derives later goals from the clean transcript and the newly received request', async () => {
     const { ctx, agent, requests } = await harness(
       'As the user, I want the next house iteration implemented in one focused pass, so that the house is ready for the next step.',
@@ -281,6 +313,21 @@ describe('plan-goal', () => {
     expect(requests).toHaveLength(1)
     expect(requests[0]?.purpose).toBe('goal')
     expect(ctx.goals.get(agent)).toBeUndefined()
+    expect(agent.session.events.find(event => event.type === 'assistant/message')).toBeUndefined()
+  })
+
+  it('keeps the planner timeout code on the failed turn', async () => {
+    const { ctx, agent, requests } = await harness('unused', 1, { timeoutMs: 1 }, 'hang')
+
+    start(agent, 'Wait briefly')
+    await waitForIdle(ctx, agent)
+
+    expect(requests).toHaveLength(1)
+    const end = agent.session.events.findLast(event => event.type === 'turn/end')
+    expect(end?.type === 'turn/end' && end.data.reason).toEqual({
+      kind: 'error',
+      error: { message: 'PLAN_GOAL_TIMEOUT after 1ms', code: 'PLAN_GOAL_TIMEOUT' },
+    })
     expect(agent.session.events.find(event => event.type === 'assistant/message')).toBeUndefined()
   })
 })

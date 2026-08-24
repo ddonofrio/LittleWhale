@@ -9,12 +9,12 @@
 
 import { Context } from '@deepseek-ai/cordis'
 import type { Agent, PreStepDecision } from '@deepseek-ai/dsh-agent'
-import { BlockAssembler, createUserMessage, deepFreeze } from '@deepseek-ai/dsh-llm'
+import { BlockAssembler, createUserMessage, deepFreeze, LlmError } from '@deepseek-ai/dsh-llm'
 import type { ContentBlock, FinishReason, GenerateOptions, Message, ToolSchema } from '@deepseek-ai/dsh-llm'
 import type { UserMessage } from '@deepseek-ai/dsh-session'
 import type {} from '@deepseek-ai/dsh-goal'
 import { installSettingsSection, settingsNamespace } from '@deepseek-ai/dsh-settings'
-import { deadline, MAX_TIMER_DELAY_MS } from '@deepseek-ai/dsh-timeout'
+import { deadline, MAX_TIMER_DELAY_MS, timeoutOf } from '@deepseek-ai/dsh-timeout'
 import z from '@deepseek-ai/schemastery'
 
 /** Plugin configuration. */
@@ -83,6 +83,11 @@ const GOAL_RESULT_TOOL: ToolSchema = {
 type PlanGoalState = {
   readonly timeoutMs: number
 }
+
+type GoalPlanKey = string
+
+/** One auxiliary planner promise per agent and claimed request. */
+const inFlightPlans = new WeakMap<Agent, Map<GoalPlanKey, Promise<string>>>()
 
 function clip(text: string, maxChars: number): string {
   return text.length <= maxChars ? text : `${text.slice(0, maxChars)}… [truncated]`
@@ -305,6 +310,13 @@ function renderError(error: unknown): string {
   return error instanceof Error ? error.message : String(error)
 }
 
+/** Preserve the capability-owned timeout code instead of flattening it to UNKNOWN. */
+function throwIfPlannerAborted(signal: AbortSignal): void {
+  const timeout = timeoutOf(signal, 'PLAN_GOAL_TIMEOUT')
+  if (timeout !== undefined) throw new LlmError(timeout.message, timeout.code)
+  signal.throwIfAborted()
+}
+
 /** Persist an objective through the same goal domain used by `/goal`. */
 function persistGoal(ctx: Context, agent: Agent, objective: string): void {
   const current = ctx.goals.get(agent)
@@ -350,9 +362,10 @@ async function deriveGoal(
     })
     const assembler = new BlockAssembler()
     for await (const chunk of ctx.llm.stream(options)) {
-      callDeadline.signal.throwIfAborted()
+      throwIfPlannerAborted(callDeadline.signal)
       assembler.push(chunk)
     }
+    throwIfPlannerAborted(callDeadline.signal)
     const error = finishError(assembler.finish)
     if (error !== undefined) throw error
     try {
@@ -368,6 +381,31 @@ async function deriveGoal(
   }
   /* v8 ignore next -- the bounded loop always returns or throws. */
   throw new Error('plan-goal: goal resolution loop ended unexpectedly')
+}
+
+/** Share a planner call when duplicate pre-step middleware races the same input. */
+function deriveGoalOnce(
+  ctx: Context,
+  state: PlanGoalState,
+  agent: Agent,
+  messages: readonly UserMessage[],
+  signal: AbortSignal,
+): Promise<string> {
+  const key = messages.map(message => message.id).join('\u0000')
+  let plans = inFlightPlans.get(agent)
+  if (plans === undefined) {
+    plans = new Map()
+    inFlightPlans.set(agent, plans)
+  }
+  const existing = plans.get(key)
+  if (existing !== undefined) return existing
+  const plan = deriveGoal(ctx, state, agent, messages, signal)
+  plans.set(key, plan)
+  void plan.then(
+    () => { if (plans?.get(key) === plan) plans.delete(key) },
+    () => { if (plans?.get(key) === plan) plans.delete(key) },
+  )
+  return plan
 }
 
 /** Install goal derivation at the model-step boundary. */
@@ -398,7 +436,7 @@ export function apply(ctx: Context, config: Config = {}): void {
       return decision
     }
 
-    const objective = await deriveGoal(ctx, state, agent, messages, signal)
+    const objective = await deriveGoalOnce(ctx, state, agent, messages, signal)
 
     try {
       persistGoal(ctx, agent, objective)
