@@ -1,6 +1,10 @@
 CLAUDE.local.md
 .env
 node_modules/
+cloud/backend/node_modules/
+cloud/.deploy/
+cloud/frontend/dist/
+cloud/outputs.json
 lib/
 *.tsbuildinfo
 pnpm-debug.log
