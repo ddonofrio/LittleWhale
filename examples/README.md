@@ -6,6 +6,10 @@ Runnable demonstrations of the main Little Whale interfaces and extension points
 
 Optional overlays that connect supported third-party memory servers through the generic MCP client. See the [memory example reference](mcp-memory/README.md).
 
+## mcp-atlassian-rovo
+
+An opt-in overlay that connects Little Whale to the Atlassian Rovo MCP Server for Jira and Confluence search and retrieval. See the [Atlassian Rovo example reference](mcp-atlassian-rovo/README.md).
+
 ## headless-agent
 
 A non-interactive agent that accepts one task, runs it, and emits a selected machine-readable or human-readable output format. See the [headless example reference](headless-agent/README.md).

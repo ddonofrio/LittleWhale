@@ -1,0 +1,12 @@
+# Opt-in PoC for the Atlassian Rovo MCP Server.
+# Keep the local credential file ignored by Git, never in this file.
+- insert:
+    - id: mcp-atlassian-rovo
+      name: '@deepseek-ai/dsh-mcp-client'
+      config:
+        serverName: atlassian_rovo
+        transport: streamable-http
+        url: https://mcp.atlassian.com/v1/mcp
+        headers:
+          Authorization: !!js 'process.getBuiltinModule("node:fs").existsSync(process.getBuiltinModule("node:path").join(process.cwd(), "examples/mcp-atlassian-rovo/credentials.json")) ? JSON.parse(process.getBuiltinModule("node:fs").readFileSync(process.getBuiltinModule("node:path").join(process.cwd(), "examples/mcp-atlassian-rovo/credentials.json"), "utf8")).authorization || "" : ""'
+        failOnStartupError: true
