@@ -34,7 +34,7 @@ function Get-AwsText([string[]]$Arguments) {
 }
 
 function Write-JsonFile([string]$Path, $Value) {
-  $Value | ConvertTo-Json -Depth 10 | Set-Content -Path $Path -Encoding utf8
+  $Value | ConvertTo-Json -Depth 10 | Set-Content -Path $Path -Encoding ascii
 }
 
 function Ensure-DynamoTable([string]$TableName, [string]$HashKey, [string]$RangeKey) {
@@ -70,10 +70,12 @@ function Ensure-S3Bucket([string]$BucketName) {
 
   Invoke-Aws @('s3api', 'put-public-access-block', '--bucket', $BucketName, '--region', $Region,
     '--public-access-block-configuration', 'BlockPublicAcls=true,IgnorePublicAcls=true,BlockPublicPolicy=true,RestrictPublicBuckets=true')
+  $encryptionPath = Join-Path $tempRoot 'encryption.json'
+  Write-JsonFile $encryptionPath @{ Rules = @(@{ ApplyServerSideEncryptionByDefault = @{ SSEAlgorithm = 'AES256' } }) }
   Invoke-Aws @('s3api', 'put-bucket-encryption', '--bucket', $BucketName, '--region', $Region,
-    '--server-side-encryption-configuration', '{"Rules":[{"ApplyServerSideEncryptionByDefault":{"SSEAlgorithm":"AES256"}}]}')
+    '--server-side-encryption-configuration', "file://$encryptionPath")
   $corsPath = Join-Path $tempRoot 'cors.json'
-  Write-JsonFile $corsPath @(@{ AllowedHeaders = @('content-type', 'x-amz-*'); AllowedMethods = @('GET', 'PUT', 'HEAD'); AllowedOrigins = @($AllowedOrigin); ExposeHeaders = @('etag'); MaxAgeSeconds = 86400 })
+  Write-JsonFile $corsPath @{ CORSRules = @(@{ AllowedHeaders = @('content-type', 'x-amz-*'); AllowedMethods = @('GET', 'PUT', 'HEAD'); AllowedOrigins = @($AllowedOrigin); ExposeHeaders = @('etag'); MaxAgeSeconds = 86400 }) }
   Invoke-Aws @('s3api', 'put-bucket-cors', '--bucket', $BucketName, '--region', $Region, '--cors-configuration', "file://$corsPath")
 }
 
@@ -107,13 +109,17 @@ Ensure-DynamoTable $configTable 'configKey' ''
 Ensure-DynamoTable $sessionsTable 'ownerId' 'sessionId'
 Ensure-DynamoTable $messagesTable 'sessionId' 'messageId'
 Ensure-DynamoTable $authTable 'authKey' ''
-Invoke-Aws @('dynamodb', 'update-time-to-live', '--table-name', $authTable, '--time-to-live-specification', 'Enabled=true,AttributeName=expiresAt', '--region', $Region)
+$ttlStatus = Get-AwsText @('dynamodb', 'describe-time-to-live', '--table-name', $authTable, '--query', 'TimeToLiveDescription.TimeToLiveStatus', '--output', 'text', '--region', $Region)
+if ($ttlStatus -ne 'ENABLED') {
+  Invoke-Aws @('dynamodb', 'update-time-to-live', '--table-name', $authTable, '--time-to-live-specification', 'Enabled=true,AttributeName=expiresAt', '--region', $Region)
+}
 Ensure-S3Bucket $WorkspaceBucket
 
 $secretArn = Get-AwsText @('secretsmanager', 'describe-secret', '--secret-id', $secretName, '--query', 'ARN', '--output', 'text', '--region', $Region)
 if ([string]::IsNullOrWhiteSpace($secretArn)) {
   Write-Host "Creating Secrets Manager secret: $secretName"
-  $secretArn = Get-AwsText @('secretsmanager', 'create-secret', '--name', $secretName, '--description', 'LittleWhale cookie signing secret', '--generate-random-password', '--query', 'ARN', '--output', 'text', '--region', $Region)
+  $secretValue = (& node -e "console.log(require('crypto').randomBytes(48).toString('base64'))").Trim()
+  $secretArn = Get-AwsText @('secretsmanager', 'create-secret', '--name', $secretName, '--description', 'LittleWhale cookie signing secret', '--secret-string', $secretValue, '--query', 'ARN', '--output', 'text', '--region', $Region)
 }
 if ([string]::IsNullOrWhiteSpace($secretArn)) { throw 'Could not resolve the LittleWhale session secret.' }
 
@@ -161,7 +167,7 @@ if ([string]::IsNullOrWhiteSpace($functionArn)) {
 Write-Host '[5/7] Configuring public Function URL with strict CORS origin...'
 $urlConfig = Get-AwsText @('lambda', 'get-function-url-config', '--function-name', $FunctionName, '--query', 'FunctionUrl', '--output', 'text', '--region', $Region)
 $corsConfigPath = Join-Path $tempRoot 'lambda-cors.json'
-Write-JsonFile $corsConfigPath @{ AllowCredentials = $true; AllowHeaders = @('content-type'); AllowMethods = @('GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'); AllowOrigins = @($AllowedOrigin); MaxAge = 86400 }
+Write-JsonFile $corsConfigPath @{ AllowCredentials = $true; AllowHeaders = @('content-type'); AllowMethods = @('GET', 'POST', 'PUT', 'DELETE'); AllowOrigins = @($AllowedOrigin); MaxAge = 86400 }
 if ([string]::IsNullOrWhiteSpace($urlConfig)) {
   Invoke-Aws @('lambda', 'create-function-url-config', '--function-name', $FunctionName, '--auth-type', 'NONE', '--cors', "file://$corsConfigPath", '--region', $Region)
 } else {
@@ -171,11 +177,14 @@ if ([string]::IsNullOrWhiteSpace($urlConfig)) {
 function Add-LambdaPermissionIfMissing([string]$StatementId, [string]$Action, [string]$FunctionUrlAuthType) {
   $policy = Get-AwsText @('lambda', 'get-policy', '--function-name', $FunctionName, '--region', $Region)
   if ($policy -notmatch [regex]::Escape($StatementId)) {
-    Invoke-Aws @('lambda', 'add-permission', '--function-name', $FunctionName, '--statement-id', $StatementId, '--action', $Action, '--principal', '*', '--function-url-auth-type', $FunctionUrlAuthType, '--region', $Region)
+    $arguments = @('lambda', 'add-permission', '--function-name', $FunctionName, '--statement-id', $StatementId, '--action', $Action, '--principal', '*')
+    if ($FunctionUrlAuthType) { $arguments += @('--function-url-auth-type', $FunctionUrlAuthType) }
+    $arguments += @('--region', $Region)
+    Invoke-Aws $arguments
   }
 }
 Add-LambdaPermissionIfMissing 'littlewhale-function-url' 'lambda:InvokeFunctionUrl' 'NONE'
-Add-LambdaPermissionIfMissing 'littlewhale-function-url-invoke' 'lambda:InvokeFunction' 'NONE'
+Add-LambdaPermissionIfMissing 'littlewhale-function-url-invoke' 'lambda:InvokeFunction' ''
 
 Write-Host '[6/7] Seeding LittleWhale configuration...'
 $configPath = Join-Path $tempRoot 'config-item.json'
