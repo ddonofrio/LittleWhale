@@ -25,9 +25,6 @@ let sessionSecretPromise
 
 const corsHeaders = () => ({
   'content-type': 'application/json; charset=utf-8', 'cache-control': 'no-store',
-  'access-control-allow-origin': process.env.ALLOWED_ORIGIN ?? 'https://placeholder.invalid',
-  'access-control-allow-credentials': 'true', 'access-control-allow-headers': 'content-type',
-  'access-control-allow-methods': 'GET,POST,PUT,DELETE,OPTIONS',
 })
 const response = (statusCode, body, headers = {}) => ({ statusCode, headers: { ...corsHeaders(), ...headers }, body: body === undefined ? '' : JSON.stringify(body) })
 const redirect = (location, headers = {}) => ({ statusCode: 302, headers: { location, 'cache-control': 'no-store', ...headers }, body: '' })
