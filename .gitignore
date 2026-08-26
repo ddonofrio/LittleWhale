@@ -7,6 +7,7 @@ pnpm-debug.log
 .pnpm-store/
 .cache/
 examples/*/*.jsonl
+examples/mcp-atlassian-rovo/credentials.json
 .storages/
 .sessions/
 examples/*/.sessions/
