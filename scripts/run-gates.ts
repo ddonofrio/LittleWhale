@@ -438,25 +438,12 @@ function ciConsumerGates(): Gate[] {
 }
 
 function webSnapshotGate(needs: string[]): Gate {
-  const workerRaw = process.env.DSH_WEB_SNAPSHOT_WORKERS
-  if (workerRaw !== undefined && workerRaw !== '') {
-    const workers = Number.parseInt(workerRaw, 10)
-    if (!Number.isSafeInteger(workers) || workers < 2 || String(workers) !== workerRaw) {
-      throw new Error(`run-gates: DSH_WEB_SNAPSHOT_WORKERS must be an integer greater than 1, got ${JSON.stringify(workerRaw)}.`)
-    }
-    return pnpmScript('web-snapshot', 'test:web:ci', {
-      label: 'web browser snapshot',
-      displayCommand: `DSH_SNAPSHOT=replay DSH_WEB_SNAPSHOT_WORKERS=${workers} pnpm run test:web:ci`,
-      env: { DSH_SNAPSHOT: 'replay' },
-      needs,
-      streamOutput: true,
-    })
-  }
-  return pnpmScript('web-snapshot', 'test:web:built', {
-    label: 'web browser snapshot',
-    displayCommand: 'DSH_SNAPSHOT=replay pnpm run test:web:built',
+  return pnpmScript('web-snapshot', 'test:web:ci', {
+    label: 'assembled Web snapshot',
+    displayCommand: 'DSH_SNAPSHOT=replay pnpm run test:web:ci',
     env: { DSH_SNAPSHOT: 'replay' },
     needs,
+    streamOutput: true,
   })
 }
 

@@ -1,10 +1,9 @@
-// Shared scaffold for the keyless browser e2e lane (Agent Note:
-// .agents/notes/implemented/testing/2026-07-24-web-gui-browser-e2e-lane.md).
+// Shared scaffold for keyless assembled Web snapshots.
 // Boots the REAL web composition — the dsh-base and dsh-web-app bundle
 // patches over the empty profile root through the vendored Loader (the same
 // layer stack the profile boot composes), patched the
-// snapshot way — so a real chromium exercises the real HTTP uplink/WebSocket
-// downlink, api-gateway, agent loop, tools, and persistence. Modes ride $DSH_SNAPSHOT:
+// snapshot way so the Host/Client composition, api-gateway, agent loop, tools,
+// and persistence are exercised. Modes ride $DSH_SNAPSHOT:
 // replay (default, keyless: normally disables the llm-deepseek row and
 // inserts dsh-llm-replay in providers mode), record (real adapter + key,
 // harvests fixtures from live session memory), refresh (keyless replay that
@@ -27,7 +26,6 @@ import { mkdir, mkdtemp, readFile, readdir, realpath, rm, writeFile } from 'node
 import { tmpdir } from 'node:os'
 import { join } from 'node:path'
 import { pathToFileURL } from 'node:url'
-import type { Page } from 'playwright'
 import { expect } from 'vitest'
 import { Context } from '@deepseek-ai/cordis'
 import Loader from '@deepseek-ai/cordis-plugin-loader'
@@ -35,8 +33,6 @@ import Include, { type PatchOptions } from '@deepseek-ai/cordis-plugin-include'
 import Group from '@deepseek-ai/cordis-plugin-group'
 import {
   scrubRequestHeaders,
-  scrubSessionSnapshot,
-  stabilizeFixtureMessageIds,
 } from '@deepseek-ai/dsh-acp-snapshot'
 import {
   assertEntriesLoaded,
@@ -53,7 +49,6 @@ import type {
 import type { ReplayHandle } from '@deepseek-ai/dsh-llm-replay'
 import { installLlmReplay, parseSessionLog } from '@deepseek-ai/dsh-llm-replay'
 import SessionStore, {
-  packChunkRuns,
   SESSION_FORMAT_VERSION,
   SessionId,
   type Session,
@@ -67,7 +62,7 @@ import type {} from '@deepseek-ai/dsh-agent'
 import { provideCmdline } from '@deepseek-ai/dsh-cmdline'
 import { REPO_ROOT, requireDist } from './support.ts'
 
-// Host-side web e2e cannot import a browser package: doing so would pull that
+// Host-side Web snapshots cannot import a browser package: doing so would pull that
 // package's complete TS project into this graph. Mirrored from
 // packages/client/ui-settings-models/src/onboarding-copy.ts; drift makes the
 // default pre-acknowledgement stop suppressing the notice and fails loudly.
@@ -75,17 +70,9 @@ import { REPO_ROOT, requireDist } from './support.ts'
 //   WELCOME_NOTICE_ACK_FIELD, WELCOME_NOTICE_SETTINGS_NAMESPACE,
 //   WELCOME_NOTICE_VERSION, WELCOME_NOTICE_COPY,
 // } from '@deepseek-ai/dsh-client-ui-settings-models'
-export const WELCOME_NOTICE_SETTINGS_NAMESPACE = 'ui-onboarding'
-export const WELCOME_NOTICE_ACK_FIELD = 'welcomeNoticeVersion'
-export const WELCOME_NOTICE_VERSION = '2026-08-13.1'
-export const WELCOME_NOTICE_COPY = {
-  zh: {
-    title: '内测声明',
-    body: 'Little Whale 目前的 0.1 版本仍处在面向 Harness 开发者进行测试的阶段，还有许多地方需要持续改进和打磨，希望听取广大开发者的反馈建议。预计 Little Whale 的核心插件以及基础 API 都会在接下来的一段时间内快速迭代、持续演化。\n\n我们期待与全球开发者一起，在开源、开放、可复用、可组合的基础设施之上，共同探索智能上限。欢迎全球 Harness 开发者加入 DSH 插件生态。',
-    continueLabel: '继续',
-  },
-} as const
-
+const WELCOME_NOTICE_SETTINGS_NAMESPACE = 'ui-onboarding'
+const WELCOME_NOTICE_ACK_FIELD = 'welcomeNoticeVersion'
+const WELCOME_NOTICE_VERSION = '2026-08-13.1'
 /** Snapshot mode for the lane, from $DSH_SNAPSHOT (same vocabulary as the other snapshot suites). */
 export type WebSnapshotMode = 'replay' | 'record' | 'refresh'
 
@@ -93,7 +80,7 @@ export type WebSnapshotMode = 'replay' | 'record' | 'refresh'
  * Resolve and validate the lane's snapshot mode.
  * @returns the active mode; unset/empty selects replay.
  */
-export function webSnapshotMode(): WebSnapshotMode {
+function webSnapshotMode(): WebSnapshotMode {
   const value = process.env.DSH_SNAPSHOT
   if (value === undefined || value === '' || value === 'replay') return 'replay'
   if (value === 'record' || value === 'refresh') return value
@@ -153,7 +140,7 @@ class RouteOnlyAdapter extends LlmAdapter {
 
   override async *stream(): AsyncIterable<StreamChunk> {
     throw new Error(
-      'web e2e scaffold: a model call was issued by a scenario that declared no replay fixture'
+      'web snapshot scaffold: a model call was issued by a scenario that declared no replay fixture'
       + ' — pass replayFixture, or keep the scenario free of model calls',
     )
   }
@@ -324,7 +311,7 @@ export async function launchWebScaffold(options: LaunchOptions = {}): Promise<We
     // Both owning vitest configs (web unconditionally, snapshot in record
     // mode) load the repo-root .env before this file runs.
     if (process.env.DEEPSEEK_API_KEY === undefined || process.env.DEEPSEEK_API_KEY.length === 0) {
-      throw new Error('web e2e record mode needs DEEPSEEK_API_KEY (env or repo-root .env)')
+      throw new Error('snapshot record mode needs DEEPSEEK_API_KEY (env or repo-root .env)')
     }
   }
   if (mode === 'record' && options.deepSeekMissingCredential === true) {
@@ -391,11 +378,11 @@ export async function launchWebScaffold(options: LaunchOptions = {}): Promise<We
   // (bundle patches in dsh.profile.bundles order), applied over the SAME empty root (a
   // patch id that stops matching a row fails the boot sweep loudly instead of
   // drifting).
-  const basePatches = loadOverlayPatches('web e2e scaffold', BASE_PATCH_PATH)
-  const surfacePatches = loadOverlayPatches('web e2e scaffold', WEB_PATCH_PATH)
+  const basePatches = loadOverlayPatches('web snapshot scaffold', BASE_PATCH_PATH)
+  const surfacePatches = loadOverlayPatches('web snapshot scaffold', WEB_PATCH_PATH)
   const extraOverlayPatches = options.extraOverlayPath === undefined
     ? []
-    : loadOverlayPatches('web e2e scaffold', options.extraOverlayPath)
+    : loadOverlayPatches('web snapshot scaffold', options.extraOverlayPath)
   const composedRows = composeEntries([basePatches, surfacePatches, extraOverlayPatches])
   const webRuntimeConfig = composedRows.find(row => row.id === 'web-runtime')?.config as {
     surfaceContext?: boolean
@@ -469,7 +456,7 @@ export async function launchWebScaffold(options: LaunchOptions = {}): Promise<We
     },
     // The bundle's web-runtime row resolves the same built dist under test
     // (apps/web IS @deepseek-ai/dsh-web-frontend); native browser opening and the
-    // URL line are disabled because this scaffold owns its Playwright browser.
+    // URL line are disabled because this scaffold owns the assembled snapshot boot.
     // Preserve the composed surface-context choice because a patch replaces
     // the row's complete config.
     { id: 'web-runtime', config: { openBrowser: false, printUrl: false, surfaceContext } },
@@ -542,7 +529,7 @@ export async function launchWebScaffold(options: LaunchOptions = {}): Promise<We
     provideCmdline(ctx, {
       args: [],
       exit: (code) => {
-        throw new Error(`web e2e scaffold: the web app requested exit ${String(code)} with no arguments to reject`)
+        throw new Error(`web snapshot scaffold: the web app requested exit ${String(code)} with no arguments to reject`)
       },
     })
     await ctx.plugin(Loader)
@@ -557,7 +544,7 @@ export async function launchWebScaffold(options: LaunchOptions = {}): Promise<We
       config: { path: pathToFileURL(rootConfig).href, patches },
     })
     await ctx.loader.await()
-    assertEntriesLoaded(ctx, 'web e2e scaffold')
+    assertEntriesLoaded(ctx, 'web snapshot scaffold')
     if (options.welcomeNoticePending !== true) {
       await ctx.settings.mutate(settingsNamespace(WELCOME_NOTICE_SETTINGS_NAMESPACE), [{
         op: 'set', path: [WELCOME_NOTICE_ACK_FIELD], value: WELCOME_NOTICE_VERSION,
@@ -565,7 +552,7 @@ export async function launchWebScaffold(options: LaunchOptions = {}): Promise<We
     }
     const boundPort = ctx.get('webServer')?.port
     if (boundPort === undefined) {
-      throw new Error('web e2e scaffold: webServer service missing after settled boot')
+      throw new Error('web snapshot scaffold: webServer service missing after settled boot')
     }
     port = boundPort
 
@@ -623,7 +610,7 @@ export async function launchWebScaffold(options: LaunchOptions = {}): Promise<We
       ctx.effect(() => ctx.llm.registerAdapter(
         replayProviders(options.replayContextWindow).map(provider => provider.id),
         new RouteOnlyAdapter(replayProviders(options.replayContextWindow)),
-      ), 'web e2e scaffold: route-only adapter')
+      ), 'web snapshot scaffold: route-only adapter')
     }
   } catch (error) {
     if (process.cwd() !== originalCwd) process.chdir(originalCwd)
@@ -688,56 +675,6 @@ export async function launchWebScaffold(options: LaunchOptions = {}): Promise<We
 }
 
 /**
- * Serialize a live session to the canonical raw session-JSONL layout — the
- * in-memory record-mode harvest, so the on-disk zstd default never matters.
- */
-function rawSessionLog(session: Session): string {
-  return [
-    JSON.stringify({ type: 'session', ...session.header }),
-    ...packChunkRuns(session.events).map(record => JSON.stringify(record)),
-    '',
-  ].join('\n')
-}
-
-/**
- * Record-mode fixture write-back: harvest the live session, scrub request
- * headers to {{system}}/{{tools}} (TODO(web-header-pin): the web lane pins no
- * header class — a deliberate deviation logged in the Agent Note's deferred
- * work), tokenize the run-local session id, cwd, and browser RPC id
- * ({{sessionId}}/{{cwd}}/{{rpcId}}, the committed fixture convention —
- * re-records then diff only on real content), and write the fixture.
- * @param scaffold - the record-mode scaffold.
- * @param sessionId - the driven session.
- * @param fixturePath - the committed session.jsonl / seed.jsonl target.
- */
-export async function recordFixture(scaffold: WebScaffold, sessionId: SessionId, fixturePath: string): Promise<void> {
-  const agent = scaffold.ctx.agents.get(sessionId)
-  if (agent === undefined) throw new Error(`record harvest: no live agent for ${sessionId}`)
-  const fresh = scrubSessionSnapshot(rawSessionLog(agent.session))
-    .split(sessionId).join('{{sessionId}}')
-    .split(scaffold.workspaceCwd).join('{{cwd}}')
-    .replace(/"rpcId":"[^"]+"/g, '"rpcId":"{{rpcId}}"')
-  const existing = existsSync(fixturePath) ? await readFile(fixturePath, 'utf8') : ''
-  const stable = stabilizeFixtureMessageIds([fresh], [existing])[0]
-  if (stable === undefined) throw new Error('record harvest: no stabilized fixture')
-  await writeFile(fixturePath, stable)
-}
-
-/**
- * The user prompts recorded in a fixture, in order — the single source tying
- * spec drive steps to recorded reality so script and fixture cannot drift.
- * @param fixtureText - raw session.jsonl contents.
- * @returns the recorded user prompt texts.
- */
-export function fixtureUserPrompts(fixtureText: string): string[] {
-  return parseSessionLog(fixtureText).flatMap((event) => {
-    if (event.type !== 'user/message' || event.data.source.kind !== 'user') return []
-    const text = event.data.content.filter(block => block.type === 'text').map(block => block.text).join('')
-    return text.length > 0 ? [text] : []
-  })
-}
-
-/**
  * Seed a recorded session fixture into the scaffold's persistence root
  * through the REAL backend API (throwaway Context + SessionStore + JSONL
  * plugin — the semantic-checkpoint precedent), never raw file writes: no
@@ -765,7 +702,7 @@ export function fixtureUserPrompts(fixtureText: string): string[] {
  * @param id - the session id the seed is realized for.
  * @returns the realized fixture text.
  */
-export function realizeSeedFixture(scaffold: WebScaffold, fixtureText: string, id: string): string {
+function realizeSeedFixture(scaffold: WebScaffold, fixtureText: string, id: string): string {
   const realized = fixtureText
     .split('{{sessionId}}').join(id)
     .split('{{cwd}}').join(scaffold.workspaceCwd)
@@ -780,7 +717,7 @@ export function realizeSeedFixture(scaffold: WebScaffold, fixtureText: string, i
  * @param fixtureText - session JSONL fixture contents.
  * @returns the original header line, parsed header, and logical events.
  */
-export function parseSeedFixture(fixtureText: string): {
+function parseSeedFixture(fixtureText: string): {
   headerLine: string
   header: Record<string, unknown>
   events: SessionEvent[]
@@ -790,23 +727,6 @@ export function parseSeedFixture(fixtureText: string): {
   const header = JSON.parse(headerLine) as Record<string, unknown>
   if (header.type !== 'session') throw new Error('seed fixture must start with a session header')
   return { headerLine, header, events: parseSessionLog(fixtureText) }
-}
-
-/**
- * Render logical events as an envelope-free web seed fixture.
- * @param headerLine - original session header line.
- * @param events - logical session events in order.
- * @returns projected session JSONL.
- */
-export function renderSeedFixture(
-  headerLine: string,
-  events: readonly ({ readonly seq: number; readonly time: number } & object)[],
-): string {
-  return [
-    headerLine,
-    ...events.map(({ seq: _seq, time: _time, ...event }) => JSON.stringify(event)),
-    '',
-  ].join('\n')
 }
 
 export async function seedSession(
@@ -840,28 +760,6 @@ export async function seedSession(
   return meta.id
 }
 
-/** Seed one materialized cold Session whose log has no turn/start event. */
-export async function seedBlankSession(
-  scaffold: WebScaffold,
-  id: string,
-  cwd: string,
-): Promise<SessionId> {
-  const meta: SessionHeader = {
-    version: SESSION_FORMAT_VERSION,
-    id: SessionId(id),
-    createdAt: Date.now() - 60_000,
-    cwd,
-    delegationDepth: 0,
-  }
-  await persistSeedSession(scaffold, meta, [{
-    type: 'session/end-seed',
-    seq: 0,
-    time: meta.createdAt,
-    data: {},
-  }])
-  return meta.id
-}
-
 /** Materialize one detached Session fixture through the shipped JSONL provider. */
 async function persistSeedSession(
   scaffold: WebScaffold,
@@ -879,70 +777,6 @@ async function persistSeedSession(
   } finally {
     await seeder.fiber.dispose()
   }
-}
-
-/**
- * Normalize an aria snapshot: uuid, cwd, workspace-basename, duration,
- * decode-throughput, and path-sensitive compaction estimates collapse to
- * stable tokens.
- *
- * Throughput needs a token for the same reason durations do, and no fixture
- * can supply one: the figure divides a replayed step's output tokens by the
- * wall time the local run took to stream them, so it moves between two runs
- * on one machine (measured 69 → 70 tok/s) and swings wildly on a fast replay
- * (26333 tok/s for a 3 ms stream).
- */
-function normalizeAria(snapshot: string, workspaceCwd: string): string {
-  // The session heading renders the workspace's basename, not the full
-  // path, so both spellings must collapse to the token.
-  const base = workspaceCwd.split('/').pop()!
-  return snapshot
-    .split(workspaceCwd).join('{{cwd}}')
-    .split(base).join('{{workspace}}')
-    .replace(/[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}/gi, '{{uuid}}')
-    // The optional space in `\d+m ?\d+s` covers both minute spellings: the
-    // stats line's compact `2m42s` and the message-chrome template's `2m 42s`.
-    .replace(
-      /~\d+(?:y(?: \d+mo)?|mo(?: \d+d)?)|\b(?:\d+d(?: \d+h(?: \d+m \d+s)?)?|\d+h \d+m \d+s|\d+m ?\d+s|\d+(?:\.\d+)?s|\d+(?:\.\d+)?ms)\b/g,
-      duration => duration.startsWith('~') ? duration : '{{duration}}',
-    )
-    .replace(/\b\d[\d,]*(?:\.\d+)? ms\b/g, '{{duration}}')
-    .replace(
-      /约\d+(?:年(?:\d+个月)?|个月(?:\d+天)?)|\d+(?:天(?:\d+小时(?:\d+分\d+秒)?)?|小时\d+分\d+秒|分\d+秒|(?:\.\d+)?秒)/g,
-      duration => duration.startsWith('约') ? duration : '{{duration}}',
-    )
-    .replace(/\d+(?:\.\d+)?(?= tok\/s(?!\w))/g, '{{throughput}}')
-    // Seeded compaction prices realized file paths, whose length differs
-    // between local worktrees and CI scratch directories.
-    .replace(/(Compacted \d+ history items \(~)\d+( tokens\))/g, '$1{{tokens}}$2')
-    // Session summaries and Message IconActions clocks cross calendar
-    // boundaries; collapse every shape so goldens stay stable across them.
-    .replace(/\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}(?:\.\d+)?Z/g, '{{timestamp}}')
-    .replace(/\d{4}年\d{1,2}月\d{1,2}日 \d{2}:\d{2}/g, '{{clock}}')
-    .replace(/\d{1,2}月\d{1,2}日 \d{2}:\d{2}/g, '{{clock}}')
-    .replace(/(?<!\d)\d{1,2}:\d{2}:\d{2}(?:\.\d+)?(?:\s*[AP]M)?(?!\d)/gi, '{{clock}}')
-    .replace(/(?<!\d)\d{2}:\d{2}(?!\d)/g, '{{clock}}')
-}
-
-/**
- * Capture the region's aria snapshot at a settled milestone: poll until two
- * consecutive normalized captures are equal — a single-shot capture races the
- * last React commits.
- * @param page - the page under test.
- * @param selector - the region locator selector.
- * @param workspaceCwd - normalization input.
- * @returns the stable normalized snapshot.
- */
-export async function captureStableAria(page: Page, selector: string, workspaceCwd: string): Promise<string> {
-  const region = page.locator(selector).first()
-  let previous = normalizeAria(await region.ariaSnapshot(), workspaceCwd)
-  await expect.poll(async () => {
-    const current = normalizeAria(await region.ariaSnapshot(), workspaceCwd)
-    const stable = current === previous
-    previous = current
-    return stable
-  }, { timeout: 5_000, message: 'aria snapshot did not stabilize' }).toBe(true)
-  return previous
 }
 
 /**
@@ -989,27 +823,3 @@ export async function assertFixtureInventory(dir: string, expected: string[]): P
  * @param page - the page under test.
  * @returns live warning/pageerror collectors to assert empty at scenario end.
  */
-export function watchConsole(page: Page): { warnings: string[]; pageErrors: string[] } {
-  const warnings: string[] = []
-  const pageErrors: string[] = []
-  page.on('console', (message) => {
-    const text = message.text()
-    if (/connection lost|gap repair|discontinuous/i.test(text)) warnings.push(text)
-  })
-  page.on('pageerror', (error) => { pageErrors.push(String(error)) })
-  return { warnings, pageErrors }
-}
-
-/**
- * Remove only connection-loss warnings emitted after an intentional reload.
- * Earlier warnings and all gap-repair/discontinuity warnings remain fatal.
- * @param tripwire - the live console-warning collector.
- * @param warningStart - warning count captured immediately before reloading.
- */
-export function acknowledgeReloadConnectionLoss(
-  tripwire: ReturnType<typeof watchConsole>,
-  warningStart: number,
-): void {
-  const reloadWarnings = tripwire.warnings.splice(warningStart)
-  tripwire.warnings.push(...reloadWarnings.filter(text => !/connection lost/i.test(text)))
-}

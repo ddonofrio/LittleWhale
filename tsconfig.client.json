@@ -38,7 +38,7 @@
     "packages/client/*/tests/**/*.host.spec.ts"
   ],
   "references": [
-    // Shared leaf: web e2e boots the real host webserver (fixture + real-host
+    // Shared leaf: assembled Web snapshots boot the real host webserver (fixture + real-host
     // smoke policy). webserver has zero workspace deps and no cordis merge,
     // so it cannot drag host-side Context augmentation into this program.
     { "path": "./packages/host/webserver" },
@@ -66,6 +66,7 @@
     { "path": "./packages/client/ui-layout" },
     { "path": "./packages/client/ui-sidebar" },
     { "path": "./packages/client/ui-brand-official" },
+    { "path": "./packages/little-whale/ui-brand" },
     { "path": "./packages/client/ui-conversation" },
     { "path": "./packages/client/ui-tool" },
     { "path": "./packages/client/ui-deliverables" },

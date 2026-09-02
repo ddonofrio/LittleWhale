@@ -407,19 +407,19 @@ describe('Node 24 lane ownership', () => {
       ]),
     )
     expect(subject.find(item => item.id === 'web-snapshot')).toMatchObject({
-      displayCommand: 'DSH_SNAPSHOT=replay pnpm run test:web:built',
+      displayCommand: 'DSH_SNAPSHOT=replay pnpm run test:web:ci',
       env: { DSH_SNAPSHOT: 'replay' },
     })
   })
 })
 
 describe('Linux primary graph', () => {
-  it('adds the same compare-only web gate after built client artifacts', () => {
+  it('adds the same assembled Web snapshot gate after built client artifacts', () => {
     const subject = withPnpmEntrypoint(() => gatesForMode('ci-linux-primary'))
     const web = subject.find(item => item.id === 'web-snapshot')
 
     expect(web).toMatchObject({
-      displayCommand: 'DSH_SNAPSHOT=replay pnpm run test:web:built',
+      displayCommand: 'DSH_SNAPSHOT=replay pnpm run test:web:ci',
       env: { DSH_SNAPSHOT: 'replay' },
       needs: ['built-package-invariants'],
     })

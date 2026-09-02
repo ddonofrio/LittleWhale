@@ -607,8 +607,6 @@
     },
     "apps/web": {
       "entry": [
-        "tests/**/*.e2e.ts",
-        "tests/**/*.perf.ts",
         "tests/**/*.snapshot.ts",
         "tests/support.ts",
         "src/node-module-stub.ts"

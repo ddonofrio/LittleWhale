@@ -136,14 +136,14 @@ SRC solves only dispatch for a Host process running from source. The Client does
 
 ## Development mode
 
-Web development prepares current Host, Client, and Web artifacts with `pnpm run build`, then runs the source Host and the Client plugin watcher in separate terminals:
+Web development prepares current Host, Client, and Web artifacts with `pnpm run build`, then runs the source Host and the Client/Web artifact watcher in separate terminals:
 
 ```sh
-pnpm dsh web
+pnpm dsh web --no-open
 pnpm run dev:web
 ```
 
-`dsh` starts the Host source through tsx, so the Host can use the SRC fallback; `dev:web` watches only Client plugins with a `dsh.client` declaration and rewrites their `lib/client.js`. It does not analyze Host decorators or generate Remote Client DTS.
+`dsh` starts the Host source through tsx, so the Host can use the SRC fallback. `dev:web` watches Client plugins with a `dsh.client` declaration, statically linked Client libraries, and the Vite Web shell; it is a watcher rather than a server. It does not analyze Host decorators or generate Remote Client DTS.
 
 Changing only a Remote method's implementation body without changing its contract does not require regenerating the Typert files. After adding or removing a decorator or changing an export name, namespace, parameter, return value, lookup, Context, or cancellation signature, rerun the ordered lib build so the Host generates the strict contract before the Client compiles and bundles the new contribution:
 

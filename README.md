@@ -52,20 +52,48 @@ See [Upstream relationship and compatibility](UPSTREAM.md) for the exact boundar
 - pnpm 11.7+
 - An OpenAI-compatible local model server
 
-### Run from source
+### Install and build
 
 ```sh
 pnpm install
-pnpm dev:web
+pnpm build
 ```
 
-On first launch, Little Whale starts with this editable local endpoint:
+`pnpm build` is required after a fresh clone. It builds the Host and Client libraries, the vendored runtime packages, and the browser assets consumed by `dsh web`.
+
+### Start the Web UI
+
+```sh
+pnpm dsh web --no-open
+```
+
+The command prints the URL that is ready to open. Omit `--no-open` to open the default browser automatically. Use `--port 0` to let the operating system select a free port, or pass a fixed port such as `--port 3080`.
+
+The Web UI serves the built application through the full `dsh web` host. Do not start `apps/web` with bare Vite: it does not inject the runtime boot manifest and will render an unusable shell.
+
+### Local model server
+
+The Web profile starts with this editable OpenAI-compatible endpoint:
 
 ```text
 http://127.0.0.1:1234/v1
 ```
 
-This works naturally with local inference applications that expose an OpenAI-compatible API. The endpoint may also point to another machine on the LAN. Little Whale discovers the available models from the server; an API key is optional.
+This works with local inference applications that expose an OpenAI-compatible API. The endpoint may also point to another machine on the LAN. Little Whale discovers the available models from the server; an API key is optional. Configure another provider from the Web UI or follow [Local providers](website/providers.md).
+
+### Source development with automatic client reload
+
+Run these commands in separate terminals after one successful `pnpm build`:
+
+```sh
+# Terminal 1: the Host and Web UI
+pnpm dsh web --no-open
+
+# Terminal 2: rebuild Client and browser artifacts on source changes
+pnpm run dev:web
+```
+
+`pnpm run dev:web` is a watcher, not a server. It keeps Client plugin bundles and `apps/web/dist` current; the Host process in the first terminal serves them and receives client-plugin reload events. Changes to Host code or other server-side packages require another `pnpm build` and a restart of `dsh web`. The checked-in script uses polling; run `pnpm exec tsx scripts/dev-web.ts --poll=1000` directly when a different polling interval is needed.
 
 ## Privacy defaults
 
