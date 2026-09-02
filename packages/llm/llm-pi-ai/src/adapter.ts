@@ -132,6 +132,13 @@ function profileOptions(
   }
 }
 
+/** Official OpenAI reasoning models reject the `temperature` request field. */
+function supportsTemperature(model: Model<Api>): boolean {
+  return model.provider !== 'openai'
+    || !model.reasoning
+    || !['openai-responses', 'openai-completions'].includes(model.api)
+}
+
 /**
  * The profile default this exact model can actually take, for DESCRIBING it.
  * A configured level the model does not support yields none rather than
@@ -413,7 +420,7 @@ export class PiAiAdapter extends LlmAdapter {
         })
       const events = snapshot.models.streamSimple(model, context, {
         ...profileOptions(profile, reasoning, apiKey),
-        ...options.temperature === undefined ? {} : { temperature: options.temperature },
+        ...options.temperature === undefined || !supportsTemperature(model) ? {} : { temperature: options.temperature },
         ...options.maxTokens === undefined ? {} : { maxTokens: options.maxTokens },
         ...options.sessionId === undefined ? {} : { sessionId: String(options.sessionId) },
         signal: watchdog.signal,

@@ -258,6 +258,27 @@ describe('PiAiAdapter provider routing', () => {
     expect(server.paths).toEqual(['/v1/responses'])
   })
 
+  it.each([
+    ['gpt-5', false],
+    ['gpt-4.1', true],
+  ] as const)('forwards temperature only when the OpenAI model supports it (%s)', async (model, forwardsTemperature) => {
+    const server = await mockServer([{ status: 401, body: JSON.stringify({ error: { message: 'expected mock failure' } }) }])
+    const ctx = new Context()
+    await ctx.plugin(LlmRuntime)
+    await ctx.plugin(LlmPiAi, {
+      providers: { openai: { apiKeyEnv: 'PI_TEST_KEY', baseURL: `${server.url}/v1` } },
+    })
+
+    const result = await assemble(ctx, { provider: 'openai', model, messages: [], temperature: 0.2 })
+
+    expect(result.finish.kind).toBe('error')
+    if (forwardsTemperature) {
+      expect(server.requests[0]).toHaveProperty('temperature', 0.2)
+    } else {
+      expect(server.requests[0]).not.toHaveProperty('temperature')
+    }
+  })
+
   it('resolves an attachment service mounted after the adapter when dispatching an image', async () => {
     const server = await mockServer([{ status: 401, body: JSON.stringify({ error: { message: 'expected mock failure' } }) }])
     const attachmentId = AttachmentId(`sha256:${'a'.repeat(64)}`)
