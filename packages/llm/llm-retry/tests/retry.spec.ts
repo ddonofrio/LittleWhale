@@ -364,7 +364,7 @@ describe('provider-routed retry policy', () => {
     expect(adapter.requests).toHaveLength(2)
   })
 
-  it('uses a bounded provider Retry-After verbatim and delegates an over-cap instruction', async () => {
+  it('uses a provider Retry-After verbatim even when it exceeds local maxDelayMs', async () => {
     vi.useFakeTimers()
     const accepted = new ScriptedAdapter([
       new LlmError('wait', 'RATE_LIMIT', { providerRetryAfterMs: 2_000 }),
@@ -383,19 +383,22 @@ describe('provider-routed retry policy', () => {
     expect(accepted.requests).toHaveLength(2)
 
     await context.fiber.dispose()
-    const rejected = new ScriptedAdapter([
+    const overCap = new ScriptedAdapter([
       new LlmError('wait too long', 'RATE_LIMIT', { providerRetryAfterMs: 10_001 }),
+      textResponse('done'),
     ])
-    ;({ ctx: context } = await harness(rejected))
-    const rejectedAgent = context.agentLoop.create(SessionId('retry-after-rejected'), { provider: 'mock', model: 'mock' })
-    const rejectedIdle = waitForIdle(context, rejectedAgent)
-    rejectedAgent.followup(createUserMessage({ content: [{ type: 'text', text: 'go' }], source: { kind: 'user' } }))
-    await rejectedIdle
-    expect(rejected.requests).toHaveLength(1)
-    expect(rejectedAgent.session.events.some(event => event.type === 'llm/retry')).toBe(false)
+    ;({ ctx: context } = await harness(overCap))
+    const overCapAgent = context.agentLoop.create(SessionId('retry-after-over-cap'), { provider: 'mock', model: 'mock' })
+    const overCapScheduled = waitForRetry(context, overCapAgent, 1)
+    overCapAgent.followup(createUserMessage({ content: [{ type: 'text', text: 'go' }], source: { kind: 'user' } }))
+    expect((await overCapScheduled).data.delayMs).toBe(10_001)
+    const overCapIdle = waitForIdle(context, overCapAgent)
+    await vi.advanceTimersByTimeAsync(10_001)
+    await overCapIdle
+    expect(overCap.requests).toHaveLength(2)
   })
 
-  it('uses local jittered backoff when always mode receives an over-cap Retry-After', async () => {
+  it('uses provider Retry-After in always mode without local jitter', async () => {
     vi.useFakeTimers()
     const adapter = new ScriptedAdapter([
       new LlmError('wait too long', 'AUTH', { providerRetryAfterMs: 10 }),
@@ -413,9 +416,9 @@ describe('provider-routed retry policy', () => {
     const scheduled = waitForRetry(context, agent, 1)
 
     agent.followup(createUserMessage({ content: [{ type: 'text', text: 'go' }], source: { kind: 'user' } }))
-    expect((await scheduled).data.delayMs).toBe(3)
+    expect((await scheduled).data.delayMs).toBe(10)
     const idle = waitForIdle(context, agent)
-    await vi.advanceTimersByTimeAsync(3)
+    await vi.advanceTimersByTimeAsync(10)
     await idle
 
     expect(adapter.requests).toHaveLength(2)

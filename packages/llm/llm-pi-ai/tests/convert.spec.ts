@@ -788,6 +788,20 @@ describe('mapStopReason / mapUsage', () => {
       .toMatchObject({ kind: 'error', failure: { code: 'AUTH' } })
     expect(mapStopReason(assistant({ stopReason: 'error', errorMessage: 'HTTP 429: rate limit' })))
       .toMatchObject({ kind: 'error', failure: { code: 'RATE_LIMIT' } })
+    expect(mapStopReason(assistant({
+      stopReason: 'error',
+      errorMessage: 'OpenAI API error (429): Please try again in 5.796s.',
+    }))).toMatchObject({
+      kind: 'error',
+      failure: { code: 'RATE_LIMIT', providerRetryAfterMs: 5796 },
+    })
+    expect(mapStopReason(assistant({
+      stopReason: 'error',
+      errorMessage: 'HTTP 429: retry after 250 milliseconds',
+    }))).toMatchObject({
+      kind: 'error',
+      failure: { code: 'RATE_LIMIT', providerRetryAfterMs: 250 },
+    })
     expect(mapStopReason(assistant({ stopReason: 'error', errorMessage: 'HTTP 429: insufficient_quota' })))
       .toMatchObject({ kind: 'error', failure: { code: 'QUOTA' } })
     expect(mapStopReason(assistant({

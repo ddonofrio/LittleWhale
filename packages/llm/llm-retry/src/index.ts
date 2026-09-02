@@ -11,6 +11,7 @@ import z from '@deepseek-ai/schemastery'
 import type { Agent, RequestErrorAction } from '@deepseek-ai/dsh-agent'
 import type { LlmFailure, ResolvedRetryPolicy } from '@deepseek-ai/dsh-llm'
 import type { SessionEvent } from '@deepseek-ai/dsh-session'
+import { MAX_TIMER_DELAY_MS } from '@deepseek-ai/dsh-timeout'
 import { RetryId } from './brand.ts'
 import type { LlmRetryEventData } from './types.ts'
 
@@ -194,12 +195,11 @@ export function apply(ctx: Context, config: Config = {}, internals: RetryInterna
     if (failure.providerRetryAfterMs !== undefined
       && Number.isFinite(failure.providerRetryAfterMs)
       && failure.providerRetryAfterMs > 0) {
-      if (failure.providerRetryAfterMs > policy.maxDelayMs) {
-        if (policy.mode === 'normal') return next()
-        delayMs = localDelay(policy, retry, random)
-      } else {
-        delayMs = failure.providerRetryAfterMs
-      }
+      // A provider's Retry-After is an instruction for this failure, not a
+      // local backoff recommendation. It must be honored even when it is
+      // longer than the local exponential-backoff cap. Keep the timer within
+      // the runtime's safe range for malformed or excessively large values.
+      delayMs = Math.min(failure.providerRetryAfterMs, MAX_TIMER_DELAY_MS)
     } else {
       delayMs = localDelay(policy, retry, random)
     }

@@ -64,6 +64,19 @@ function classifyPiAiError(message: string): string {
   return 'PI_AI_ERROR'
 }
 
+/** Parse a provider-requested retry delay from pi-ai's flattened error text. */
+function providerRetryAfterMs(message: string): number | undefined {
+  const match = /\b(?:try again|retry)\s+(?:in|after)\s+(\d+(?:\.\d+)?)\s*(milliseconds?|ms|seconds?|s)\b/i.exec(message)
+  if (match === null) return undefined
+  const amountText = match[1]
+  const unitText = match[2]
+  if (amountText === undefined || unitText === undefined) return undefined
+  const amount = Number(amountText)
+  const unit = unitText.toLowerCase()
+  const delay = Math.ceil(amount * (unit === 'ms' || unit.startsWith('millisecond') ? 1 : 1_000))
+  return Number.isFinite(delay) && delay > 0 ? delay : undefined
+}
+
 /**
  * Map a terminal pi-ai event to the harness finish reason.
  * @param message - the assistant message carried by the `done` or `error` event.
@@ -110,7 +123,16 @@ export function mapStopReason(message: AssistantMessage, contextWindow?: number)
     }
     case 'error': {
       const text = message.errorMessage ?? 'pi-ai stream error'
-      return { kind: 'error', failure: { message: text, code: classifyPiAiError(text) } }
+      const code = classifyPiAiError(text)
+      const retryAfterMs = code === 'RATE_LIMIT' ? providerRetryAfterMs(text) : undefined
+      return {
+        kind: 'error',
+        failure: {
+          message: text,
+          code,
+          ...retryAfterMs === undefined ? {} : { providerRetryAfterMs: retryAfterMs },
+        },
+      }
     }
   }
 }
