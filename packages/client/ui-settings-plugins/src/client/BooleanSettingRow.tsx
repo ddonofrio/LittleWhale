@@ -1,4 +1,4 @@
-/** A General-settings row for one live boolean preference. */
+/** A Models > Behavior row for one live boolean preference. */
 
 import { useState } from 'react'
 import type { InjectFace, PropsLocale, PropsRuntime } from '@deepseek-ai/dsh-client-ui-slots'
@@ -8,9 +8,9 @@ import type { BooleanSettingRowFace } from './boolean-setting-controller.ts'
 import type { PluginsSettingsLocaleKey } from './locales.ts'
 import css from './LoopDetectionRow.module.css'
 
-/** Full General-settings row props. */
+/** Full Models > Behavior row props. */
 export type BooleanSettingRowProps =
-  PropsRuntime<'settings.general.item'>
+  PropsRuntime<'settings.models.item'>
   & PropsLocale<'settings.plugins'>
   & InjectFace<BooleanSettingRowFace>
   & {

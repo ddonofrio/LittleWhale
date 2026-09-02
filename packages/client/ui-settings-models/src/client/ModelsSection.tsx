@@ -14,12 +14,13 @@
 
 import { useState } from 'react'
 import type { ReactNode } from 'react'
-import type { IApiClient } from '@deepseek-ai/dsh-api-remotes/client'
+import type { IApiClient, SettingsNamespaceView } from '@deepseek-ai/dsh-api-remotes/client'
 import { Button, IconPlusOutline16, Modal } from '@deepseek-ai/dsh-client-ui-primitives'
 import type { InjectFace } from '@deepseek-ai/dsh-client-ui-slots'
 import { CustomProviderCard } from './CustomProviderCard.tsx'
 import { deriveKeyRef, messageOf, protocolChoices, providerUsable } from './store.ts'
 import type { ModelsSettingsStore, ProviderRow } from './store.ts'
+import { formatCapacity, modelDrafts } from './DeepSeekModelsEditor.tsx'
 import type { SettingsSchemaOperations } from './schema-operations.ts'
 import { ProviderEditor, type ProviderEditorProps } from './ProviderEditor.tsx'
 import type { en } from './locales.ts'
@@ -158,6 +159,46 @@ function targetOf(row: ProviderRow): EditorTarget {
   }
 }
 
+/** One model summary shown below its provider without opening the editor. */
+interface ProviderModelSummary {
+  id: string
+  name?: string
+  contextWindow?: number
+  maxTokens?: number
+}
+
+/** Read the effective model list for one provider row, including inherited defaults. */
+function modelsOf(
+  row: ProviderRow,
+  namespace: SettingsNamespaceView,
+  schema: SettingsSchemaOperations,
+): ProviderModelSummary[] {
+  const path = [...row.entry.settingsPath, 'models']
+  const root = schema.rehydrate(namespace.schema)
+  const raw = schema.getPath(namespace.value, path)
+    ?? schema.getPath(namespace.base, path)
+    ?? schema.nodeAtPath(root, path)?.meta.default
+  return modelDrafts(raw).flatMap((model) => {
+    const id = model['id']
+    if (typeof id !== 'string' || id.trim().length === 0) return []
+    const name = typeof model['name'] === 'string' && model['name'].length > 0
+      ? model['name']
+      : undefined
+    const contextWindow = typeof model['contextWindow'] === 'number' && Number.isInteger(model['contextWindow'])
+      ? model['contextWindow']
+      : undefined
+    const maxTokens = typeof model['maxTokens'] === 'number' && Number.isInteger(model['maxTokens'])
+      ? model['maxTokens']
+      : undefined
+    return [{
+      id,
+      ...name === undefined ? {} : { name },
+      ...contextWindow === undefined ? {} : { contextWindow },
+      ...maxTokens === undefined ? {} : { maxTokens },
+    }]
+  })
+}
+
 /** Stable visible and accessible identity for one provider target. */
 export function providerTargetLabel(target: ProviderIdentity): string {
   return target.provider === target.displayName
@@ -283,8 +324,6 @@ function Loaded({ injected }: { injected: ModelsSectionFace }): ReactNode {
 
   return (
     <div className={styles['section']}>
-      <h2 className={styles['title']}>{t('title')}</h2>
-      <p className={styles['intro']}>{t('intro')}</p>
       {!state.writable && state.status === 'ready' ? <p className={styles['notice']}>{t('readOnly')}</p> : null}
       {savedIdentity === undefined
         ? null
@@ -317,6 +356,7 @@ function Loaded({ injected }: { injected: ModelsSectionFace }): ReactNode {
             )
           }
           const open = !adding && editing?.provider === row.entry.provider
+          const models = modelsOf(row, namespace, schema)
           const credentialConfigured = row.credential?.configured === true
           const credentialMissing = !credentialConfigured
             && row.apiKeyEnv !== undefined
@@ -388,6 +428,28 @@ function Loaded({ injected }: { injected: ModelsSectionFace }): ReactNode {
                     : null}
                 </span>
               </div>
+              {models.length === 0 ? null : (
+                <ul className={styles['modelSummary']} aria-label={`${t('models')}: ${row.entry.displayName}`}>
+                  {models.map(model => (
+                    <li key={model.id} className={styles['modelSummaryItem']}>
+                      <span className={styles['modelSummaryIdentity']}>
+                        <span className={styles['modelSummaryId']}>{model.id}</span>
+                        {model.name === undefined || model.name === model.id
+                          ? null
+                          : <span className={styles['modelSummaryName']}>{model.name}</span>}
+                      </span>
+                      <span className={styles['modelSummaryParams']}>
+                        {model.contextWindow === undefined
+                          ? null
+                          : <span>{t('contextWindow')}: {formatCapacity(model.contextWindow)}</span>}
+                        {model.maxTokens === undefined
+                          ? null
+                          : <span>{t('maxTokens')}: {formatCapacity(model.maxTokens)}</span>}
+                      </span>
+                    </li>
+                  ))}
+                </ul>
+              )}
               {open
                 ? renderProviderEditor({
                   target,

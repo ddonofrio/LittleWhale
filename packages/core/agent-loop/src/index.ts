@@ -144,7 +144,7 @@ const DEFAULT_LOOP_DETECTION: Required<LoopDetectionOptions> = {
   enabled: false,
   detectOnText: true,
   detectOnReasoning: true,
-  detectOnToolCall: true,
+  detectOnToolCall: false,
   includeLoop: true,
   minTokens: 16,
   maxToolCallDetections: 32,
@@ -157,7 +157,7 @@ const DEFAULT_LOOP_DETECTION: Required<LoopDetectionOptions> = {
   compactBeforeFailing: true,
 }
 
-/** Project the flat General setting fields into one agent option. */
+/** Project the flat Models > Behavior fields into one agent option. */
 function loopDetectionFromSettings(settings: AgentLoopSettings): Required<LoopDetectionOptions> {
   return {
     enabled: settings.loopDetectionEnabled,
@@ -177,7 +177,7 @@ function loopDetectionFromSettings(settings: AgentLoopSettings): Required<LoopDe
   }
 }
 
-/** Apply General defaults while preserving explicit per-agent overrides. */
+/** Apply Models > Behavior defaults while preserving explicit per-agent overrides. */
 function resolveAgentOptions(options: AgentOptions, settings: AgentLoopSettings): AgentOptions {
   const configured = loopDetectionFromSettings(settings)
   const usesDefaultPolicy = configured.enabled === DEFAULT_LOOP_DETECTION.enabled
@@ -443,7 +443,7 @@ export class AgentLoop extends Service implements AgentFactory {
         enabled: z.boolean().default(false),
         detectOnText: z.boolean().default(true),
         detectOnReasoning: z.boolean().default(true),
-        detectOnToolCall: z.boolean().default(true),
+        detectOnToolCall: z.boolean().default(false),
         includeLoop: z.boolean().default(true),
         minTokens: z.number().step(1).min(1).max(Number.MAX_SAFE_INTEGER).default(16),
         maxToolCallDetections: z.number().step(1).min(1).max(Number.MAX_SAFE_INTEGER).default(32),

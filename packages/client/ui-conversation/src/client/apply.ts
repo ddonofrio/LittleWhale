@@ -150,16 +150,16 @@ export function apply(ctx: Context): void {
     setGlobalRatio: (ratio) => { void compactionPolicy.set('compactAtRatio', ratio) },
   })
 
-  ctx.slots.inject('settings.general.item', () => ctx.slots.register({
-    name: 'settings.general.item',
+  ctx.slots.inject('settings.models.item', () => ctx.slots.register({
+    name: 'settings.models.item',
     id: 'compaction-policy',
     order: 25,
     locale: NS,
     inject: compactPolicyFace,
   }, CompactionPolicyRow))
 
-  ctx.slots.inject('settings.general.item', () => ctx.slots.register({
-    name: 'settings.general.item',
+  ctx.slots.inject('settings.models.item', () => ctx.slots.register({
+    name: 'settings.models.item',
     id: 'composer-enter',
     order: 20,
     locale: NS,

@@ -38,6 +38,14 @@ function capacityInputs(label: string): HTMLInputElement[] {
   return screen.getAllByLabelText<HTMLInputElement>(new RegExp(label))
 }
 
+/** Ensure the provider editor's customized settings are open. */
+function openCustomized(): void {
+  const summary = screen.getByText(en.customized)
+  const details = summary.closest('details')
+  if (details === null) throw new Error('no customized settings disclosure')
+  if (!details.open) fireEvent.click(summary)
+}
+
 const PiAiConfig = Schema.object({
   providers: Schema.dict(Schema.object({
     apiKeyEnv: Schema.string().role('credential-ref'),
@@ -259,6 +267,10 @@ describe('ModelsSection', () => {
     expect(configured.closest('li')?.textContent).toContain('openai')
     const missing = screen.getByRole('img', { name: en.credentialMissing })
     expect(missing.closest('li')?.textContent).toContain('DeepSeek')
+    const deepSeekModels = screen.getByRole('list', { name: `${en.models}: DeepSeek` })
+    expect(within(deepSeekModels).getByText('deepseek-v4-flash')).toBeTruthy()
+    expect(within(deepSeekModels).getAllByText(`${en.contextWindow}: 1M`)).toHaveLength(2)
+    expect(within(deepSeekModels).getByText('deepseek-v4-pro')).toBeTruthy()
     // The card is still one click away.
     fireEvent.click(screen.getByRole('button', { name: deepSeekCopy(en.editProvider) }))
     expect(screen.getByLabelText(en.keyInput)).toBeTruthy()
@@ -423,11 +435,18 @@ describe('ModelsSection', () => {
     expect(onClose).toHaveBeenCalledWith(true)
   })
 
+  it('opens customized settings by default when editing a provider', async () => {
+    await mountDeepSeekCard()
+    const details = screen.getByText(en.customized).closest('details')
+    if (!(details instanceof HTMLDetailsElement)) throw new Error('no customized settings disclosure')
+    expect(details.open).toBe(true)
+  })
+
   it('applies customized deepseek fields as path ops', async () => {
     const { mutate } = await mountDeepSeekCard({
       mutate: vi.fn(() => Promise.resolve(ok(wireNamespaces()[0]))),
     })
-    fireEvent.click(screen.getByText(en.customized))
+    openCustomized()
     const baseURL = screen.getByLabelText<HTMLInputElement>(en.baseUrl)
     // The deepseek placeholder is pinned to the public endpoint, not the
     // effective value (which may reflect a launch-environment override).
@@ -448,7 +467,7 @@ describe('ModelsSection', () => {
     const { mutate } = await mountDeepSeekCard({
       mutate: vi.fn(() => Promise.resolve(ok(wireNamespaces()[0]))),
     })
-    fireEvent.click(screen.getByText(en.customized))
+    openCustomized()
     expect(screen.getByText(en.modelsInherited)).toBeTruthy()
     expect(screen.getAllByLabelText(new RegExp(en.modelId)).map(input => (input as HTMLInputElement).value))
       .toEqual(['deepseek-v4-flash', 'deepseek-v4-pro'])
@@ -480,7 +499,7 @@ describe('ModelsSection', () => {
 
   it('rejects duplicate DeepSeek model ids before writing', async () => {
     const { mutate } = await mountDeepSeekCard()
-    fireEvent.click(screen.getByText(en.customized))
+    openCustomized()
     fireEvent.click(screen.getByText(en.addModel))
     const ids = screen.getAllByLabelText(new RegExp(en.modelId))
     fireEvent.change(ids[2] as HTMLInputElement, { target: { value: 'deepseek-v4-flash' } })
@@ -552,7 +571,7 @@ describe('ModelsSection', () => {
     const { mutate } = await mountDeepSeekCard({
       mutate: vi.fn(() => Promise.resolve(ok(wireNamespaces()[0]))),
     })
-    fireEvent.click(screen.getByText(en.customized))
+    openCustomized()
     expandRow(1)
     expandRow(2)
     const windows = capacityInputs(en.contextWindow)
@@ -590,7 +609,7 @@ describe('ModelsSection', () => {
 
   it('keeps unreadable context-window text on screen and refuses the write', async () => {
     const { mutate } = await mountDeepSeekCard()
-    fireEvent.click(screen.getByText(en.customized))
+    openCustomized()
     expandRow(1)
     expandRow(2)
     const windows = capacityInputs(en.contextWindow)
@@ -637,7 +656,7 @@ describe('ModelsSection', () => {
       readOnly={false}
       onClose={() => {}}
     />)
-    fireEvent.click(screen.getByText(en.customized))
+    openCustomized()
     expect(screen.getByText(en.modelsCustomized)).toBeTruthy()
     expect(screen.getAllByLabelText(new RegExp(en.modelId)).map(input => (input as HTMLInputElement).value))
       .toEqual(['user-only-model'])
@@ -654,7 +673,7 @@ describe('ModelsSection', () => {
     // the first, which then fell back to rendering its stored NaN as `NaN` —
     // losing the text the user was told they could still correct.
     await mountDeepSeekCard()
-    fireEvent.click(screen.getByText(en.customized))
+    openCustomized()
     expandRow(1)
     expandRow(2)
     const windows = capacityInputs(en.contextWindow)
@@ -668,7 +687,7 @@ describe('ModelsSection', () => {
 
   it('re-keys the typed text around a removed row', async () => {
     await mountDeepSeekCard()
-    fireEvent.click(screen.getByText(en.customized))
+    openCustomized()
     const windows = (): HTMLInputElement[] => capacityInputs(en.contextWindow)
     const removeRow = (at: number): void => {
       fireEvent.click(screen.getAllByLabelText(new RegExp(en.removeModel))[at] as HTMLElement)
@@ -704,7 +723,7 @@ describe('ModelsSection', () => {
     const { mutate } = await mountDeepSeekCard({
       mutate: vi.fn(() => Promise.resolve(ok(wireNamespaces()[0]))),
     })
-    fireEvent.click(screen.getByText(en.customized))
+    openCustomized()
     expandRow(1)
     const windows = capacityInputs(en.contextWindow)
     fireEvent.change(windows[0] as HTMLInputElement, { target: { value: 'garbage' } })
@@ -727,7 +746,7 @@ describe('ModelsSection', () => {
     const { mutate } = await mountDeepSeekCard({
       mutate: vi.fn(() => Promise.resolve(ok(wireNamespaces()[0]))),
     })
-    fireEvent.click(screen.getByText(en.customized))
+    openCustomized()
     expandRow(1)
     expandRow(2)
     // The profile's own cap is the placeholder both rows inherit.
@@ -759,7 +778,7 @@ describe('ModelsSection', () => {
 
   it('settles a pasted id and refuses whitespace that would never match', async () => {
     await mountDeepSeekCard()
-    fireEvent.click(screen.getByText(en.customized))
+    openCustomized()
     const ids = screen.getAllByLabelText<HTMLInputElement>(new RegExp(en.modelId))
     fireEvent.change(ids[0] as HTMLInputElement, { target: { value: '  deepseek-v4-flash  ' } })
     fireEvent.blur(ids[0] as HTMLInputElement)
@@ -798,7 +817,7 @@ describe('ModelsSection', () => {
     const { mutate } = await mountDeepSeekCard({
       mutate: vi.fn(() => Promise.resolve(ok(wireNamespaces()[0]))),
     })
-    fireEvent.click(screen.getByText(en.customized))
+    openCustomized()
     fireEvent.click(screen.getAllByLabelText(new RegExp(en.removeModel))[0] as HTMLElement)
     fireEvent.click(screen.getByLabelText(new RegExp(en.removeModel)))
     expect(screen.getByText(en.modelsEmpty)).toBeTruthy()
@@ -830,7 +849,7 @@ describe('ModelsSection', () => {
   it('clears an inherited override with an unset op, never a whole-section replace', async () => {
     // A whole-section replace would clobber sibling overrides to clear one field.
     const { replace, update, mutate } = await mountDeepSeekCard()
-    fireEvent.click(screen.getByText(en.customized))
+    openCustomized()
     const url = screen.getByLabelText<HTMLInputElement>(en.baseUrl)
     expect(url.value).toBe('https://base')
     fireEvent.change(url, { target: { value: '' } })
@@ -867,7 +886,7 @@ describe('ModelsSection', () => {
       readOnly={false}
       onClose={() => {}}
     />)
-    fireEvent.click(screen.getByText(en.customized))
+    openCustomized()
     const baseURL = screen.getByLabelText<HTMLInputElement>(en.baseUrl)
     expect(baseURL.placeholder).toBe('https://api.deepseek.com')
     fireEvent.change(baseURL, { target: { value: 'https://x' } })
@@ -878,7 +897,7 @@ describe('ModelsSection', () => {
 
   it('rejects an invalid draft before writing', async () => {
     const { update } = await mountDeepSeekCard()
-    fireEvent.click(screen.getByText(en.customized))
+    openCustomized()
     fireEvent.change(screen.getByLabelText(en.baseUrl), { target: { value: 'not-a-url' } })
     fireEvent.click(screen.getByText(en.apply))
     await screen.findByText(/baseURL/)
@@ -893,7 +912,7 @@ describe('ModelsSection', () => {
     await waitFor(() => { expect(editorKey.placeholder).toBe(en.keyStored) })
     // pi-ai carries Base URL too: the stored override shows as the value and
     // the effective profile endpoint as its placeholder source.
-    fireEvent.click(screen.getByText(en.customized))
+    openCustomized()
     const url = screen.getByLabelText<HTMLInputElement>(en.baseUrl)
     expect(url.value).toBe('https://proxy')
     fireEvent.change(url, { target: { value: 'https://proxy/v2' } })
@@ -916,7 +935,7 @@ describe('ModelsSection', () => {
     expect(pick.value).toBe('anthropic')
     // A dormant profile has no endpoint anywhere: the pi-ai placeholder
     // falls back to the provider-default wording.
-    fireEvent.click(screen.getByText(en.customized))
+    openCustomized()
     expect(screen.getByLabelText<HTMLInputElement>(en.baseUrl).placeholder).toBe(en.baseUrlDefault)
     const addKey = screen.getByLabelText<HTMLInputElement>(en.keyInput)
     expect(addKey.placeholder).toBe(en.keyPlaceholderNative)
@@ -1047,7 +1066,7 @@ describe('ModelsSection', () => {
     const { set } = await mountDeepSeekCard({
       mutate: vi.fn(() => Promise.resolve(fail('changed since it was read', 'settings-conflict'))),
     })
-    fireEvent.click(screen.getByText(en.customized))
+    openCustomized()
     fireEvent.change(screen.getByLabelText<HTMLInputElement>(en.baseUrl), { target: { value: 'https://mine' } })
     fireEvent.click(screen.getByText(en.apply))
     await screen.findByText(en.conflict)
@@ -1059,7 +1078,7 @@ describe('ModelsSection', () => {
     // gets on the whole configuration plane) rejects rather than returning a
     // failed envelope: without a catch the card would stay busy forever.
     await mountDeepSeekCard({ mutate: vi.fn(() => Promise.reject(new Error('connection lost'))) })
-    fireEvent.click(screen.getByText(en.customized))
+    openCustomized()
     fireEvent.change(screen.getByLabelText<HTMLInputElement>(en.baseUrl), { target: { value: 'https://next' } })
     fireEvent.click(screen.getByText(en.apply))
     await screen.findByText('connection lost')

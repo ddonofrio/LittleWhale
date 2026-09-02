@@ -1,4 +1,4 @@
-/** General Settings row for output-token limit recovery. */
+/** Models > Behavior row for output-token limit recovery. */
 
 import { useState } from 'react'
 import type { InjectFace, PropsLocale, PropsRuntime } from '@deepseek-ai/dsh-client-ui-slots'
@@ -8,13 +8,13 @@ import type { TokenLimitHandlerRowFace } from './token-limit-handler-controller.
 import type { PluginsSettingsLocaleKey } from './locales.ts'
 import css from './LoopDetectionRow.module.css'
 
-/** Full General-settings row props. */
+/** Full Models > Behavior row props. */
 export type TokenLimitHandlerRowProps =
-  PropsRuntime<'settings.general.item'>
+  PropsRuntime<'settings.models.item'>
   & PropsLocale<'settings.plugins'>
   & InjectFace<TokenLimitHandlerRowFace>
 
-/** Render the output-token recovery policy in General settings. */
+/** Render the output-token recovery policy in Models > Behavior. */
 export function TokenLimitHandlerRow(props: TokenLimitHandlerRowProps) {
   const { t } = props
   const state = props.useTokenLimitHandler(snapshot => snapshot)
@@ -48,7 +48,7 @@ export function TokenLimitHandlerRow(props: TokenLimitHandlerRowProps) {
           <div className={css.body}>
             {!state.writable ? <p className={css.readOnly}>{t('readOnly')}</p> : null}
             <SelectField
-              id="general-token-limit-action"
+              id="models-token-limit-action"
               label={field('tokenLimitHandlerAction')}
               hint={field('tokenLimitHandlerActionHint')}
               options={[
@@ -64,7 +64,7 @@ export function TokenLimitHandlerRow(props: TokenLimitHandlerRowProps) {
             {action === 'continue'
               ? (
                 <ValueField
-                  id="general-token-limit-count"
+                  id="models-token-limit-count"
                   label={field('tokenLimitHandlerContinueCount')}
                   hint={field('tokenLimitHandlerContinueCountHint')}
                   numeric
@@ -78,7 +78,7 @@ export function TokenLimitHandlerRow(props: TokenLimitHandlerRowProps) {
             {action === 'custom-prompt'
               ? (
                 <TextAreaField
-                  id="general-token-limit-prompt"
+                  id="models-token-limit-prompt"
                   label={field('tokenLimitHandlerCustomPrompt')}
                   hint={field('tokenLimitHandlerCustomPromptHint')}
                   {...common}

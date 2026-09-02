@@ -7,6 +7,7 @@
  */
 import type { ClientContext } from '@deepseek-ai/dsh-client-runtime/client'
 import type { ConnectionHandle } from '@deepseek-ai/dsh-api-remotes/client'
+import { resolveSlotLabel } from '@deepseek-ai/dsh-client-ui-slots'
 // Type-only: pulls the shell's SlotMap merge (the 'settings.section' entry).
 import type {} from '@deepseek-ai/dsh-client-ui-settings/client'
 // Type-only: pulls the locale plugin's Context merge (ctx.locale).
@@ -16,15 +17,19 @@ import type {} from '@deepseek-ai/dsh-client-locale/client'
 import type {} from '@deepseek-ai/dsh-api-remotes/client'
 import { ModelsSection } from './ModelsSection.tsx'
 import type { ModelsSectionInjected } from './ModelsSection.tsx'
+import { ModelsSettingsSection } from './ModelsSettingsSection.tsx'
+import type { ModelsSettingsSectionInjected, ModelsSettingsTabEntry } from './ModelsSettingsSection.tsx'
+import { ModelsBehaviorTab } from './ModelsBehaviorTab.tsx'
 import { WelcomeNotice } from './WelcomeNotice.tsx'
 import type { WelcomeNoticeInjected } from './WelcomeNotice.tsx'
 import { decodeWelcomeSection, WelcomeNoticeStore } from './welcome-store.ts'
 import { ModelsSettingsStore } from './store.ts'
 import { createSettingsSchemaOperations } from './schema-operations.ts'
-import { en, zh, type ModelsKey } from './locales.ts'
+import { en, type ModelsKey } from './locales.ts'
 import { WELCOME_NOTICE_SETTINGS_NAMESPACE } from '../onboarding-copy.ts'
 
 export type { ModelsSectionInjected, ModelsSectionProps } from './ModelsSection.tsx'
+export type { ModelsSettingsSectionInjected, ModelsSettingsSectionProps } from './ModelsSettingsSection.tsx'
 export type { ModelsKey } from './locales.ts'
 
 declare module '@deepseek-ai/dsh-client-ui-slots' {
@@ -62,7 +67,7 @@ export const inject = ['slots', 'locale', 'connection', 'remote', 'settingsScope
  * @param ctx - client root context.
  */
 export function apply(ctx: ClientContext): void {
-  ctx.effect(() => ctx.locale.register(NS, { zh, en }), 'ui-settings-models: copy dictionaries')
+  ctx.effect(() => ctx.locale.register(NS, 'en', en), 'ui-settings-models: copy dictionaries')
 
   const connection = ctx.get('connection') as ConnectionHandle
   const schema = createSettingsSchemaOperations(ctx.settingsSchema)
@@ -89,6 +94,41 @@ export function apply(ctx: ClientContext): void {
     t,
   })
 
+  let tabsVersion = -1
+  let tabsRevision = -1
+  let tabs: readonly ModelsSettingsTabEntry[] = []
+  const sectionInjected = (): ModelsSettingsSectionInjected => ({
+    hooks: {
+      tabs: {
+        getSnapshot: () => {
+          const version = ctx.slots.getVersion('settings.models.tab')
+          const revision = ctx.locale.getSnapshot().revision
+          if (version !== tabsVersion || revision !== tabsRevision) {
+            tabsVersion = version
+            tabsRevision = revision
+            tabs = ctx.slots.entries('settings.models.tab')
+              .map(entry => ({
+                /* v8 ignore next -- list-slot registration requires id */
+                id: entry.options.id ?? '',
+                order: entry.options.order ?? 0,
+                label: resolveSlotLabel(entry.options.label) ?? '',
+              }))
+              .sort((a, b) => a.order - b.order)
+          }
+          return tabs
+        },
+        subscribe: (listener) => {
+          const offLedger = ctx.slots.subscribe('settings.models.tab', listener)
+          const offLocale = ctx.locale.subscribe(listener)
+          return () => {
+            offLedger()
+            offLocale()
+          }
+        },
+      },
+    },
+  })
+
   // Pushed invalidations converge every open surface without polling. The
   // settingsScope injection makes ui-settings activate first, and remote
   // dispatch preserves listener order; its listener therefore starts the
@@ -113,8 +153,28 @@ export function apply(ctx: ClientContext): void {
     id: 'models',
     order: 10,
     label: () => t('nav'),
+    locale: NS,
+    inject: sectionInjected,
+    children: { 'settings.models.tab': { kind: 'list', scope: 'root' } },
+  }, ModelsSettingsSection))
+
+  ctx.slots.inject('settings.models.tab', () => ctx.slots.register({
+    name: 'settings.models.tab',
+    id: 'model-list',
+    order: 0,
+    label: () => t('modelListTab'),
+    locale: NS,
     inject: injected,
   }, ModelsSection))
+
+  ctx.slots.inject('settings.models.tab', () => ctx.slots.register({
+    name: 'settings.models.tab',
+    id: 'behavior',
+    order: 10,
+    label: () => t('behaviorTab'),
+    locale: NS,
+    children: { 'settings.models.item': { kind: 'list', scope: 'root' } },
+  }, ModelsBehaviorTab))
   ctx.slots.inject('settings.onboarding', () => ctx.slots.register({
     name: 'settings.onboarding',
     id: 'welcome-notice',

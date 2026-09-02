@@ -66,6 +66,64 @@
   gap: 12px;
 }
 
+/* Keep the configured model catalog visible in the provider card. Editing
+   remains a separate action in the card header, so inspecting a provider no
+   longer requires opening its editor and its nested catalog disclosure. */
+.modelSummary {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.modelSummaryItem {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 12px;
+  min-width: 0;
+  padding: 6px 8px;
+  border-radius: 8px;
+  background: var(--dsw-alias-bg-module-platform);
+}
+
+.modelSummaryIdentity {
+  display: inline-flex;
+  align-items: baseline;
+  gap: 8px;
+  min-width: 0;
+}
+
+.modelSummaryId {
+  min-width: 0;
+  overflow-wrap: anywhere;
+  font-family: var(--ds-font-family-code);
+  font-size: 13px;
+  line-height: 18px;
+  color: var(--dsw-alias-label-primary);
+}
+
+.modelSummaryName,
+.modelSummaryParams {
+  color: var(--dsw-alias-label-tertiary);
+  font-size: 12px;
+  line-height: 18px;
+}
+
+.modelSummaryName {
+  overflow-wrap: anywhere;
+}
+
+.modelSummaryParams {
+  display: inline-flex;
+  flex: none;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+  gap: 8px;
+}
+
 .rowHead {
   display: flex;
   align-items: center;

@@ -1,4 +1,4 @@
-/** The token-limit handler's staged General-settings form. */
+/** The token-limit handler's staged Models > Behavior form. */
 
 import type { SettingsScope, SnapshotStore } from '@deepseek-ai/dsh-client-runtime/client'
 import { CardForm, numberField, textField, type CardActions, type CardFieldState } from './card-form.ts'
@@ -6,14 +6,14 @@ import { CardForm, numberField, textField, type CardActions, type CardFieldState
 /** Namespace owned by the output-token recovery plugin. */
 export const TOKEN_LIMIT_HANDLER_NS = 'token-limit-handler'
 
-/** Fields exposed by the General row. */
+/** Fields exposed by the Models > Behavior row. */
 export interface TokenLimitHandlerSettings {
   action?: string
   continueCount?: number
   customPrompt?: string
 }
 
-/** State rendered by the General row. */
+/** State rendered by the Models > Behavior row. */
 export interface TokenLimitHandlerRowState {
   available: boolean
   writable: boolean
@@ -26,7 +26,7 @@ export interface TokenLimitHandlerRowState {
   customPrompt: CardFieldState
 }
 
-/** Registration-side face for the General row. */
+/** Registration-side face for the Models > Behavior row. */
 export interface TokenLimitHandlerRowFace extends CardActions {
   hooks: {
     tokenLimitHandler: SnapshotStore<TokenLimitHandlerRowState>

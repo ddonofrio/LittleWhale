@@ -1,4 +1,4 @@
-/** General-settings row for the global automatic-compaction threshold. */
+/** Models > Behavior row for the global automatic-compaction threshold. */
 
 import { useState } from 'react'
 import type { ObservableSnapshot } from '@deepseek-ai/dsh-client-runtime/client'
@@ -14,9 +14,9 @@ export interface CompactionPolicyRowInjected {
   setGlobalRatio: (ratio: number) => void
 }
 
-/** Full General-settings row props. */
+/** Full Models > Behavior row props. */
 export type CompactionPolicyRowProps =
-  PropsRuntime<'settings.general.item'>
+  PropsRuntime<'settings.models.item'>
   & PropsLocale<'conversation'>
   & InjectFace<CompactionPolicyRowInjected>
 

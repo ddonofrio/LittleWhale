@@ -103,7 +103,7 @@ function renderLoopDetection(state: Partial<LoopDetectionRowState> = {}) {
     enabled: field('on'),
     detectOnText: field('on'),
     detectOnReasoning: field('on'),
-    detectOnToolCall: field('on'),
+    detectOnToolCall: field('off'),
     includeLoop: field('on'),
     minTokens: field('5'),
     maxToolCallDetections: field('32'),
@@ -402,14 +402,14 @@ describe('AgentLoopCard', () => {
 })
 
 describe('LoopDetectionRow', () => {
-  it('shows all streams selected by default', () => {
+  it('shows text and reasoning selected while Tool calls is off by default', () => {
     renderLoopDetection()
     fireEvent.click(screen.getByText(en.loopDetectionTitle))
 
     expect(screen.getByRole('checkbox', { name: en.loopDetectionDetectOnText })).toHaveProperty('checked', true)
     expect(screen.getByRole('checkbox', { name: en.loopDetectionDetectOnReasoning })).toHaveProperty('checked', true)
-    expect(screen.getByRole('checkbox', { name: en.loopDetectionDetectOnToolCall })).toHaveProperty('checked', true)
-    expect(screen.getByLabelText(en.loopDetectionMaxToolCallDetections)).toHaveProperty('value', '32')
+    expect(screen.getByRole('checkbox', { name: en.loopDetectionDetectOnToolCall })).toHaveProperty('checked', false)
+    expect(screen.queryByLabelText(en.loopDetectionMaxToolCallDetections)).toBeNull()
     expect(screen.getByText(en.loopDetectionDetectOnTextHint)).toBeTruthy()
     expect(screen.getByText(en.loopDetectionDetectOnReasoningHint)).toBeTruthy()
     expect(screen.getByText(en.loopDetectionDetectOnToolCallHint)).toBeTruthy()

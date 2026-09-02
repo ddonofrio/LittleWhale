@@ -112,7 +112,7 @@ function resolveLoopDetection(options: LoopDetectionOptions | undefined): Resolv
     enabled: options?.enabled ?? false,
     detectOnText: options?.detectOnText ?? true,
     detectOnReasoning: options?.detectOnReasoning ?? true,
-    detectOnToolCall: options?.detectOnToolCall ?? true,
+    detectOnToolCall: options?.detectOnToolCall ?? false,
     includeLoop: options?.includeLoop ?? true,
     minTokens: options?.minTokens ?? 16,
     maxToolCallDetections: options?.maxToolCallDetections ?? 32,

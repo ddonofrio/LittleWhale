@@ -1,4 +1,4 @@
-/** The completion checker's staged General-settings form. */
+/** The completion checker's staged Models > Behavior form. */
 
 import type { SettingsScope, SnapshotStore } from '@deepseek-ai/dsh-client-runtime/client'
 import { booleanField, CardForm, type CardActions, type CardFieldState } from './card-form.ts'
@@ -6,12 +6,12 @@ import { booleanField, CardForm, type CardActions, type CardFieldState } from '.
 /** Namespace owned by the completion checker. */
 export const COMPLETION_CHECKER_NS = 'completion-checker'
 
-/** Fields exposed by the General row. */
+/** Fields exposed by the Models > Behavior row. */
 export interface CompletionCheckerSettings {
   enabled?: boolean
 }
 
-/** State rendered by the General row. */
+/** State rendered by the Models > Behavior row. */
 export interface CompletionCheckerRowState {
   available: boolean
   writable: boolean
@@ -22,7 +22,7 @@ export interface CompletionCheckerRowState {
   enabled: CardFieldState
 }
 
-/** Registration-side face for the General row. */
+/** Registration-side face for the Models > Behavior row. */
 export interface CompletionCheckerRowFace extends CardActions {
   hooks: {
     completionChecker: SnapshotStore<CompletionCheckerRowState>

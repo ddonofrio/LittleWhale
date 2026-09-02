@@ -61,6 +61,7 @@ function declareRoot(slots: SlotRegistry): () => void {
     children: {
       'settings.section': { kind: 'list', scope: 'root' },
       'settings.general.item': { kind: 'list', scope: 'root' },
+      'settings.models.item': { kind: 'list', scope: 'root' },
     },
   } as never, () => null)
 }
@@ -87,43 +88,43 @@ describe('ui-settings-plugins apply', () => {
     expect(slots.spec('settings.plugin.item')).toMatchObject({ kind: 'keyed', scope: 'root' })
   })
 
-  it('registers loop detection in General below the busy-enter behavior', async () => {
+  it('registers loop detection in Models > Behavior', async () => {
     const { ctx, slots } = await bench()
     declareRoot(slots)
 
     await ctx.plugin({ inject: [...inject], apply }).await()
 
-    const row = slots.entries('settings.general.item').find(entry => entry.options.id === 'agent-loop-detection')
+    const row = slots.entries('settings.models.item').find(entry => entry.options.id === 'agent-loop-detection')
     expect(row?.options).toMatchObject({ id: 'agent-loop-detection', order: 30 })
   })
 
-  it('registers token-limit recovery in General after loop detection', async () => {
+  it('registers token-limit recovery in Models > Behavior after loop detection', async () => {
     const { ctx, slots } = await bench()
     declareRoot(slots)
 
     await ctx.plugin({ inject: [...inject], apply }).await()
 
-    const row = slots.entries('settings.general.item').find(entry => entry.options.id === 'token-limit-handler')
+    const row = slots.entries('settings.models.item').find(entry => entry.options.id === 'token-limit-handler')
     expect(row?.options).toMatchObject({ id: 'token-limit-handler', order: 40 })
   })
 
-  it('registers Double-check results in General after token-limit recovery', async () => {
+  it('registers Double-check results in Models > Behavior after token-limit recovery', async () => {
     const { ctx, slots } = await bench()
     declareRoot(slots)
 
     await ctx.plugin({ inject: [...inject], apply }).await()
 
-    const row = slots.entries('settings.general.item').find(entry => entry.options.id === 'completion-checker')
+    const row = slots.entries('settings.models.item').find(entry => entry.options.id === 'completion-checker')
     expect(row?.options).toMatchObject({ id: 'completion-checker', order: 50 })
   })
 
-  it('registers automatic goals and new-chat plan mode at the end of General', async () => {
+  it('registers automatic goals and new-chat plan mode in Models > Behavior', async () => {
     const { ctx, slots } = await bench()
     declareRoot(slots)
 
     await ctx.plugin({ inject: [...inject], apply }).await()
 
-    expect(slots.entries('settings.general.item').map(entry => [entry.options.id, entry.options.order]))
+    expect(slots.entries('settings.models.item').map(entry => [entry.options.id, entry.options.order]))
       .toEqual([
         ['agent-loop-detection', 30],
         ['token-limit-handler', 40],

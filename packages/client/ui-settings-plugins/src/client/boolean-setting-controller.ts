@@ -1,4 +1,4 @@
-/** Settings controller shared by the two General boolean preferences. */
+/** Settings controller shared by the two Models > Behavior boolean preferences. */
 
 import type { SettingsScope, SnapshotStore } from '@deepseek-ai/dsh-client-runtime/client'
 import { booleanField, CardForm, type CardActions, type CardFieldState, type CardShell } from './card-form.ts'
@@ -8,19 +8,19 @@ export interface BooleanSetting {
   [field: string]: boolean | undefined
 }
 
-/** State rendered by a General boolean row. */
+/** State rendered by a Models > Behavior boolean row. */
 export interface BooleanSettingRowState extends CardShell {
   value: CardFieldState
 }
 
-/** Registration-side face for a General boolean row. */
+/** Registration-side face for a Models > Behavior boolean row. */
 export interface BooleanSettingRowFace extends CardActions {
   hooks: {
     booleanSetting: SnapshotStore<BooleanSettingRowState>
   }
 }
 
-/** Bridge a boolean settings namespace onto the shared General row. */
+/** Bridge a boolean settings namespace onto the shared Models > Behavior row. */
 export class BooleanSettingRowController {
   private readonly form: CardForm<BooleanSetting>
   private readonly store: SnapshotStore<BooleanSettingRowState>

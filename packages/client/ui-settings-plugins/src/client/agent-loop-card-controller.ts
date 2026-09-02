@@ -19,7 +19,7 @@ export const AGENT_LOOP_NS = 'agent-loop'
 export interface AgentLoopSettings {
   /** Upper bound on parallel-safe tool calls in flight per step. */
   maxParallelToolCalls?: number
-  /** General loop-recovery policy. */
+  /** Models > Behavior loop-recovery policy. */
   loopDetectionEnabled?: boolean
   loopDetectionDetectOnText?: boolean
   loopDetectionDetectOnReasoning?: boolean
@@ -74,7 +74,7 @@ export class AgentLoopCardController {
   }
 }
 
-/** General-settings projection for the loop recovery policy. */
+/** Models > Behavior projection for the loop recovery policy. */
 export interface LoopDetectionRowState extends CardShell {
   enabled: CardFieldState
   detectOnText: CardFieldState
@@ -92,14 +92,14 @@ export interface LoopDetectionRowState extends CardShell {
   compactBeforeFailing: CardFieldState
 }
 
-/** Registration-side face injected into the General settings row. */
+/** Registration-side face injected into the Models > Behavior row. */
 export interface LoopDetectionRowFace extends CardActions {
   hooks: {
     loopDetection: SnapshotStore<LoopDetectionRowState>
   }
 }
 
-/** Bridges the loop policy fields onto the General settings row. */
+/** Bridges the loop policy fields onto the Models > Behavior row. */
 export class LoopDetectionRowController {
   private readonly form: CardForm<AgentLoopSettings>
   private readonly store: SnapshotStore<LoopDetectionRowState>
@@ -145,7 +145,7 @@ export class LoopDetectionRowController {
   }
 
   /**
-   * Build the injected face consumed by the General settings row.
+   * Build the injected face consumed by the Models > Behavior row.
    * @returns the row snapshot and staged-form actions.
    */
   inject(): LoopDetectionRowFace {

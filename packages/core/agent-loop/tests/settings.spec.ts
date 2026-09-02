@@ -112,7 +112,7 @@ describe('agent-loop settings section', () => {
     })).toMatchObject({
       loopDetectionDetectOnText: true,
       loopDetectionDetectOnReasoning: true,
-      loopDetectionDetectOnToolCall: true,
+      loopDetectionDetectOnToolCall: false,
     })
 
     const agent = bench.ctx.agentLoop.create(SessionId('default-loop-threshold'), {

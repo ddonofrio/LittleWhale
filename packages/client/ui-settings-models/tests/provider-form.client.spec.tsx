@@ -155,14 +155,20 @@ async function mountSection(options: Parameters<typeof scriptedFace>[0] = {}) {
   return { ...scripted, controller }
 }
 
-/** Open the editor of one configured row and expand its customized fold. */
+/** Open the editor of one configured row and ensure its customized fold is open. */
+function openCustomized(): void {
+  const summary = document.querySelector('summary')
+  if (summary === null) throw new Error('no customized fold')
+  const details = summary.closest('details')
+  if (details === null) throw new Error('no customized settings disclosure')
+  if (!details.open) fireEvent.click(summary)
+}
+
 function openEditor(provider: string): void {
   const row = screen.getByText(provider).closest('li')
   if (row === null) throw new Error(`no row for ${provider}`)
   fireEvent.click(within_(row, en.edit))
-  const summary = document.querySelector('summary')
-  if (summary === null) throw new Error('no customized fold')
-  fireEvent.click(summary)
+  openCustomized()
 }
 
 /** Open one model row's advanced fold, where the capacities live. */
@@ -755,7 +761,7 @@ describe('hand-declared providers', () => {
     // offers no route-level protocol to override them with.
     await mountSection({ providers: { openai: { apiKeyEnv: 'OPENAI_API_KEY' } } })
     openEditor('openai')
-    fireEvent.click(screen.getByText(en.customized))
+    openCustomized()
     expect(fields()).toEqual([en.keyInput, en.baseUrl])
     cleanup()
 

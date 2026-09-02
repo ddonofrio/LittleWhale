@@ -40,7 +40,7 @@ Source: [`packages/core/system-prompt/src/index.ts:186`](../packages/core/system
 
 ## `@ddonofrio/littlewhale-plan-goal`
 
-Requires: `llm` · `goals`
+Requires: `llm` · `goals` · `systemPrompt` · `tools`
 
 ```ts config-catalog
 /** Plugin configuration. */
@@ -52,7 +52,7 @@ export interface Config {
 }
 ```
 
-Source: [`packages/core/plan-goal/src/index.ts:20`](../packages/core/plan-goal/src/index.ts)
+Source: [`packages/core/plan-goal/src/index.ts:22`](../packages/core/plan-goal/src/index.ts)
 
 <a id="ddonofriolittlewhale-plan-mode"></a>
 
@@ -581,6 +581,20 @@ export interface ModelCompactPolicyConfig extends CompactionPolicyConfig {
 ```
 
 Source: [`packages/compaction/compaction-basic/src/types.ts:38`](../packages/compaction/compaction-basic/src/types.ts)
+
+<a id="deepseek-aidsh-compaction-policy"></a>
+
+## `@deepseek-ai/dsh-compaction-policy`
+
+```ts config-catalog
+/** Composition defaults for the policy service. */
+export interface Config {
+  /** Global default fraction when no user value exists. */
+  compactAtRatio?: number
+}
+```
+
+Source: [`packages/compaction/compaction-policy/src/index.ts:51`](../packages/compaction/compaction-policy/src/index.ts)
 
 <a id="deepseek-aidsh-compaction-tool-result-pruner"></a>
 

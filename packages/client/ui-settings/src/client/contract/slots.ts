@@ -61,6 +61,14 @@ declare module '@deepseek-ai/dsh-client-ui-slots' {
      */
     'settings.plugins.tab': { kind: 'list'; scope: 'root'; owner: SettingsPluginsTabOwnerProps }
     /**
+     * One page inside the Models settings section. The section owner renders
+     * localized entry labels as tabs and mounts each contribution inside its
+     * corresponding tab panel.
+     */
+    'settings.models.tab': { kind: 'list'; scope: 'root'; owner: SettingsModelsTabOwnerProps }
+    /** One behavior preference row inside the Models Behavior tab. */
+    'settings.models.item': { kind: 'list'; scope: 'root'; owner: SettingsModelsItemOwnerProps }
+    /**
      * Root-scoped onboarding steps contributed by settings features. The
      * shell mounts one ordered step at a time; the active registrant either
      * completes itself or keeps ownership until the user completes its sole
@@ -97,6 +105,18 @@ export interface SettingsGeneralItemOwnerProps {
 /** Owner share of a Plugins tab (the section supplies nothing). */
 export interface SettingsPluginsTabOwnerProps {
   /** Marker field: tab owner props are intentionally empty. */
+  children?: never
+}
+
+/** Owner share of a Models tab (the section supplies nothing). */
+export interface SettingsModelsTabOwnerProps {
+  /** Marker field: tab owners are intentionally empty. */
+  children?: never
+}
+
+/** Owner share of a Models Behavior preference row. */
+export interface SettingsModelsItemOwnerProps {
+  /** Marker field: item owners are intentionally empty. */
   children?: never
 }
 

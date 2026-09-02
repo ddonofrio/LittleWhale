@@ -1,4 +1,4 @@
-/** General Settings row for the agent's LLM loop recovery policy. */
+/** Models > Behavior row for the agent's LLM loop recovery policy. */
 
 import { useState } from 'react'
 import type { InjectFace, PropsLocale, PropsRuntime } from '@deepseek-ai/dsh-client-ui-slots'
@@ -8,13 +8,13 @@ import type { LoopDetectionRowFace } from './agent-loop-card-controller.ts'
 import type { PluginsSettingsLocaleKey } from './locales.ts'
 import css from './LoopDetectionRow.module.css'
 
-/** Full General-settings row props. */
+/** Full Models > Behavior row props. */
 export type LoopDetectionRowProps =
-  PropsRuntime<'settings.general.item'>
+  PropsRuntime<'settings.models.item'>
   & PropsLocale<'settings.plugins'>
   & InjectFace<LoopDetectionRowFace>
 
-/** Render the loop policy below the Composer busy-Enter preference. */
+/** Render the loop recovery policy in Models > Behavior. */
 export function LoopDetectionRow(props: LoopDetectionRowProps) {
   const { t } = props
   const state = props.useLoopDetection(snapshot => snapshot)
@@ -50,7 +50,7 @@ export function LoopDetectionRow(props: LoopDetectionRowProps) {
           <div className={css.body}>
             {!state.writable ? <p className={css.readOnly}>{t('readOnly')}</p> : null}
             <SelectField
-              id="general-loop-detection-enabled"
+              id="models-loop-detection-enabled"
               label={field('loopDetectionEnabled')}
               hint={field('loopDetectionDescription')}
               options={[
@@ -67,7 +67,7 @@ export function LoopDetectionRow(props: LoopDetectionRowProps) {
                 <>
                   <p className={css.streamHeading}>{field('loopDetectionDetectOn')}</p>
                   <CheckboxField
-                    id="general-loop-detection-text"
+                    id="models-loop-detection-text"
                     label={field('loopDetectionDetectOnText')}
                     hint={field('loopDetectionDetectOnTextHint')}
                     {...common}
@@ -77,7 +77,7 @@ export function LoopDetectionRow(props: LoopDetectionRowProps) {
                     onReset={() => { props.resetField('loopDetectionDetectOnText') }}
                   />
                   <CheckboxField
-                    id="general-loop-detection-reasoning"
+                    id="models-loop-detection-reasoning"
                     label={field('loopDetectionDetectOnReasoning')}
                     hint={field('loopDetectionDetectOnReasoningHint')}
                     {...common}
@@ -87,7 +87,7 @@ export function LoopDetectionRow(props: LoopDetectionRowProps) {
                     onReset={() => { props.resetField('loopDetectionDetectOnReasoning') }}
                   />
                   <CheckboxField
-                    id="general-loop-detection-tool-call"
+                    id="models-loop-detection-tool-call"
                     label={field('loopDetectionDetectOnToolCall')}
                     hint={field('loopDetectionDetectOnToolCallHint')}
                     {...common}
@@ -100,7 +100,7 @@ export function LoopDetectionRow(props: LoopDetectionRowProps) {
                     ? (
                       <div className={css.toolCallChildren}>
                         <ValueField
-                          id="general-loop-detection-max-tool-call-detections"
+                          id="models-loop-detection-max-tool-call-detections"
                           label={field('loopDetectionMaxToolCallDetections')}
                           hint={field('loopDetectionMaxToolCallDetectionsHint')}
                           numeric
@@ -110,7 +110,7 @@ export function LoopDetectionRow(props: LoopDetectionRowProps) {
                           onReset={() => { props.resetField('loopDetectionMaxToolCallDetections') }}
                         />
                         <TextAreaField
-                          id="general-loop-detection-tool-call-first-prompt"
+                          id="models-loop-detection-tool-call-first-prompt"
                           label={field('loopDetectionToolCallFirstPrompt')}
                           hint={field('loopDetectionToolCallPromptHint')}
                           {...common}
@@ -119,7 +119,7 @@ export function LoopDetectionRow(props: LoopDetectionRowProps) {
                           onReset={() => { props.resetField('loopDetectionToolCallFirstPrompt') }}
                         />
                         <TextAreaField
-                          id="general-loop-detection-tool-call-second-prompt"
+                          id="models-loop-detection-tool-call-second-prompt"
                           label={field('loopDetectionToolCallSecondPrompt')}
                           hint={field('loopDetectionToolCallPromptHint')}
                           {...common}
@@ -128,7 +128,7 @@ export function LoopDetectionRow(props: LoopDetectionRowProps) {
                           onReset={() => { props.resetField('loopDetectionToolCallSecondPrompt') }}
                         />
                         <TextAreaField
-                          id="general-loop-detection-tool-call-third-prompt"
+                          id="models-loop-detection-tool-call-third-prompt"
                           label={field('loopDetectionToolCallThirdPrompt')}
                           hint={field('loopDetectionToolCallPromptHint')}
                           {...common}
@@ -140,7 +140,7 @@ export function LoopDetectionRow(props: LoopDetectionRowProps) {
                     )
                     : null}
                   <SelectField
-                    id="general-loop-detection-include"
+                    id="models-loop-detection-include"
                     label={field('loopDetectionIncludeLoop')}
                     hint={field('loopDetectionPromptHint')}
                     options={[
@@ -153,7 +153,7 @@ export function LoopDetectionRow(props: LoopDetectionRowProps) {
                     onReset={() => { props.resetField('loopDetectionIncludeLoop') }}
                   />
                   <ValueField
-                    id="general-loop-detection-min-tokens"
+                    id="models-loop-detection-min-tokens"
                     label={field('loopDetectionMinTokens')}
                     hint={field('loopDetectionMinTokensHint')}
                     numeric
@@ -163,7 +163,7 @@ export function LoopDetectionRow(props: LoopDetectionRowProps) {
                     onReset={() => { props.resetField('loopDetectionMinTokens') }}
                   />
                   <TextAreaField
-                    id="general-loop-detection-first-prompt"
+                    id="models-loop-detection-first-prompt"
                     label={field('loopDetectionFirstPrompt')}
                     hint={field('loopDetectionPromptHint')}
                     {...common}
@@ -172,7 +172,7 @@ export function LoopDetectionRow(props: LoopDetectionRowProps) {
                     onReset={() => { props.resetField('loopDetectionFirstPrompt') }}
                   />
                   <TextAreaField
-                    id="general-loop-detection-second-prompt"
+                    id="models-loop-detection-second-prompt"
                     label={field('loopDetectionSecondPrompt')}
                     hint={field('loopDetectionPromptHint')}
                     {...common}
@@ -181,7 +181,7 @@ export function LoopDetectionRow(props: LoopDetectionRowProps) {
                     onReset={() => { props.resetField('loopDetectionSecondPrompt') }}
                   />
                   <TextAreaField
-                    id="general-loop-detection-third-prompt"
+                    id="models-loop-detection-third-prompt"
                     label={field('loopDetectionThirdPrompt')}
                     hint={field('loopDetectionPromptHint')}
                     {...common}
@@ -190,7 +190,7 @@ export function LoopDetectionRow(props: LoopDetectionRowProps) {
                     onReset={() => { props.resetField('loopDetectionThirdPrompt') }}
                   />
                   <CheckboxField
-                    id="general-loop-detection-compact-before-failing"
+                    id="models-loop-detection-compact-before-failing"
                     label={field('loopDetectionCompactBeforeFailing')}
                     hint={field('loopDetectionCompactBeforeFailingHint')}
                     {...common}

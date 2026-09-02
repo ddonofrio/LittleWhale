@@ -184,35 +184,35 @@ export function apply(ctx: ClientContext): void {
     }, WebSearchCard)
   })
 
-  // Loop recovery is a General preference, immediately after the Composer's
-  // busy-Enter row. Its namespace remains agent-loop because the Host scheduler
-  // is the owner and per-agent options can still override these defaults.
-  ctx.slots.inject('settings.general.item', () => ctx.slots.register({
-    name: 'settings.general.item',
+  // These behavior rows live in Models > Behavior. Their namespaces remain
+  // owned by the corresponding Host plugins and their controllers stay here
+  // so the plugin cards and rows share one settings implementation.
+  ctx.slots.inject('settings.models.item', () => ctx.slots.register({
+    name: 'settings.models.item',
     id: 'agent-loop-detection',
     order: 30,
     locale: NS,
     inject: () => loopDetection.inject(),
   }, LoopDetectionRow))
 
-  ctx.slots.inject('settings.general.item', () => ctx.slots.register({
-    name: 'settings.general.item',
+  ctx.slots.inject('settings.models.item', () => ctx.slots.register({
+    name: 'settings.models.item',
     id: 'token-limit-handler',
     order: 40,
     locale: NS,
     inject: () => tokenLimitHandler.inject(),
   }, TokenLimitHandlerRow))
 
-  ctx.slots.inject('settings.general.item', () => ctx.slots.register({
-    name: 'settings.general.item',
+  ctx.slots.inject('settings.models.item', () => ctx.slots.register({
+    name: 'settings.models.item',
     id: 'completion-checker',
     order: 50,
     locale: NS,
     inject: () => completionChecker.inject(),
   }, CompletionCheckerRow))
 
-  ctx.slots.inject('settings.general.item', () => ctx.slots.register({
-    name: 'settings.general.item',
+  ctx.slots.inject('settings.models.item', () => ctx.slots.register({
+    name: 'settings.models.item',
     id: 'plan-goal',
     order: 60,
     locale: NS,
@@ -222,12 +222,12 @@ export function apply(ctx: ClientContext): void {
       descriptionKey: 'planGoalDescription' as const,
       fieldKey: 'planGoalEnabled' as const,
       field: 'enabled',
-      id: 'general-plan-goal-enabled',
+      id: 'models-plan-goal-enabled',
     }),
   }, BooleanSettingRow))
 
-  ctx.slots.inject('settings.general.item', () => ctx.slots.register({
-    name: 'settings.general.item',
+  ctx.slots.inject('settings.models.item', () => ctx.slots.register({
+    name: 'settings.models.item',
     id: 'plan-mode-startup',
     order: 70,
     locale: NS,
@@ -237,7 +237,7 @@ export function apply(ctx: ClientContext): void {
       descriptionKey: 'planModeStartupDescription' as const,
       fieldKey: 'planModeStartupEnabled' as const,
       field: 'startInPlanMode',
-      id: 'general-plan-mode-startup-enabled',
+      id: 'models-plan-mode-startup-enabled',
     }),
   }, BooleanSettingRow))
 }
