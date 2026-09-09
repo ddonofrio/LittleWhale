@@ -85,7 +85,7 @@ const GOAL_RESULT_TOOL: ToolSchema = {
       goal: {
         type: 'string',
         minLength: 1,
-        description: 'Exactly one user story: As <role>, I want <outcome>, so that <value or reason>.',
+        description: 'One user story, or the exact string NO_GOAL when the request needs only a direct response and no tracked work.',
       },
       source_excerpt: {
         type: 'string',
@@ -214,7 +214,7 @@ function plannerSystemPrompt(): string {
     'Do not invent requirements, motivations, files, tools, architecture, or acceptance criteria that the user did not imply.',
     'If the user gives no explicit reason, use the neutral purpose “so that the requested outcome is achieved”.',
     'Correct spelling and improve clarity while preserving the user’s intent.',
-    'For greetings, acknowledgements, small talk, and requests that only need a reply, describe the required response as the desired outcome.',
+    'For greetings, acknowledgements, small talk, and requests that only need a reply, set goal to exactly NO_GOAL. Do not create a goal for a direct response, a courtesy message, or any request with no actionable work.',
     'The user story must be self-contained and understandable without the original request.',
     `Put the user story in the ${GOAL_RESULT_TOOL_NAME}.goal field and put one exact contiguous excerpt copied from the latest user request in the ${GOAL_RESULT_TOOL_NAME}.source_excerpt field.`,
     'Return no visible text. Do not add analysis, explanation, Markdown, quotation marks, alternatives, or additional fields.',
@@ -241,7 +241,7 @@ function plannerUserPrompt(
     ].join('\n')
   }
   const prompt = [
-    'Understand the latest user request and convert it into exactly one user story.',
+    'Understand the latest user request and convert actionable work into exactly one user story. If no tracked work is needed, call the result tool with goal: NO_GOAL.',
     'If an active goal is supplied below, treat it as the standing goal: preserve it when the new request is part of the same work, and refine it only when the request clearly changes the outcome. Never invent a second independent goal.',
     'Preserve the user’s intent, constraints, scope, and requested outcome. Correct spelling and improve clarity, but do not add requirements or invent motivation.',
     `Call ${GOAL_RESULT_TOOL_NAME} exactly once with two fields: goal and source_excerpt. The goal must use this exact structure: As <role>, I want <desired outcome>, so that <value or reason>. The source_excerpt must be copied verbatim from the latest user request.`,
@@ -276,7 +276,7 @@ function hasExactlyOne(value: string, needle: string): boolean {
   return first >= 0 && value.indexOf(needle, first + needle.length) < 0
 }
 
-function generatedGoal(blocks: readonly ContentBlock[], request: string): string {
+function generatedGoal(blocks: readonly ContentBlock[], request: string): string | undefined {
   const calls = blocks.filter((block): block is Extract<ContentBlock, { type: 'tool-call' }> => block.type === 'tool-call')
   const visibleText = blocks
     .filter((block): block is Extract<ContentBlock, { type: 'text' }> => block.type === 'text')
@@ -310,11 +310,12 @@ function generatedGoal(blocks: readonly ContentBlock[], request: string): string
     throw new Error(`plan-goal: ${GOAL_RESULT_TOOL_NAME} arguments must contain only goal and source_excerpt strings`)
   }
 
-  const goal = parsed.goal.replace(/\s+/gu, ' ').trim()
   const sourceExcerpt = parsed.source_excerpt
   if (sourceExcerpt === '' || !request.includes(sourceExcerpt)) {
     throw new Error('plan-goal: source_excerpt must be an exact excerpt from the latest user request')
   }
+  const goal = parsed.goal.replace(/\s+/gu, ' ').trim()
+  if (goal === 'NO_GOAL') return undefined
   if (/<\/?(?:SYSTEM PROMPT|goal_round|goal_complete|goal_blocked)\b|SYSTEM INSTRUCTION|REMEMBER:/iu.test(goal)) {
     throw new Error('plan-goal: goal contained a prompt wrapper')
   }
@@ -623,7 +624,7 @@ async function deriveGoal(
   agent: Agent,
   messages: readonly UserMessage[],
   signal: AbortSignal,
-): Promise<string> {
+): Promise<string | undefined> {
   const logged = agent.session.requestHeader()?.config
   const route = logged !== undefined
     ? { provider: logged.provider, model: logged.model }
@@ -877,7 +878,7 @@ function deriveGoalOnce(
   agent: Agent,
   messages: readonly UserMessage[],
   signal: AbortSignal,
-): Promise<string> {
+): Promise<string | undefined> {
   const key = messages.map(message => message.id).join('\u0000')
   let plans = inFlightPlans.get(agent)
   if (plans === undefined) {

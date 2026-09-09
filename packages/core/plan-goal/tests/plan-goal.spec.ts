@@ -27,12 +27,21 @@ function goalPlannerResponse(goal: string): (options: GenerateOptions) => Stream
     const prompt = (options.messages[0]?.content[0] as { type: 'text'; text: string }).text
     const marker = 'Latest user request:\n'
     const start = prompt.lastIndexOf(marker)
-    const end = prompt.indexOf('\n\nRetry correction from the local validator:', start + marker.length)
+    const end = prompt.indexOf('\n\n', start + marker.length)
     const request = start < 0
       ? ''
       : prompt.slice(start + marker.length, end < 0 ? undefined : end).trim()
     return toolCallResponse('goal-call', 'emit_goal', { goal, source_excerpt: request })
   }
+}
+
+function noGoalPlannerResponse(options: GenerateOptions): StreamChunk[] {
+  const prompt = (options.messages[0]?.content[0] as { type: 'text'; text: string }).text
+  const marker = 'Latest user request:\n'
+  const start = prompt.lastIndexOf(marker)
+  const end = prompt.indexOf('\n\n', start + marker.length)
+  const request = prompt.slice(start + marker.length, end < 0 ? undefined : end).trim()
+  return toolCallResponse('goal-call', 'emit_goal', { goal: 'NO_GOAL', source_excerpt: request })
 }
 
 function goalValidationResponse(status: 'DONE' | 'UNCOMPLETE' | 'UNKNOWN', reason: string): StreamChunk[] {
@@ -169,6 +178,18 @@ describe('plan-goal', () => {
       && event.data.source.plugin === 'plan-goal'
       && 'summary' in event.data.source
       && event.data.source.summary === 'goal completed')).toBe(true)
+  })
+
+  it('does not create a goal for a greeting', async () => {
+    const { ctx, agent } = await harness(noGoalPlannerResponse)
+    start(agent, 'Hi there')
+    await waitForIdle(ctx, agent)
+    expect(ctx.goals.get(agent)).toBeUndefined()
+    expect(agent.session.events.some(event => event.type === 'user/message'
+      && event.data.source.kind === 'plugin'
+      && event.data.source.plugin === 'plan-goal'
+      && 'summary' in event.data.source
+      && event.data.source.summary === 'Goal created')).toBe(false)
   })
 
   it('publishes the user message while goal planning is still running', async () => {
@@ -386,7 +407,7 @@ describe('plan-goal', () => {
     start(agent, 'Investigate the issue')
     await waitForIdle(ctx, agent)
 
-    expect(requests.map(request => request.purpose)).toEqual(['goal', 'goal', undefined, 'goal'])
+    expect(requests.map(request => request.purpose)).toEqual(['goal', 'goal', undefined, 'goal', 'goal'])
     expect(requests[1]?.tools).toEqual([expect.objectContaining({ name: 'todo_write' })])
     const todoPrompt = (requests[1]?.messages[0]?.content[0] as { type: 'text'; text: string }).text
     expect(todoPrompt).toContain('Always write every TODO title and description in English, regardless of the language used by the user or conversation.')
