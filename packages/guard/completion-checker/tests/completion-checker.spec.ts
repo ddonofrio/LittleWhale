@@ -63,6 +63,8 @@ describe('automatic master review', () => {
     expect(prompt).toContain('Clean conversation transcript:')
     expect(prompt).toContain('The project directory is:')
     expect(prompt).toContain('only project root')
+    expect(prompt).toContain('project coding preferences')
+    expect(prompt).toContain('All project-owned code')
     expect(prompt).toContain('Agent used bash')
     expect(starts[0]!.agentOptions).toMatchObject({ provider: 'mock', model: 'master' })
     expect(starts[0]!.outputSchema).toMatchObject({ required: ['status', 'instruction'] })
