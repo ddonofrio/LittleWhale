@@ -295,11 +295,18 @@
    Read-only; the chip gap widened to 12 so the pill chips read as separate
    controls. */
 .tools {
-  gap: 16px;
+  gap: 4px;
 }
 
 .modes {
-  gap: 12px;
+  gap: 4px;
+}
+
+.leftItems {
+  display: flex;
+  align-items: center;
+  gap: 3px;
+  min-width: 0;
 }
 
 .trailing {
@@ -325,6 +332,7 @@
   background: var(--dsw-specific-selector);
   color: var(--dsw-alias-label-primary);
   cursor: pointer;
+  margin-right: 0;
 }
 
 .add:hover:not(:disabled) {

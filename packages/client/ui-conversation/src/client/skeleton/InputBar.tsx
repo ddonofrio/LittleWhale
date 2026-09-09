@@ -782,7 +782,7 @@ export function InputBar({
             <div className={css.modes}>
               {renderSlot('conversation.input.plan', { locked })}
             </div>
-            {leftItems}
+            <div className={css.leftItems}>{leftItems}</div>
           </div>
           <div className={css.trailing}>
             {rightItems}

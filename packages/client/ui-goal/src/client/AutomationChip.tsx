@@ -10,7 +10,7 @@ export interface AutomationChipProps {
   scope: SettingsScope<{ enabled?: boolean }>
   disabledSessions: Set<SessionId>
   label: string
-  tone: 'yellow' | 'purple'
+  tone: 'orange' | 'purple'
   onDisable: (sessionId: SessionId) => Promise<void>
 }
 
@@ -20,7 +20,7 @@ export function AutomationChip({ sessionId, scope, disabledSessions, label, tone
   const snapshot = useSyncExternalStore(scope.subscribe.bind(scope), scope.getSnapshot.bind(scope), scope.getSnapshot.bind(scope))
   const [closed, setClosed] = useState(false)
   if (snapshot.value?.enabled !== true || disabledSessions.has(sessionId) || closed) return null
-  return <span className={`${css.wrap} ${tone === 'yellow' ? css.yellow : css.purple}`} data-testid={`automation-${tone}-chip`}>
+  return <span className={`${css.wrap} ${tone === 'orange' ? css.orange : css.purple}`} data-testid={`automation-${tone}-chip`}>
     <button type="button" className={css.chip} aria-label={`Disable ${label} for this chat`} onClick={() => { setClosed(true); void onDisable(sessionId) }}>
       {label}<span className={css.close} aria-hidden><IconCloseFill14 size={12} /></span>
     </button>

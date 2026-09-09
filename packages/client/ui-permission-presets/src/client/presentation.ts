@@ -1,5 +1,5 @@
 /** Machine value of the preset that requires an explicit GUI risk gate. */
-export const FULL_ACCESS_PRESET = 'danger-full-access'
+export const FULL_ACCESS_PRESET = 'full-access'
 
 /**
  * Convert conventional kebab-case preset names into user-facing title case.

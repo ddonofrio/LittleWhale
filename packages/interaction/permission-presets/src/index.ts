@@ -156,7 +156,7 @@ export interface PermissionSettings {
 export interface Config {
   /**
    * The preset table: name → knob bundle. Defaults to `workspace-write`
-   * (workspace-write + ask) and `danger-full-access` (danger-full-access +
+   * (workspace-write + ask) and `full-access` (danger-full-access +
    * never). The name `custom` is reserved for the derived not-a-preset state.
    */
   presets?: Record<string, PresetSpec>
@@ -185,9 +185,9 @@ export class PermissionPresetService extends Service {
         sandbox: 'workspace-write', approval: 'ask',
         name: 'workspace-write', description: 'Write inside the workspace and permitted temporary directories; wider retries require approval.',
       },
-      'danger-full-access': {
+      'full-access': {
         sandbox: 'danger-full-access', approval: 'never',
-        name: 'danger-full-access', description: 'Full file access without approval prompts.',
+        name: 'full-access', description: 'Full file access without approval prompts.',
       },
     }),
     defaultPreset: z.string(),
