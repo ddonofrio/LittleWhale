@@ -389,6 +389,7 @@ describe('plan-goal', () => {
     expect(requests.map(request => request.purpose)).toEqual(['goal', 'goal', undefined, 'goal'])
     expect(requests[1]?.tools).toEqual([expect.objectContaining({ name: 'todo_write' })])
     const todoPrompt = (requests[1]?.messages[0]?.content[0] as { type: 'text'; text: string }).text
+    expect(todoPrompt).toContain('Always write every TODO title and description in English, regardless of the language used by the user or conversation.')
     expect(todoPrompt).toContain('Current goal: As the user, I want the issue investigated, so that the cause is known.')
     expect(agent.session.events.findLast(event => event.type === 'todo/write')?.data.todos).toEqual(todos)
   })

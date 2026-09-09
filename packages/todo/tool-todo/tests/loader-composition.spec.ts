@@ -95,6 +95,7 @@ describe('tool-todo real Loader composition through cordis.yml', () => {
   it('allowParallelInProgress: false narrows the description and rejects a parallel write', async () => {
     const ctx = await boot(['    allowParallelInProgress: false'])
     const description = ctx.tools.schemas().find(s => s.name === 'todo_write')?.description ?? ''
+    expect(description).toContain('Write every todo content string in English')
     expect(description).toContain('Keep AT MOST ONE todo `in_progress`')
     expect(description).not.toContain('several at once')
 

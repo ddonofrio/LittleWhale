@@ -100,6 +100,7 @@ const GOAL_RESULT_TOOL: ToolSchema = {
 const TODO_PLANNER_SYSTEM = [
   'You are an automatic TODO planner for a coding assistant. You are not the main agent.',
   'Read the complete clean conversation, the current goal when present, and the current TODO list.',
+  'Always write every TODO title and description in English, regardless of the language used by the user or conversation.',
   'Always decompose the latest request into concrete implementation or investigation tasks when it is non-trivial.',
   'If uncertain whether the work has two or three parts, create the separate tasks; the main agent will review and complete them.',
   'Preserve already completed tasks and update existing tasks instead of duplicating them.',
@@ -841,9 +842,10 @@ async function validateCompletedTurn(
           appendNotice(agent, 'Validating TODOs…', 'validating TODOs')
           const todos = currentTodos(agent)
           const tool = ctx.tools.schemas(agent).find(schema => schema.name === 'todo_write')
-          if (tool !== undefined && todos.length > 0) {
+          if (tool !== undefined && todos.length > 0
+            && agent.options.provider !== undefined && agent.options.model !== undefined) {
             const review = deepFreeze({
-              provider: agent.options.provider!, model: agent.options.model!,
+              provider: agent.options.provider, model: agent.options.model,
               messages: [createUserMessage({ content: [{ type: 'text', text: `Review the current TODO list against the complete transcript and goal. Mark an item completed only when the transcript proves it is done. Keep remaining work pending or in_progress. Call todo_write exactly once with the complete corrected list and no visible text.\nGoal: ${goal.objective}\nCurrent TODOs: ${JSON.stringify(todos)}\nTranscript:\n${cleanConversation(agent)}` }], source: { kind: 'plugin', plugin: PLUGIN_NAME } })],
               system: 'You are a TODO completion validator. Use the supplied todo_write tool exactly once. Do not produce visible text.',
               tools: [tool], sessionId: agent.session.id, purpose: 'goal' as const, temperature: 0, signal,

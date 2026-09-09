@@ -46,7 +46,8 @@ const DESCRIPTION_HEAD =
   'Record and update a structured task list for the current work. Send the ENTIRE '
   + 'list every call — it REPLACES the previous list (there are no partial updates, '
   + 'no per-item edits). Use it to plan multi-step work and show progress: add one '
-  + 'todo per concrete step before you start. '
+  + 'todo per concrete step before you start. Write every todo content string in '
+  + 'English, regardless of the language used by the user or conversation. '
 
 const DESCRIPTION_PARALLEL =
   'Mark every todo being actively worked '
