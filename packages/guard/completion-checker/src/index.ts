@@ -210,11 +210,12 @@ export function apply(ctx: Context, config: Config): void {
   let disposeTurnStopping: (() => void) | undefined
   const onTurnStopping = async ({ agent, turn, reason, signal }: TurnStoppingPayload) => {
     const turnEvents = currentTurnEvents(agent, turn)
+    const hasToolCall = turnEvents.some(event => event.type === 'tool/call')
     if (reason.kind !== 'completed'
       || isNestedAgent(agent)
       || !source().enabled
       || disabledAgents.has(agent)
-      || (!pendingReviews.has(agent) && !turnEvents.some(event => event.type === 'tool/call'))
+      || (!pendingReviews.has(agent) && !hasToolCall)
       || (source().masterModel === undefined || source().masterProvider === undefined) && configuredMaster === undefined) return
     if (isLoopRecoveryTurn(turnEvents)) return
     const state = reviewStates.get(agent)
@@ -224,6 +225,7 @@ export function apply(ctx: Context, config: Config): void {
       ? { provider: current.masterProvider, model: current.masterModel }
       : configuredMaster
     if (master === undefined) return
+    ctx.logger.info(`master-model: reviewing completed turn ${turn} (${hasToolCall ? 'tool-using' : 'corrective'})`)
     let run: SubagentRun | undefined
     try {
       run = await ctx.subagents.start(providerName, {
@@ -270,7 +272,7 @@ export function apply(ctx: Context, config: Config): void {
   }
 
   function mount(): void {
-    if (!source().enabled || disposeTurnStopping !== undefined || ctx.subagents.getProvider(providerName) === undefined) return
+    if (!source().enabled || disposeTurnStopping !== undefined) return
     disposeTurnStopping = ctx.on('agent/turn-stopping', onTurnStopping)
   }
 
