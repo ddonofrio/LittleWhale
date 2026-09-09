@@ -69,7 +69,7 @@ const PLUGIN_SOURCE: Extract<MessageSource, { kind: 'plugin' }> = { kind: 'plugi
 /** Load with tools and system-prompt services; the review provider may appear later. */
 export const inject = ['subagents', 'commands']
 
-type CompletionReview = { review: string }
+type CompletionReview = { status: 'OK' | 'KO'; instruction: string }
 
 const REVIEW_ACTION_MAX_CHARS = 600
 
@@ -160,28 +160,29 @@ function reviewPrompt(agent: Agent): string {
     'Check for: (1) scope drift, where the student did more or less than requested without telling the user; (2) mistakes or goal drift; (3) hallucinations; and (4) inability to complete the task after exhausting reasonable attempts.',
     'Do not make changes yourself. Do not fix files. If issues 1–3 exist, write a detailed instruction for the student as if it were the user saying what was actually wanted and what must be corrected.',
     'If issue 4 applies, clearly say that the agent is less capable than the task and that execution must stop so the message can be shown to the user.',
-    'Start the response with exactly one verdict line: ACCEPT, REVISE, or STOP.',
-    'Use ACCEPT only when there are no issues. Use REVISE for issues 1–3. Use STOP only for issue 4.',
+    'Return structured output with exactly these fields: {"status":"OK"|"KO","instruction":"..."}.',
+    'Use OK only when there are no issues. Use KO when issues 1–4 apply. For issues 1–3, instruction must tell the student exactly what to correct. For issue 4, instruction must say the student model is less capable than the task and execution must stop.',
     'The transcript includes every user-visible turn and summarized tool activity, but excludes model reasoning, runtime context, and raw tool payloads/results.',
     'Use available tools only to verify the listed work. Do not make changes just to inspect it.',
-    'Return your review as a normal final response. Do not call completion_check or any reporting tool, and do not use structured output.',
-    'State clearly what the parent agent should verify, change, or continue; if there are no issues, say so.',
+    'Do not call completion_check or any reporting tool. The structured output is the only review result.',
     '',
     'Clean conversation transcript:',
     cleanConversation(agent),
   ].join('\n')
 }
 
-/** Collect the reviewer's ordinary textual final response without enforcing a schema. */
-function reviewerText(result: SubagentResult): string {
+/** Collect and validate the reviewer's structured verdict. */
+function reviewerResult(result: SubagentResult): CompletionReview {
+  const structured = result.structured as Partial<CompletionReview> | undefined
+  if (structured?.status === 'OK' || structured?.status === 'KO') {
+    return { status: structured.status, instruction: structured.instruction ?? '' }
+  }
   const text = result.output
     .filter((block): block is Extract<ContentBlock, { type: 'text' }> => block.type === 'text')
     .map(block => block.text)
     .join('\n')
     .trim()
-  if (text !== '') return text
-  if (result.diagnostic !== undefined) return result.diagnostic
-  return `The reviewer returned no text (stop reason: ${result.stopReason}).`
+  throw new Error(`master reviewer returned invalid structured output: ${text || result.diagnostic || result.stopReason}`)
 }
 
 /** Install the automatic master review after completed student turns. */
@@ -194,6 +195,7 @@ export function apply(ctx: Context, config: Config): void {
   const disabledAgents = new WeakSet<Agent>()
 
   const reviewStates = new WeakMap<Agent, { turn: number; review: CompletionReview }>()
+  const pendingReviews = new WeakSet<Agent>()
   const providerName = config.provider ?? DEFAULT_COMPLETION_CHECKER_PROVIDER
   const configuredMaster = config.masterModel === undefined || config.masterProvider === undefined
     ? undefined
@@ -209,7 +211,7 @@ export function apply(ctx: Context, config: Config): void {
       || isNestedAgent(agent)
       || !source().enabled
       || disabledAgents.has(agent)
-      || !turnEvents.some(event => event.type === 'tool/call')
+      || (!pendingReviews.has(agent) && !turnEvents.some(event => event.type === 'tool/call'))
       || (source().masterModel === undefined || source().masterProvider === undefined) && configuredMaster === undefined) return
     if (isLoopRecoveryTurn(turnEvents)) return
     const state = reviewStates.get(agent)
@@ -223,11 +225,16 @@ export function apply(ctx: Context, config: Config): void {
     try {
       run = await ctx.subagents.start(providerName, {
         label: 'master-model', prompt: [{ type: 'text', text: reviewPrompt(agent) }], parent: agent, signal,
+        outputSchema: {
+          type: 'object', properties: { status: { type: 'string', enum: ['OK', 'KO'] }, instruction: { type: 'string' } },
+          required: ['status', 'instruction'], additionalProperties: false,
+        },
         agentOptions: { ...master, loopDetection: { ...agent.options.loopDetection, enabled: true } },
         toolFilter: { deny: ['completion_check'] },
       })
-      const review = { review: reviewerText(await run.result) }
-      if (/^ACCEPT(?:\s|$)/i.test(review.review)) {
+      const review = reviewerResult(await run.result)
+      if (review.status === 'OK') {
+        pendingReviews.delete(agent)
         reviewStates.set(agent, { turn, review })
         agent.steer(createUserMessage({
           content: [{ type: 'text', text: 'Tell the user that the master model validated the response successfully. Do not perform any more work.' }],
@@ -235,12 +242,13 @@ export function apply(ctx: Context, config: Config): void {
         }))
         return
       }
-      const stop = /^STOP(?:\s|$)/i.test(review.review)
-      if (stop) reviewStates.set(agent, { turn, review })
+      pendingReviews.add(agent)
+      const stop = /less capable than the task|execution must stop/i.test(review.instruction)
+      if (stop) { pendingReviews.delete(agent); reviewStates.set(agent, { turn, review }) }
       agent.steer(createUserMessage({
         content: [{ type: 'text', text: stop
-          ? `Stop working. Tell the user that the selected student model is less capable than this task. Master review:\n\n${review.review}`
-          : `The master model rejected the completed work. Treat the following as corrective user feedback, perform the requested corrections, and then finish again:\n\n${review.review}` }],
+          ? `Stop working. Tell the user that the selected student model is less capable than this task. Master review:\n\n${review.instruction}`
+          : `The master model rejected the completed work. Treat the following as corrective user feedback, perform the requested corrections, and then finish again:\n\n${review.instruction}` }],
         source: stop
           ? { ...PLUGIN_SOURCE, form: 'notice', summary: 'master stopped task' }
           : { kind: 'user' },

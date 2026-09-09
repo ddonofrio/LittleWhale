@@ -16,11 +16,11 @@ The `enabled` field is also available in the `completion-checker` settings names
 
 ## Review protocol
 
-The master returns one verdict line: `ACCEPT`, `REVISE`, or `STOP`.
+The master returns structured output with `status: "OK"` or `status: "KO"`, plus an `instruction` string.
 
-- `ACCEPT` tells the student to report that the response was validated successfully.
-- `REVISE` is sent back as a real user message, so user-triggered automations such as Auto Goal and Auto TODOs run normally before the student continues.
-- `STOP` tells the student to stop and report that it is less capable than the task.
+- `OK` tells the student to report that the response was validated successfully.
+- `KO` sends the instruction back as a real user message, so user-triggered automations such as Auto Goal and Auto TODOs run normally before the student continues. Review repeats after every corrective turn until `OK` or an inability-to-complete instruction stops the task.
+- An inability-to-complete `KO` tells the student to stop and report that it is less capable than the task.
 
 The master is strictly read-only. It must not edit, create, delete, rename, format, or otherwise modify files. It must use the parent session's project directory as its only project root and must not inspect external directories unless the user explicitly requested one.
 

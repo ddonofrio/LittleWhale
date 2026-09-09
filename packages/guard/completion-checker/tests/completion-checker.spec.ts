@@ -13,7 +13,7 @@ import { MockAdapter, textResponse, toolCallResponse } from '../../../core/agent
 const contexts: Context[] = []
 afterEach(async () => { await Promise.allSettled(contexts.splice(0).map(context => context.fiber.dispose())) })
 
-async function harness(reviews: string[]) {
+async function harness(reviews: Array<{ status: 'OK' | 'KO'; instruction: string }>) {
   const ctx = new Context(); contexts.push(ctx)
   await mountAgentLoopTestDependencies(ctx)
   const starts: SubagentStartRequest[] = []
@@ -21,7 +21,7 @@ async function harness(reviews: string[]) {
     getProvider: () => ({}),
     start: async (_provider: string, request: SubagentStartRequest): Promise<SubagentRun> => {
       starts.push(request)
-      const result: SubagentResult = { output: [{ type: 'text', text: reviews.shift() ?? 'ACCEPT\nThe response is valid.' }], stopReason: 'completed' }
+      const result: SubagentResult = { output: [], structured: reviews.shift() ?? { status: 'OK', instruction: 'The response is valid.' }, stopReason: 'completed' }
       return { id: SessionId(`review-${starts.length}`), localAgent: undefined, result: Promise.resolve(result), dispose: async () => {} }
     },
   } as never)
@@ -65,10 +65,11 @@ describe('automatic master review', () => {
     expect(prompt).toContain('only project root')
     expect(prompt).toContain('Agent used bash')
     expect(starts[0]!.agentOptions).toMatchObject({ provider: 'mock', model: 'master' })
+    expect(starts[0]!.outputSchema).toMatchObject({ required: ['status', 'instruction'] })
   })
 
   it('feeds REVISE feedback back as a real user message', async () => {
-    const { ctx, agent, starts } = await harness(['REVISE\nFix the implementation and continue.'])
+    const { ctx, agent, starts } = await harness([{ status: 'KO', instruction: 'Fix the implementation and continue.' }, { status: 'OK', instruction: 'Validated.' }])
     agent.followup(createUserMessage({ content: [{ type: 'text', text: 'task' }], source: { kind: 'user' } }))
     await idle(ctx, agent)
     expect(starts).toHaveLength(2)
@@ -76,7 +77,7 @@ describe('automatic master review', () => {
   })
 
   it('stops on STOP and reports that the student is less capable', async () => {
-    const { ctx, agent, starts } = await harness(['STOP\nThe student model is less capable than this task.'])
+    const { ctx, agent, starts } = await harness([{ status: 'KO', instruction: 'The student model is less capable than the task and execution must stop.' }])
     agent.followup(createUserMessage({ content: [{ type: 'text', text: 'task' }], source: { kind: 'user' } }))
     await idle(ctx, agent)
     expect(starts).toHaveLength(1)
