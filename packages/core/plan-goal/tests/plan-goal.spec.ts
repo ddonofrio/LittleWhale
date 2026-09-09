@@ -8,6 +8,7 @@ import { createUserMessage } from '@deepseek-ai/dsh-llm'
 import type { GenerateOptions, StreamChunk } from '@deepseek-ai/dsh-llm'
 import { SessionId } from '@deepseek-ai/dsh-session'
 import GoalService from '@deepseek-ai/dsh-goal'
+import * as TodoTool from '@deepseek-ai/dsh-tool-todo'
 import * as PlanGoal from '../src/index.ts'
 import { MockAdapter, maxTokensResponse, textResponse, toolCallResponse } from '../../agent-loop/tests/mock-adapter.ts'
 
@@ -56,6 +57,7 @@ async function harness(
 
   await ctx.plugin(AgentLoop, { agents: [] })
   await ctx.plugin(GoalService)
+  await ctx.plugin(TodoTool, { allowParallelInProgress: true })
   await ctx.plugin(PlanGoal, planGoalConfig)
   const script: PlannerResponse[] = scriptedResponses === undefined ? [] : [...scriptedResponses]
   if (scriptedResponses === undefined) {
@@ -134,7 +136,9 @@ describe('plan-goal', () => {
     ])
     const goalContext = agent.session.events.find(event => event.type === 'user/message'
       && event.data.source.kind === 'plugin'
-      && event.data.source.plugin === 'plan-goal')
+      && event.data.source.plugin === 'plan-goal'
+      && 'summary' in event.data.source
+      && event.data.source.summary === 'Goal created')
     expect(goalContext?.type === 'user/message' && goalContext.data).toMatchObject({
       content: [{
         type: 'text',
@@ -361,6 +365,32 @@ describe('plan-goal', () => {
 
     expect(requests.filter(request => request.purpose === 'goal')).toHaveLength(0)
     expect(ctx.goals.get(agent)).toBeUndefined()
+  })
+
+  it('assigns TODOs after the goal and passes the current goal and list to todo_write', async () => {
+    const todos = [{ content: 'Inspect the implementation', status: 'in_progress' }]
+    const { ctx, agent, requests } = await harness(
+      'As the user, I want the issue investigated, so that the cause is known.',
+      1,
+      { enabled: true, todoEnabled: true },
+      options => options.tools?.some(tool => tool.name === 'todo_write')
+        ? toolCallResponse('todo-call', 'todo_write', { todos })
+        : goalPlannerResponse('As the user, I want the issue investigated, so that the cause is known.') (options),
+      [], [
+        goalPlannerResponse('As the user, I want the issue investigated, so that the cause is known.'),
+        toolCallResponse('todo-call', 'todo_write', { todos }),
+        textResponse('parent answer'),
+        goalValidationResponse('DONE', 'The requested response is complete.'),
+      ],
+    )
+    start(agent, 'Investigate the issue')
+    await waitForIdle(ctx, agent)
+
+    expect(requests.map(request => request.purpose)).toEqual(['goal', 'goal', undefined, 'goal'])
+    expect(requests[1]?.tools).toEqual([expect.objectContaining({ name: 'todo_write' })])
+    const todoPrompt = (requests[1]?.messages[0]?.content[0] as { type: 'text'; text: string }).text
+    expect(todoPrompt).toContain('Current goal: As the user, I want the issue investigated, so that the cause is known.')
+    expect(agent.session.events.findLast(event => event.type === 'todo/write')?.data.todos).toEqual(todos)
   })
 
   it('rejects free-form planner text instead of persisting it as a goal', async () => {

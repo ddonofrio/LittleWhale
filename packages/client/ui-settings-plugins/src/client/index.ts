@@ -81,6 +81,7 @@ export function apply(ctx: ClientContext): void {
   const tokenLimitHandler = new TokenLimitHandlerRowController(ctx.settingsScope.bind({ namespace: TOKEN_LIMIT_HANDLER_NS }))
   const completionChecker = new CompletionCheckerRowController(ctx.settingsScope.bind({ namespace: COMPLETION_CHECKER_NS }))
   const planGoal = new BooleanSettingRowController(ctx.settingsScope.bind({ namespace: 'plan-goal' }), 'enabled')
+  const planTodo = new BooleanSettingRowController(ctx.settingsScope.bind({ namespace: 'plan-todo' }), 'enabled')
   const planModeStartup = new BooleanSettingRowController(ctx.settingsScope.bind({ namespace: 'plan-mode' }), 'startInPlanMode')
   const webSearch = new WebSearchCardController(ctx.settingsScope.bind({ namespace: WEB_SEARCH_NS }), api)
 
@@ -224,6 +225,11 @@ export function apply(ctx: ClientContext): void {
       field: 'enabled',
       id: 'models-plan-goal-enabled',
     }),
+  }, BooleanSettingRow))
+
+  ctx.slots.inject('settings.models.item', () => ctx.slots.register({
+    name: 'settings.models.item', id: 'plan-todo', order: 65, locale: NS,
+    inject: () => ({ ...planTodo.inject(), titleKey: 'planTodoTitle' as const, descriptionKey: 'planTodoDescription' as const, fieldKey: 'planTodoEnabled' as const, field: 'enabled', id: 'models-plan-todo-enabled' }),
   }, BooleanSettingRow))
 
   ctx.slots.inject('settings.models.item', () => ctx.slots.register({

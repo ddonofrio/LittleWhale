@@ -22,7 +22,7 @@ export type PluginsSettingsLocaleKey =
   | 'tokenLimitHandlerCustomPrompt' | 'tokenLimitHandlerCustomPromptHint'
   | 'completionCheckerTitle' | 'completionCheckerDescription' | 'completionCheckerEnabled'
   | 'completionCheckerOn' | 'completionCheckerOff'
-  | 'planGoalTitle' | 'planGoalDescription' | 'planGoalEnabled'
+  | 'planGoalTitle' | 'planGoalDescription' | 'planGoalEnabled' | 'planTodoTitle' | 'planTodoDescription' | 'planTodoEnabled'
   | 'planModeStartupTitle' | 'planModeStartupDescription' | 'planModeStartupEnabled'
   | 'webSearchTitle' | 'webSearchDescription'
   | 'webSearchApiKey' | 'webSearchApiKeyHint' | 'webSearchApiKeySet' | 'webSearchApiKeyUnset'
@@ -33,6 +33,9 @@ export const en: Record<PluginsSettingsLocaleKey, string> = {
   planGoalTitle: 'Automatic goal assignment',
   planGoalDescription: 'Have a separate agent define and update the current goal for each user request.',
   planGoalEnabled: 'Automatically assign goals',
+  planTodoTitle: 'Automatic TODO assignment',
+  planTodoDescription: 'Have a separate agent break non-trivial requests into actionable TODOs.',
+  planTodoEnabled: 'Automatically assign TODOs',
   planModeStartupTitle: 'Plan mode for new chats',
   planModeStartupDescription: 'Start each new chat in plan mode; you can still leave it with /plan off.',
   planModeStartupEnabled: 'Start new chats in plan mode',
@@ -123,6 +126,9 @@ export const en: Record<PluginsSettingsLocaleKey, string> = {
 
 /** Simplified Chinese copy. */
 export const zh: Record<PluginsSettingsLocaleKey, string> = {
+  planTodoTitle: 'Automatic TODO assignment',
+  planTodoDescription: 'Automatically break non-trivial requests into actionable TODOs.',
+  planTodoEnabled: 'Automatically assign TODOs',
   planGoalTitle: '自动分配目标',
   planGoalDescription: '让独立代理为每个用户请求定义并更新当前目标。',
   planGoalEnabled: '自动分配目标',

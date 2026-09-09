@@ -11,7 +11,7 @@ import { Context } from '@deepseek-ai/cordis'
 import type { Agent, PreStepDecision } from '@deepseek-ai/dsh-agent'
 import { BlockAssembler, createAssistantMessage, createUserMessage, deepFreeze, LlmError } from '@deepseek-ai/dsh-llm'
 import type { ContentBlock, FinishReason, GenerateOptions, Message, ToolSchema } from '@deepseek-ai/dsh-llm'
-import type { UserMessage } from '@deepseek-ai/dsh-session'
+import type { UserMessage, TodoItem } from '@deepseek-ai/dsh-session'
 import type { GoalRef, GoalView } from '@deepseek-ai/dsh-goal'
 import type { PreToolDecision, ToolExecution } from '@deepseek-ai/dsh-tools'
 import { installSettingsSection, settingsNamespace } from '@deepseek-ai/dsh-settings'
@@ -24,6 +24,8 @@ export interface Config {
   enabled?: boolean
   /** End-to-end deadline for the auxiliary goal-description request. */
   timeoutMs?: number
+  /** Whether automatic TODO assignment is enabled by default. */
+  todoEnabled?: boolean
 }
 
 /** Default deadline for the auxiliary goal-description request. */
@@ -50,6 +52,13 @@ export interface PlanGoalSettings {
 /** Schema for the user-owned General settings section. */
 export const PLAN_GOAL_SETTINGS_SCHEMA: z<PlanGoalSettings> = z.object({
   enabled: z.boolean().default(DEFAULT_PLAN_GOAL_ENABLED),
+})
+
+export interface PlanTodoSettings { enabled: boolean }
+export const PLAN_TODO_SETTINGS_NAMESPACE = settingsNamespace('plan-todo')
+export const DEFAULT_PLAN_TODO_ENABLED = false
+export const PLAN_TODO_SETTINGS_SCHEMA: z<PlanTodoSettings> = z.object({
+  enabled: z.boolean().default(DEFAULT_PLAN_TODO_ENABLED),
 })
 
 /** Services used by the pre-step policy. */
@@ -87,6 +96,21 @@ const GOAL_RESULT_TOOL: ToolSchema = {
     required: ['goal', 'source_excerpt'],
   },
 }
+
+const TODO_PLANNER_SYSTEM = [
+  'You are an automatic TODO planner for a coding assistant. You are not the main agent.',
+  'Read the complete clean conversation, the current goal when present, and the current TODO list.',
+  'Always decompose the latest request into concrete implementation or investigation tasks when it is non-trivial.',
+  'If uncertain whether the work has two or three parts, create the separate tasks; the main agent will review and complete them.',
+  'Preserve already completed tasks and update existing tasks instead of duplicating them.',
+  'A new task is always pending unless the transcript proves that the task was completed before this planning call.',
+  'Never mark a task completed merely because it is unnecessary, trivial, understood, or included in the plan.',
+  'Use in_progress only for work the main agent is actively performing now; do not mark every task in progress.',
+  'If the request has no remaining actionable work, write an empty list or preserve only tasks proven completed; do not manufacture completed tasks.',
+  'Skip TODOs only for genuinely trivial requests that need no multi-step work.',
+  'Call todo_write exactly once with the complete replacement list. Return no visible text and call no other tool.',
+].join('\n')
+const TODO_PLANNER_MAX_ATTEMPTS = 3
 
 type PlanGoalState = {
   readonly timeoutMs: number
@@ -297,6 +321,68 @@ function generatedGoal(blocks: readonly ContentBlock[], request: string): string
   return goal
 }
 
+function currentTodos(agent: Agent): TodoItem[] {
+  const event = [...agent.session.events].reverse().find(event => event.type === 'todo/write')
+  return event?.type === 'todo/write' ? event.data.todos : []
+}
+
+function generatedTodos(blocks: readonly ContentBlock[]): TodoItem[] {
+  const calls = blocks.filter((block): block is Extract<ContentBlock, { type: 'tool-call' }> => block.type === 'tool-call')
+  if (calls.length !== 1 || blocks.some(block => block.type === 'text')) throw new Error('plan-todo: expected exactly one todo_write call with no visible text')
+  const call = calls[0]
+  if (call === undefined) throw new Error('plan-todo: missing todo_write call')
+  const parsed = JSON.parse(call.arguments) as { todos?: unknown }
+  if (!Array.isArray(parsed.todos)) throw new Error('plan-todo: todo_write must contain a todos array')
+  return parsed.todos as TodoItem[]
+}
+
+async function deriveTodos(
+  ctx: Context,
+  state: PlanGoalState,
+  agent: Agent,
+  messages: readonly UserMessage[],
+  goal: GoalView | undefined,
+  signal: AbortSignal,
+): Promise<void> {
+  const logged = agent.session.requestHeader()?.config
+  const route = logged !== undefined ? { provider: logged.provider, model: logged.model }
+    : agent.options.provider !== undefined && agent.options.model !== undefined
+      ? { provider: agent.options.provider, model: agent.options.model } : undefined
+  if (route === undefined) throw new Error('plan-todo: no model route is available')
+  const tool = ctx.tools.schemas(agent).find(schema => schema.name === 'todo_write')
+  if (tool === undefined) throw new Error('plan-todo: todo_write is unavailable')
+  const prompt = [
+    'Clean conversation transcript:', cleanConversation(agent, new Set(messages.map(message => message.id))),
+    '', 'Latest user request:', currentRequest(messages), '',
+    `Current goal: ${goal?.objective ?? '[No active goal]'}`, '',
+    `Current TODO list: ${JSON.stringify(currentTodos(agent))}`,
+  ].join('\n')
+  const conversation: Message[] = [createUserMessage({ content: [{ type: 'text', text: prompt }], source: { kind: 'plugin', plugin: 'plan-todo' } })]
+  using operationDeadline = deadline(signal, state.timeoutMs, 'PLAN_TODO_TIMEOUT')
+  for (let attempt = 0; attempt < TODO_PLANNER_MAX_ATTEMPTS; attempt += 1) {
+    const correction = attempt === 0 ? '' : '\nPrevious attempt failed local validation. Call todo_write exactly once, with no visible text. Correction: the previous output did not satisfy the todo_write contract.'
+    const options = deepFreeze({ ...route, messages: [...conversation, ...(correction === '' ? [] : [createUserMessage({ content: [{ type: 'text', text: correction }], source: { kind: 'plugin', plugin: 'plan-todo' } })])], system: TODO_PLANNER_SYSTEM, tools: [tool], sessionId: agent.session.id, purpose: 'goal' as const, temperature: 0, signal: operationDeadline.signal })
+    const assembler = new BlockAssembler()
+    try {
+      for await (const chunk of ctx.llm.stream(options)) {
+        operationDeadline.signal.throwIfAborted()
+        assembler.push(chunk)
+      }
+      const todos = generatedTodos(assembler.blocks())
+      agent.session.append('todo/write', { todos })
+      return
+    } catch (error: unknown) {
+      ctx.logger.warn(`plan-todo: attempt ${attempt + 1} failed: ${renderError(error)}`)
+      if (attempt === TODO_PLANNER_MAX_ATTEMPTS - 1) {
+        ctx.logger.warn(`plan-todo: planner exhausted local retries: ${renderError(error)}`)
+        return
+      }
+      conversation.push(createAssistantMessage({ content: [{ type: 'text', text: 'Local validation rejected the previous TODO response.' }], source: route }))
+    }
+  }
+  operationDeadline.signal.throwIfAborted()
+}
+
 /** Append the derived goal instruction to the messages entering the step. */
 function goalInstruction(messages: readonly UserMessage[], objective: string): UserMessage[] {
   return [
@@ -329,6 +415,23 @@ function publishDirectUserMessages(agent: Agent, messages: readonly UserMessage[
 
 function renderError(error: unknown): string {
   return error instanceof Error ? error.message : String(error)
+}
+
+/** Emit bounded planner diagnostics without recording prompts or user content. */
+function logPlannerAttempt(
+  ctx: Context,
+  kind: 'planner' | 'validator',
+  attempt: number,
+  startedAt: number,
+  finish: FinishReason,
+  blocks: readonly ContentBlock[],
+): void {
+  const toolNames = blocks
+    .filter((block): block is Extract<ContentBlock, { type: 'tool-call' }> => block.type === 'tool-call')
+    .map(block => block.name)
+  const textBlocks = blocks.filter(block => block.type === 'text').length
+  const reasoningBlocks = blocks.filter(block => block.type === 'reasoning').length
+  ctx.logger.debug(`plan-goal ${kind} attempt=${attempt} elapsedMs=${Date.now() - startedAt} finish=${finish.kind} blocks=${blocks.length} textBlocks=${textBlocks} reasoningBlocks=${reasoningBlocks} toolCalls=${toolNames.length} toolNames=${toolNames.join(',') || '-'}`)
 }
 
 function formatElapsed(milliseconds: number): string {
@@ -531,9 +634,9 @@ async function deriveGoal(
     source: { kind: 'plugin', plugin: PLUGIN_NAME },
   })]
   const startedAt = Date.now()
+  using operationDeadline = deadline(signal, state.timeoutMs, 'PLAN_GOAL_TIMEOUT')
   let retryFeedback: string | undefined
   for (let attempt = 0; attempt < MAX_GOAL_PLAN_ATTEMPTS; attempt += 1) {
-    using attemptDeadline = deadline(signal, state.timeoutMs, 'PLAN_GOAL_TIMEOUT')
     const options: GenerateOptions = deepFreeze({
       ...route,
       messages: [...conversation],
@@ -542,17 +645,18 @@ async function deriveGoal(
       sessionId: agent.session.id,
       purpose: 'goal',
       temperature: AUXILIARY_TEMPERATURE,
-      signal: attemptDeadline.signal,
+      signal: operationDeadline.signal,
     })
     const assembler = new BlockAssembler()
     for await (const chunk of ctx.llm.stream(options)) {
-      throwIfPlannerAborted(attemptDeadline.signal)
+      throwIfPlannerAborted(operationDeadline.signal)
       assembler.push(chunk)
     }
-    throwIfPlannerAborted(attemptDeadline.signal)
+    throwIfPlannerAborted(operationDeadline.signal)
     const error = finishError(assembler.finish)
     const outputLimit = assembler.finish.kind === 'max-tokens'
     const blocks = assembler.blocks()
+    logPlannerAttempt(ctx, 'planner', attempt + 1, startedAt, assembler.finish, blocks)
     // A provider can finish a partially emitted structured response with an
     // error. Keep the existing fail-fast behaviour for errors with no model
     // output, but let a partial response go through the same bounded retry
@@ -604,9 +708,9 @@ async function validateGoal(
     source: { kind: 'plugin', plugin: PLUGIN_NAME },
   })]
   const startedAt = Date.now()
+  using operationDeadline = deadline(signal, state.timeoutMs, GOAL_VALIDATION_TIMEOUT_CODE)
   let retryFeedback: string | undefined
   for (let attempt = 0; attempt < MAX_GOAL_PLAN_ATTEMPTS; attempt += 1) {
-    using attemptDeadline = deadline(signal, state.timeoutMs, GOAL_VALIDATION_TIMEOUT_CODE)
     const options: GenerateOptions = deepFreeze({
       ...route,
       messages: [...conversation],
@@ -614,17 +718,18 @@ async function validateGoal(
       sessionId: agent.session.id,
       purpose: 'goal',
       temperature: AUXILIARY_TEMPERATURE,
-      signal: attemptDeadline.signal,
+      signal: operationDeadline.signal,
     })
     const assembler = new BlockAssembler()
     for await (const chunk of ctx.llm.stream(options)) {
-      throwIfValidationAborted(attemptDeadline.signal)
+      throwIfValidationAborted(operationDeadline.signal)
       assembler.push(chunk)
     }
-    throwIfValidationAborted(attemptDeadline.signal)
+    throwIfValidationAborted(operationDeadline.signal)
     const error = finishError(assembler.finish)
     const outputLimit = assembler.finish.kind === 'max-tokens'
     const blocks = assembler.blocks()
+    logPlannerAttempt(ctx, 'validator', attempt + 1, startedAt, assembler.finish, blocks)
     if (error !== undefined && !outputLimit && blocks.length === 0) throw error
     try {
       if (error !== undefined) throw error
@@ -773,6 +878,11 @@ export function apply(ctx: Context, config: Config = {}): void {
     setSource: (current) => { source = current },
     onChange: () => {},
   })
+  const todoEntry: PlanTodoSettings = { enabled: config.todoEnabled ?? DEFAULT_PLAN_TODO_ENABLED }
+  let todoSource: () => PlanTodoSettings = () => todoEntry
+  installSettingsSection(ctx, PLAN_TODO_SETTINGS_NAMESPACE, PLAN_TODO_SETTINGS_SCHEMA, todoEntry, {
+    setSource: (current) => { todoSource = current }, onChange: () => {},
+  })
 
   const state: PlanGoalState = {
     timeoutMs: config.timeoutMs ?? DEFAULT_PLAN_GOAL_TIMEOUT_MS,
@@ -794,7 +904,7 @@ export function apply(ctx: Context, config: Config = {}): void {
   ctx.on('agent/pre-step', async ({ agent, messages, signal }, next): Promise<PreStepDecision> => {
     const eligible = !signal.aborted
       && !isNestedAgent(agent)
-      && source().enabled
+      && (source().enabled || todoSource().enabled)
       && hasDirectUserInput(messages)
     const published = eligible ? publishDirectUserMessages(agent, messages) : new Set<UserMessage['id']>()
     const decision = await next()
@@ -804,14 +914,25 @@ export function apply(ctx: Context, config: Config = {}): void {
       return decision
     }
 
-    const objective = await deriveGoalOnce(ctx, state, agent, messages, signal)
+    if (source().enabled) appendNotice(agent, 'Calculating goal…', 'calculating goal')
+    const objective = source().enabled
+      ? await deriveGoalOnce(ctx, state, agent, messages, signal)
+      : undefined
 
-    try {
-      persistGoal(ctx, agent, objective)
-    } catch (error: unknown) {
-      ctx.logger.warn(`plan-goal: could not persist goal: ${renderError(error)}`)
+    if (objective !== undefined) {
+      try {
+        persistGoal(ctx, agent, objective)
+      } catch (error: unknown) {
+        ctx.logger.warn(`plan-goal: could not persist goal: ${renderError(error)}`)
+      }
+    }
+    if (todoSource().enabled) {
+      appendNotice(agent, 'Calculating TODOs…', 'calculating TODOs')
+      const currentGoal = ctx.goals.get(agent)
+      await deriveTodos(ctx, state, agent, messages, currentGoal, signal)
     }
     const remaining = decision.messages.filter(message => !published.has(message.id))
+    if (objective === undefined) return { kind: 'enter', messages: remaining }
     return { kind: 'enter', messages: goalInstruction(remaining, objective) }
   })
 }

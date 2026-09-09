@@ -12,6 +12,8 @@ The host rejects autonomous `update_goal` calls with `complete` or `blocked`, so
 
 The planner is skipped for nested agents, plugin messages, and disabled configurations. Enabled direct requests are published to the session immediately, so the user message is visible while the auxiliary planner is running; the parent model request is admitted only after the planner returns one valid `emit_goal` call. Duplicate pre-step delivery of the same claimed request shares one in-flight planner call. A malformed structured result or model output-limit response is sent back to the same planner as validator feedback; each attempt gets the full configured timeout, with at most ten attempts total. The validation diagnostic is always the final user message in the auxiliary retry request, while the complete malformed model output, including invalid tool calls, is replaced by a compact assistant marker before retry. Every planner and validator request uses temperature `0`. If all ten attempts remain invalid, the turn fails with a structured plan-goal error containing the elapsed time. Planner timeouts retain the `PLAN_GOAL_TIMEOUT` error code.
 
+When `plan-todo` is enabled, the same pre-step also sends the clean transcript, the current goal when present, and the current whole TODO list to an auxiliary planner. It receives the native `todo_write` schema and writes one complete replacement list when the request is non-trivial. It preserves existing completed work, creates separate tasks when the decomposition is uncertain, and skips TODOs only for genuinely trivial requests. TODO assignment runs after goal assignment when both settings are enabled and has no final validator; the main agent owns task progress and completion.
+
 ## Configuration
 
 ```yaml
@@ -23,6 +25,8 @@ The planner is skipped for nested agents, plugin messages, and disabled configur
 ```
 
 The `enabled` value is also exposed as the `plan-goal` General setting. It defaults to `false` and applies live to direct user requests. The timeout applies to both the planner and the mandatory active-goal validator.
+
+Automatic TODO assignment uses the `plan-todo` General setting and defaults to `false`. It shares the plan-goal auxiliary model route and runs only for direct user requests.
 
 ## Model Experience
 
