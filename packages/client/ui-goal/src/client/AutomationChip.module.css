@@ -1,0 +1,5 @@
+.wrap { display: inline-flex; align-items: center; gap: 6px; }
+.chip { display: inline-flex; align-items: center; gap: 4px; min-width: 34px; padding: 2px 8px; border: none; border-radius: 999px; font-size: 13px; font-weight: 500; line-height: 20px; cursor: pointer; }
+.yellow .chip { background: var(--dsw-alias-state-warn-tertiary); color: var(--dsw-alias-state-warn-label); font-weight: 400; }
+.purple .chip { background: #5b2c83; color: #c8afe8; font-weight: 400; }
+.close { display: inline-flex; align-items: center; color: currentColor; }

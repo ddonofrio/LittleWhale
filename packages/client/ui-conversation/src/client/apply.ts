@@ -37,6 +37,7 @@ import { ApprovalPanel } from './skeleton/ApprovalPanel.tsx'
 import { todoDockEntry } from './skeleton/TodoPanel.tsx'
 import { queueDockEntry } from './queue/QueueDock.tsx'
 import { ConversationRoot } from './skeleton/ConversationRoot.tsx'
+import { HeroPermissionSelect } from './skeleton/HeroPermissionSelect.tsx'
 import { ConversationSession, ConversationSessionHeader } from './skeleton/ConversationSession.tsx'
 import { DetailsPanel } from './skeleton/DetailsPanel.tsx'
 import { en, NS, zh, type ConversationKey } from './locales.ts'
@@ -233,6 +234,7 @@ export function apply(ctx: Context): void {
       'conversation.hero.brand.mark': { kind: 'single', scope: 'root' },
       'conversation.hero.workspace': { kind: 'single', scope: 'root' },
       'conversation.hero.agentPreset': { kind: 'single', scope: 'root' },
+      'conversation.hero.access': { kind: 'single', scope: 'session' },
     },
     inject: (sessionId: SessionId | undefined): ConversationInjected => ({
       hooks: { composerBlock: sessionId === undefined ? ABSENT_BLOCK : composerBlocks.storeFor(sessionId) },
@@ -257,6 +259,18 @@ export function apply(ctx: Context): void {
       },
     }),
   }, ConversationRoot)
+
+  slots.register({
+    name: 'conversation.hero.access',
+    locale: NS,
+    inject: (sessionId: SessionId) => ({
+      command: async (line: string) => {
+        const session = sessions.binding(sessionId)?.session
+        if (session === undefined) return false
+        return (await session.command(line)).ok
+      },
+    }),
+  }, HeroPermissionSelect)
 
   // The strict session body fills the resident scrollport without owning it;
   // the Hero/composer path therefore stays fixed while the first blank

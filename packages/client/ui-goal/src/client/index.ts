@@ -15,11 +15,13 @@ import type {} from '@deepseek-ai/dsh-api-remotes/client'
 import type {} from '@deepseek-ai/dsh-client-ui-conversation/client'
 // Type-only: pulls the locale plugin's Context merge (ctx.locale).
 import type {} from '@deepseek-ai/dsh-client-locale/client'
+import type {} from '@deepseek-ai/dsh-client-ui-settings/client'
 // Type-only: the `goal` SessionProjectionMap key merge (single source, the domain's pure outlet).
 import type { GoalProjection, GoalRef } from '@deepseek-ai/dsh-goal/client'
 import type { GoalActionResult, GoalBarActions } from './slots.ts'
 import { GoalDock } from './GoalBar.tsx'
 import { GoalCommandInputView } from './GoalCommandInputView.tsx'
+import { AutomationChip } from './AutomationChip.tsx'
 import { goalCommandInputDefinition } from './goal-command-input.ts'
 import { en, zh, type GoalKey } from './locales.ts'
 
@@ -97,4 +99,18 @@ export function apply(ctx: ClientContext): void {
       },
     }),
   }, GoalDock))
+  ctx.inject(['settingsScope'], (settingsCtx) => {
+    const goalSettings = settingsCtx.settingsScope.bind<{ enabled?: boolean }>({ namespace: 'plan-goal' })
+    const todoSettings = settingsCtx.settingsScope.bind<{ enabled?: boolean }>({ namespace: 'plan-todo' })
+    const disabledGoal = new Set<SessionId>()
+    const disabledTodo = new Set<SessionId>()
+    ctx.slots.inject('conversation.input.left', () => ctx.slots.register({
+      name: 'conversation.input.left', id: 'auto-goal', order: 5, locale: NS,
+      inject: sessionId => ({ sessionId, scope: goalSettings, disabledSessions: disabledGoal, label: 'Auto Goal', tone: 'yellow' as const, onDisable: async (id: SessionId) => { disabledGoal.add(id) } }),
+    }, AutomationChip))
+    ctx.slots.inject('conversation.input.left', () => ctx.slots.register({
+      name: 'conversation.input.left', id: 'auto-todos', order: 6, locale: NS,
+      inject: sessionId => ({ sessionId, scope: todoSettings, disabledSessions: disabledTodo, label: 'Auto TODOs', tone: 'purple' as const, onDisable: async (id: SessionId) => { disabledTodo.add(id) } }),
+    }, AutomationChip))
+  })
 }

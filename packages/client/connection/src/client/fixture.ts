@@ -1151,7 +1151,7 @@ function projectionFramesOf(id: SessionId, log: readonly SessionEvent[], event: 
     return [{ type: 'session/projection', sessionId: id, key: 'goal', value: backscanGoal(log), seq: event.seq }]
   }
   // Standing-plan fold: writes replace the list; turn/start clears it (null).
-  if (type === 'todo/write' || type === 'turn/start') {
+  if (type === 'todo/write' || (event.type === 'user/message' && event.data.source.kind === 'user')) {
     return [{
       type: 'session/projection',
       sessionId: id,

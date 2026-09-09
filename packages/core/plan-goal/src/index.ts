@@ -224,6 +224,7 @@ function plannerSystemPrompt(): string {
 function plannerUserPrompt(
   agent: Agent,
   messages: readonly UserMessage[],
+  currentGoal?: GoalView,
   retryFeedback?: string,
   retryAttempt?: number,
 ): string {
@@ -240,6 +241,7 @@ function plannerUserPrompt(
   }
   const prompt = [
     'Understand the latest user request and convert it into exactly one user story.',
+    'If an active goal is supplied below, treat it as the standing goal: preserve it when the new request is part of the same work, and refine it only when the request clearly changes the outcome. Never invent a second independent goal.',
     'Preserve the user’s intent, constraints, scope, and requested outcome. Correct spelling and improve clarity, but do not add requirements or invent motivation.',
     `Call ${GOAL_RESULT_TOOL_NAME} exactly once with two fields: goal and source_excerpt. The goal must use this exact structure: As <role>, I want <desired outcome>, so that <value or reason>. The source_excerpt must be copied verbatim from the latest user request.`,
     'Clean conversation transcript:',
@@ -247,6 +249,8 @@ function plannerUserPrompt(
     '',
     'Latest user request:',
     currentRequest(messages),
+    '',
+    `Current goal: ${currentGoal?.objective ?? '[No active goal]'}`,
   ]
   return prompt.join('\n')
 }
@@ -630,7 +634,7 @@ async function deriveGoal(
   }
 
   const conversation: Message[] = [createUserMessage({
-    content: [{ type: 'text', text: plannerUserPrompt(agent, messages) }],
+    content: [{ type: 'text', text: plannerUserPrompt(agent, messages, ctx.goals.get(agent)) }],
     source: { kind: 'plugin', plugin: PLUGIN_NAME },
   })]
   const startedAt = Date.now()
@@ -679,7 +683,7 @@ async function deriveGoal(
       appendRejectedAssistantTurn(
         conversation,
         route,
-        plannerUserPrompt(agent, messages, retryFeedback, attempt + 2),
+        plannerUserPrompt(agent, messages, ctx.goals.get(agent), retryFeedback, attempt + 2),
       )
     }
   }
@@ -762,6 +766,7 @@ async function validateCompletedTurn(
   state: PlanGoalState,
   agent: Agent,
   signal: AbortSignal,
+  todoEnabled: boolean,
 ): Promise<void> {
   if (signal.aborted || isNestedAgent(agent)) return
   let goal = ctx.goals.get(agent)
@@ -832,6 +837,26 @@ async function validateCompletedTurn(
           return
         }
         appendNotice(agent, `Goal completed: ${validation.reason}`, 'goal completed')
+        if (todoEnabled) {
+          appendNotice(agent, 'Validating TODOs…', 'validating TODOs')
+          const todos = currentTodos(agent)
+          const tool = ctx.tools.schemas(agent).find(schema => schema.name === 'todo_write')
+          if (tool !== undefined && todos.length > 0) {
+            const review = deepFreeze({
+              provider: agent.options.provider!, model: agent.options.model!,
+              messages: [createUserMessage({ content: [{ type: 'text', text: `Review the current TODO list against the complete transcript and goal. Mark an item completed only when the transcript proves it is done. Keep remaining work pending or in_progress. Call todo_write exactly once with the complete corrected list and no visible text.\nGoal: ${goal.objective}\nCurrent TODOs: ${JSON.stringify(todos)}\nTranscript:\n${cleanConversation(agent)}` }], source: { kind: 'plugin', plugin: PLUGIN_NAME } })],
+              system: 'You are a TODO completion validator. Use the supplied todo_write tool exactly once. Do not produce visible text.',
+              tools: [tool], sessionId: agent.session.id, purpose: 'goal' as const, temperature: 0, signal,
+            })
+            const assembler = new BlockAssembler()
+            for await (const chunk of ctx.llm.stream(review)) assembler.push(chunk)
+            const corrected = generatedTodos(assembler.blocks())
+            agent.session.append('todo/write', { todos: corrected })
+            const remaining = corrected.filter(todo => todo.status !== 'completed')
+            if (remaining.length > 0) questionAgent(agent, `TODOs remain: ${remaining.map(todo => todo.content).join('; ')}`)
+            else appendNotice(agent, 'All TODOs completed.', 'TODOs completed')
+          }
+        }
         return
       }
 
@@ -898,7 +923,7 @@ export function apply(ctx: Context, config: Config = {}): void {
 
   ctx.on('agent/turn-stopping', async ({ agent, reason, signal }) => {
     if (reason.kind !== 'completed') return
-    await validateCompletedTurn(ctx, state, agent, signal)
+    await validateCompletedTurn(ctx, state, agent, signal, todoSource().enabled)
   })
 
   ctx.on('agent/pre-step', async ({ agent, messages, signal }, next): Promise<PreStepDecision> => {
@@ -914,8 +939,10 @@ export function apply(ctx: Context, config: Config = {}): void {
       return decision
     }
 
-    if (source().enabled) appendNotice(agent, 'Calculating goal…', 'calculating goal')
-    const objective = source().enabled
+    const autoGoal = source().enabled
+    const autoTodos = todoSource().enabled
+    if (autoGoal) appendNotice(agent, 'Calculating goal…', 'calculating goal')
+    const objective = autoGoal
       ? await deriveGoalOnce(ctx, state, agent, messages, signal)
       : undefined
 
@@ -926,7 +953,7 @@ export function apply(ctx: Context, config: Config = {}): void {
         ctx.logger.warn(`plan-goal: could not persist goal: ${renderError(error)}`)
       }
     }
-    if (todoSource().enabled) {
+    if (autoTodos) {
       appendNotice(agent, 'Calculating TODOs…', 'calculating TODOs')
       const currentGoal = ctx.goals.get(agent)
       await deriveTodos(ctx, state, agent, messages, currentGoal, signal)

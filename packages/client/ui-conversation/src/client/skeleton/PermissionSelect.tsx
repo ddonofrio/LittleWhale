@@ -133,7 +133,7 @@ export function PermissionSelect({ value, locked, command, t }: PermissionSelect
         selectedId={currentValue}
         onSelect={choose}
         onClose={() => { setOpen(false) }}
-        side="top"
+        side="bottom"
         anchor={
           <button
             type="button"
