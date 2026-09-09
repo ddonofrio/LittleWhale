@@ -12,6 +12,7 @@ import { boundContextSummary, createUserMessage, HarnessError } from '@deepseek-
 import { defineTool } from '@deepseek-ai/dsh-tools'
 import type { GenericCallView } from '@deepseek-ai/dsh-tools'
 import type {} from '@ddonofrio/littlewhale'
+import { settingsNamespace } from '@deepseek-ai/dsh-settings'
 import {
   completionAuthority,
   goalToolExecution,
@@ -186,6 +187,8 @@ function present(title: string, kind: 'read' | 'other', rawInput?: unknown): Gen
 /** Register the three Codex-shaped goal tools and their shared policy section. */
 export function apply(ctx: Context, config: Config): void {
   const resolved = resolveConfig(config)
+  const autoGoal = ctx.get('settings')?.get(settingsNamespace('plan-goal')) as { enabled?: boolean } | undefined
+  if (autoGoal?.enabled === true) return
   ctx.systemPrompt.section({
     name: 'tool:goal',
     order: 114,

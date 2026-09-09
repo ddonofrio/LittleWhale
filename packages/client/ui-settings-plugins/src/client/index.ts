@@ -16,6 +16,7 @@ import type {} from '@deepseek-ai/dsh-client-locale/client'
 // and the ctx.settingsScope Context merge. Cross-plugin collaboration goes
 // through the service, never a value import (client bundle purity gate).
 import type {} from '@deepseek-ai/dsh-client-ui-settings/client'
+import type {} from '@deepseek-ai/dsh-client-ui-conversation/client'
 import type { ClientContext } from '@deepseek-ai/dsh-client-runtime/client'
 import { resolveSlotLabel } from '@deepseek-ai/dsh-client-ui-slots'
 // Type-only: the ctx.remote Context merge and the forwarded-event key face.
@@ -40,6 +41,8 @@ import { SHELL_NS, BashCardController } from './bash-card-controller.ts'
 import { ConfigurablePluginsTabController } from './tab-store.ts'
 import { WEB_SEARCH_NS, WebSearchCardController } from './web-search-card-controller.ts'
 import { en, zh } from './locales.ts'
+import { MasterChip, MasterModelSelect } from './MasterModelSelect.tsx'
+import type { MasterSessionState } from './MasterModelSelect.tsx'
 
 export type { PluginsSettingsSectionInjected, PluginsSettingsSectionProps } from './PluginsSettingsSection.tsx'
 export type { ConfigurablePluginsTabProps } from './ConfigurablePluginsTab.tsx'
@@ -80,6 +83,23 @@ export function apply(ctx: ClientContext): void {
   const loopDetection = new LoopDetectionRowController(ctx.settingsScope.bind({ namespace: AGENT_LOOP_NS }))
   const tokenLimitHandler = new TokenLimitHandlerRowController(ctx.settingsScope.bind({ namespace: TOKEN_LIMIT_HANDLER_NS }))
   const completionChecker = new CompletionCheckerRowController(ctx.settingsScope.bind({ namespace: COMPLETION_CHECKER_NS }))
+  const masterSettings = ctx.settingsScope.bind<{
+    enabled?: boolean
+    masterProvider?: string
+    masterModel?: string
+  }>({ namespace: COMPLETION_CHECKER_NS })
+  const disabledMasterSessions = new Set<import('@deepseek-ai/dsh-api-remotes/client').SessionId>()
+  const masterSessionListeners = new Set<() => void>()
+  const masterSessionState: MasterSessionState = {
+    isDisabled: sessionId => disabledMasterSessions.has(sessionId),
+    subscribe(listener) { masterSessionListeners.add(listener); return () => masterSessionListeners.delete(listener) },
+    disable(sessionId) { disabledMasterSessions.add(sessionId); for (const listener of masterSessionListeners) listener() },
+  }
+  const loadMasterModels = async (sessionId: import('@deepseek-ai/dsh-api-remotes/client').SessionId) => {
+    const response = await api.sessions.models({ sessionId })
+    if (!response.result.ok) throw new Error(response.result.error.message)
+    return { groups: response.result.value.groups, student: response.result.value.current }
+  }
   const planGoal = new BooleanSettingRowController(ctx.settingsScope.bind({ namespace: 'plan-goal' }), 'enabled')
   const planTodo = new BooleanSettingRowController(ctx.settingsScope.bind({ namespace: 'plan-todo' }), 'enabled')
   const planModeStartup = new BooleanSettingRowController(ctx.settingsScope.bind({ namespace: 'plan-mode' }), 'startInPlanMode')
@@ -211,6 +231,28 @@ export function apply(ctx: ClientContext): void {
     locale: NS,
     inject: () => completionChecker.inject(),
   }, CompletionCheckerRow))
+
+  ctx.slots.inject('conversation.input.masterModel', () => ctx.slots.register({
+    name: 'conversation.input.masterModel',
+    inject: sessionId => ({
+      settings: masterSettings,
+      sessionState: masterSessionState,
+      loadModels: () => loadMasterModels(sessionId),
+      setBlocked: (reason?: string) => ctx.get('conversation')?.blocks.set(sessionId, reason === undefined ? undefined : { reason }),
+    }),
+  }, MasterModelSelect))
+
+  ctx.slots.inject('conversation.input.left', () => ctx.slots.register({
+    name: 'conversation.input.left', id: 'master-model', order: 40,
+    inject: sessionId => ({
+      settings: masterSettings,
+      sessionState: masterSessionState,
+      onDisable: async () => {
+        const result = await ctx.remote.commands.execute(sessionId, '/master chat-off', [])
+        if (!result.ok) throw new Error(result.error.message)
+      },
+    }),
+  }, MasterChip))
 
   ctx.slots.inject('settings.models.item', () => ctx.slots.register({
     name: 'settings.models.item',

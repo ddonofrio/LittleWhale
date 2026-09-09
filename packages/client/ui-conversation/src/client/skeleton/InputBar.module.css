@@ -296,6 +296,8 @@
    controls. */
 .tools {
   gap: 4px;
+  margin-right: auto;
+  flex-wrap: wrap;
 }
 
 .modes {
@@ -303,21 +305,21 @@
 }
 
 .leftItems {
-  display: flex;
-  align-items: center;
-  gap: 3px;
-  min-width: 0;
+  /* Expose automation chips directly to .tools' wrapping context. Each chip
+     can now move to the next line independently instead of being squeezed
+     inside a nested flex row. */
+  display: contents;
+}
+
+.tools button {
+  white-space: nowrap;
 }
 
 .trailing {
-  flex: none;
-  /* Wrap keeps the left mode chips and the right controls apart when the card
-     runs out of row width: the trailing group (model + send) moves to its own
-     line instead of the left group shrinking until its chip overlaps the
-     model trigger (external:107). The auto margin re-anchors it right on the
-     wrapped line; on a single line space-between already pins it right. */
-  margin-left: auto;
-  gap: 12px;
+  /* Let each trailing control participate in the toolbar's wrapping. This
+     keeps model and parameter selectors intact while moving them one at a
+     time instead of wrapping the entire trailing cluster as one block. */
+  display: contents;
 }
 
 /* Attach circle (figma + control): 28px, selector fill, primary glyph. */

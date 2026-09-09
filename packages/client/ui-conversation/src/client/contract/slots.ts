@@ -272,6 +272,8 @@ declare module '@deepseek-ai/dsh-client-ui-slots' {
      * a model here.
      */
     'conversation.input.model': { kind: 'single'; scope: 'session'; owner: InputControlOwnerProps }
+    /** Master-model selector immediately before the student model selector. */
+    'conversation.input.masterModel': { kind: 'single'; scope: 'session'; owner: InputControlOwnerProps }
   }
 
   /**
@@ -617,7 +619,7 @@ export interface InputControlOwnerProps {
 export type ComposerBarProps =
   PropsRuntime<'conversation.composer.bar'>
   & PropsRenderSlots<
-    'conversation.input.attachments' | 'conversation.input.plan' | 'conversation.input.model'
+    'conversation.input.attachments' | 'conversation.input.plan' | 'conversation.input.model' | 'conversation.input.masterModel'
   >
   & Omit<InjectFace<ComposerBarInjected>, 'useCompactionPolicy'>
   & { useCompactionPolicy?: SnapshotSelectorHook<SettingsScopeValue<CompactionPolicySettings>> }

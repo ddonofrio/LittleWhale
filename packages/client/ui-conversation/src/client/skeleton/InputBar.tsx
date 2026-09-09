@@ -786,6 +786,7 @@ export function InputBar({
           </div>
           <div className={css.trailing}>
             {rightItems}
+            {renderSlot('conversation.input.masterModel', { locked: modelSeatLocked })}
             {renderSlot('conversation.input.model', { locked: modelSeatLocked })}
             <ContextMeter
               useProjection={useProjection}

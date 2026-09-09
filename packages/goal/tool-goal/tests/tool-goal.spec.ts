@@ -12,6 +12,9 @@ import SystemPrompt from '@ddonofrio/littlewhale'
 import ToolRuntime from '@deepseek-ai/dsh-tools'
 import type { ToolExecutionResult } from '@deepseek-ai/dsh-tools'
 import * as toolGoal from '@deepseek-ai/dsh-tool-goal'
+import z from '@deepseek-ai/schemastery'
+import { MemorySettings } from '../../../settings/settings/tests/memory.ts'
+import { settingsNamespace } from '@deepseek-ai/dsh-settings'
 
 const testToolSignal = new AbortController().signal
 
@@ -69,12 +72,16 @@ function closeTurn(stub: StubAgent, turn: number): void {
   stub.session.append('turn/end', { turn, reason: { kind: 'completed' } })
 }
 
-async function harness(config: toolGoal.Config = {}) {
+async function harness(config: toolGoal.Config = {}, autoGoal = false) {
   const ctx = new Context()
   await ctx.plugin(SystemPrompt)
   await ctx.plugin(AgentRegistry)
   await ctx.plugin(ToolRuntime)
   await ctx.plugin(GoalService)
+  if (autoGoal) {
+    await ctx.plugin(MemorySettings, { doc: { 'plan-goal': { enabled: true } } })
+    ctx.settings.register(settingsNamespace('plan-goal'), z.object({ enabled: z.boolean().default(false) }))
+  }
   const fiber = await ctx.plugin(toolGoal, config)
   const root = stubAgent(`goal-tool-root-${Math.random()}`)
   ctx.agents.register(root.agent)
@@ -118,6 +125,15 @@ function resultGoal(result: ToolExecutionResult): Record<string, unknown> {
 }
 
 describe('goal tool registration and presentation', () => {
+  it('does not expose manual goal tools when Auto Goal is enabled', async () => {
+    const { ctx, fiber } = await harness({}, true)
+    expect(ctx.tools.get('get_goal')).toBeUndefined()
+    expect(ctx.tools.get('create_goal')).toBeUndefined()
+    expect(ctx.tools.get('update_goal')).toBeUndefined()
+    expect((await ctx.systemPrompt.assemble()).sections.some(item => item.name === 'tool:goal')).toBe(false)
+    await fiber.dispose()
+  })
+
   it('registers three exclusive tools plus configured guidance and disposes all contributions', async () => {
     const { ctx, fiber } = await harness({ blockedAfterConsecutiveRounds: 5 })
     expect(['create_goal', 'get_goal', 'update_goal'].map(name => ctx.tools.get(name)?.name))

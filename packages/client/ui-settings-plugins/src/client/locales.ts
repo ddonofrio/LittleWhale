@@ -22,6 +22,7 @@ export type PluginsSettingsLocaleKey =
   | 'tokenLimitHandlerCustomPrompt' | 'tokenLimitHandlerCustomPromptHint'
   | 'completionCheckerTitle' | 'completionCheckerDescription' | 'completionCheckerEnabled'
   | 'completionCheckerOn' | 'completionCheckerOff'
+  | 'masterProvider' | 'masterProviderHint' | 'masterModel' | 'masterModelHint'
   | 'planGoalTitle' | 'planGoalDescription' | 'planGoalEnabled' | 'planTodoTitle' | 'planTodoDescription' | 'planTodoEnabled'
   | 'planModeStartupTitle' | 'planModeStartupDescription' | 'planModeStartupEnabled'
   | 'webSearchTitle' | 'webSearchDescription'
@@ -39,11 +40,13 @@ export const en: Record<PluginsSettingsLocaleKey, string> = {
   planModeStartupTitle: 'Plan mode for new chats',
   planModeStartupDescription: 'Start each new chat in plan mode; you can still leave it with /plan off.',
   planModeStartupEnabled: 'Start new chats in plan mode',
-  completionCheckerTitle: 'Double-check results',
-  completionCheckerDescription: 'Ask a second agent to verify that the request is fully complete before stopping.',
-  completionCheckerEnabled: 'Double-check results',
+  completionCheckerTitle: 'Master model',
+  completionCheckerDescription: 'Use a separate master model to review the student model after each task.',
+  completionCheckerEnabled: 'Enable Master model',
   completionCheckerOn: 'On',
   completionCheckerOff: 'Off',
+  masterProvider: 'Master provider', masterProviderHint: 'Provider for the master model.',
+  masterModel: 'Master model', masterModelHint: 'Model used to review the student model.',
   nav: 'Plugins',
   title: 'Plugins',
   intro: 'Configure and inspect the plugins installed in this deployment.',
@@ -140,11 +143,13 @@ export const zh: Record<PluginsSettingsLocaleKey, string> = {
   loopDetectionDetectOnToolCallHint: 'Detect repeated tool calls before they execute.',
   loopDetectionMaxToolCallDetections: 'Maximum tool-call detections',
   loopDetectionMaxToolCallDetectionsHint: 'Consecutive tool-call loop detections before reporting an infinite loop. Default: 32.',
-  completionCheckerTitle: '复核结果',
-  completionCheckerDescription: '停止前让第二个 agent 检查请求是否已经完整完成。',
-  completionCheckerEnabled: '复核结果',
+  completionCheckerTitle: '主模型',
+  completionCheckerDescription: '每次任务后使用单独的主模型审查学生模型。',
+  completionCheckerEnabled: '启用主模型',
   completionCheckerOn: '开',
   completionCheckerOff: '关',
+  masterProvider: '主模型提供商', masterProviderHint: '用于主模型的提供商。',
+  masterModel: '主模型', masterModelHint: '用于审查学生模型的模型。',
   nav: '插件',
   title: '插件',
   intro: '配置和查看本部署已安装的插件。',

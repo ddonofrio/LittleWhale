@@ -827,6 +827,8 @@ function isUnloading(ctx: Context): boolean {
 
 /** Hooks a consumer hands to {@link installSettingsSection}. */
 export interface SettingsSectionHooks<T> {
+  /** Receive the writable owner scope while the settings service is attached. */
+  setScope?(scope: SettingsScope<T> | undefined): void
   /**
    * Receive the active configuration source: the resolved settings scope
    * while one is attached, the composition entry otherwise. Called before
@@ -872,6 +874,7 @@ export function installSettingsSection<T>(
       base: entry,
       ...hooks.validate === undefined ? {} : { validate: hooks.validate },
     })
+    hooks.setScope?.(scope)
     hooks.setSource(() => scope.get())
     sctx.effect(() => () => {
       // This disposer runs for two different reasons. A settings provider
@@ -881,6 +884,7 @@ export function installSettingsSection<T>(
       // and touch resources the teardown is releasing, so the fallback is
       // pointless and the notification actively harmful.
       if (isUnloading(ctx)) return
+      hooks.setScope?.(undefined)
       hooks.setSource(() => entry)
       hooks.onChange()
     })

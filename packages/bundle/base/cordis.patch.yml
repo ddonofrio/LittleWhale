@@ -375,6 +375,13 @@
       config:
         allowParallelInProgress: true
 
+    # Auto Goal must register before the manual goal tools so the latter can
+    # stay out of the model context when automatic goal mode is enabled.
+    - id: plan-goal
+      name: '@ddonofrio/littlewhale-plan-goal'
+      config:
+        enabled: true
+
     # Persisted same-session goals reach the model and the slash menu here; the
     # domain, driver, and `/goal` command are above.
     - id: tool-goal
@@ -410,11 +417,6 @@
       config:
         enabled: true
         provider: spawn
-
-    - id: plan-goal
-      name: '@ddonofrio/littlewhale-plan-goal'
-      config:
-        enabled: true
 
     # Every mode enables the stable model-facing web_search tool. DeepSeek search
     # resolves the same DEEPSEEK_API_KEY credential the Models page manages for

@@ -1,0 +1,21 @@
+.root { position: relative; display: inline-flex; }
+.trigger, .chip { display: inline-flex; align-items: center; gap: 4px; height: 28px; padding: 2px 8px; border: 0; border-radius: 999px; background: #151515; color: #c8afe8; font: inherit; font-size: 13px; white-space: nowrap; cursor: pointer; }
+.trigger { max-width: 230px; font-weight: 600; }
+.trigger:disabled { cursor: default; opacity: .55; }
+.triggerLabel { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.chevron { flex: none; transition: transform 120ms ease; }
+.chevronOpen { transform: rotate(180deg); }
+.menu { position: absolute; z-index: 30; right: 0; bottom: calc(100% + 8px); width: 320px; max-height: 360px; overflow: hidden; border: 1px solid var(--dsw-alias-border-primary); border-radius: 12px; background: var(--dsw-specific-menu); box-shadow: 0 12px 32px rgb(0 0 0 / 28%); }
+.groups { max-height: 360px; overflow-y: auto; padding: 6px; }
+.group + .group { margin-top: 6px; }
+.groupTitle { padding: 6px 8px 4px; color: var(--dsw-alias-label-tertiary); font-size: 12px; font-weight: 600; }
+.option { display: flex; width: 100%; align-items: center; justify-content: space-between; gap: 12px; padding: 8px; border: 0; border-radius: 8px; background: transparent; color: var(--dsw-alias-label-primary); text-align: left; cursor: pointer; }
+.option:hover:not(:disabled), .selected { background: var(--dsw-alias-background-hover); }
+.option:disabled { cursor: not-allowed; opacity: .4; }
+.modelName, .description { display: block; }
+.description { margin-top: 2px; color: var(--dsw-alias-label-tertiary); font-size: 12px; }
+.check { display: inline-flex; flex: none; color: #c8afe8; }
+.chipWrap { display: inline-flex; }
+.chip { font-weight: 400; }
+.chip:hover { color: #e0c8ff; }
+.close { display: inline-flex; align-items: center; }

@@ -7,6 +7,7 @@
     { "path": "../../../vendor/cordis" },
     { "path": "../../../vendor/schemastery" },
     { "path": "../../core/agent" },
+    { "path": "../../interaction/commands" },
     { "path": "../../llm/llm" },
     { "path": "../../settings/settings" },
     { "path": "../../subagent/subagent" },

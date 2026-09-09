@@ -49,6 +49,8 @@ export interface Config {
   enabled?: boolean
   /** End-to-end deadline for the auxiliary goal-description request. */
   timeoutMs?: number
+  /** Whether automatic TODO assignment is enabled by default. */
+  todoEnabled?: boolean
 }
 ```
 
@@ -620,7 +622,7 @@ Source: [`packages/compaction/compaction-tool-result-pruner/src/types.ts:4`](../
 
 ## `@deepseek-ai/dsh-completion-checker`
 
-Requires: `subagents` · `tools` · `systemPrompt`
+Requires: `subagents` · `commands`
 
 ```ts config-catalog
 /** Plugin configuration. */
@@ -629,10 +631,14 @@ export interface Config {
   enabled?: boolean
   /** Registry name of the one-shot subagent provider used for reviews. */
   provider?: string
+  /** Registry name of the provider used for the master review. */
+  masterProvider?: string
+  /** Model identifier used for the master review. */
+  masterModel?: string
 }
 ```
 
-Source: [`packages/guard/completion-checker/src/index.ts:27`](../packages/guard/completion-checker/src/index.ts)
+Source: [`packages/guard/completion-checker/src/index.ts:31`](../packages/guard/completion-checker/src/index.ts)
 
 <a id="deepseek-aidsh-cordis-host-runner"></a>
 
@@ -1417,7 +1423,7 @@ Requires: `agents`
 export type Config = Readonly<Record<string, never>>
 ```
 
-Source: [`packages/llm/llm-retry/src/index.ts:24`](../packages/llm/llm-retry/src/index.ts)
+Source: [`packages/llm/llm-retry/src/index.ts:25`](../packages/llm/llm-retry/src/index.ts)
 
 <a id="deepseek-aidsh-lsp-stdio"></a>
 
@@ -1561,7 +1567,7 @@ Requires: `shell` · `approval` · `sessions`
 export interface Config {
   /**
    * The preset table: name → knob bundle. Defaults to `workspace-write`
-   * (workspace-write + ask) and `danger-full-access` (danger-full-access +
+   * (workspace-write + ask) and `full-access` (danger-full-access +
    * never). The name `custom` is reserved for the derived not-a-preset state.
    */
   presets?: Record<string, PresetSpec>
@@ -2687,7 +2693,7 @@ export interface Config {
 }
 ```
 
-Source: [`packages/goal/tool-goal/src/index.ts:26`](../packages/goal/tool-goal/src/index.ts)
+Source: [`packages/goal/tool-goal/src/index.ts:27`](../packages/goal/tool-goal/src/index.ts)
 
 <a id="deepseek-aidsh-tool-jobs"></a>
 

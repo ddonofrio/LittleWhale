@@ -14,13 +14,17 @@ import type { ContentBlock, MessageSource } from '@deepseek-ai/dsh-llm'
 import type { SessionEvent, TurnEndReason } from '@deepseek-ai/dsh-session'
 import type { SubagentResult, SubagentRun } from '@deepseek-ai/dsh-subagent'
 import { installSettingsSection, settingsNamespace } from '@deepseek-ai/dsh-settings'
-import type { ObjectJsonSchema, ToolDefinition } from '@deepseek-ai/dsh-tools'
+import type { SettingsScope } from '@deepseek-ai/dsh-settings'
 import type {} from '@ddonofrio/littlewhale'
+import type {} from '@deepseek-ai/dsh-commands'
 
 /** User-selectable completion-review settings. */
 export interface CompletionCheckerSettings {
   /** Whether a completed turn receives a completion review. */
   enabled: boolean
+  /** Provider and model used for the independent master review. */
+  masterProvider?: string
+  masterModel?: string
 }
 
 /** Plugin configuration. */
@@ -29,6 +33,10 @@ export interface Config {
   enabled?: boolean
   /** Registry name of the one-shot subagent provider used for reviews. */
   provider?: string
+  /** Registry name of the provider used for the master review. */
+  masterProvider?: string
+  /** Model identifier used for the master review. */
+  masterModel?: string
 }
 
 /** Settings namespace exposed on the General settings surface. */
@@ -44,33 +52,26 @@ export const DEFAULT_COMPLETION_CHECKER_PROVIDER = 'spawn'
 export const Config: z<Config> = z.object({
   enabled: z.boolean().default(DEFAULT_COMPLETION_CHECKER_ENABLED),
   provider: z.string().default(DEFAULT_COMPLETION_CHECKER_PROVIDER),
+  masterProvider: z.string().required(false),
+  masterModel: z.string().required(false),
 })
 
 /** Schema for the user-owned settings section. */
 export const COMPLETION_CHECKER_SETTINGS_SCHEMA: z<CompletionCheckerSettings> = z.object({
   enabled: z.boolean().default(DEFAULT_COMPLETION_CHECKER_ENABLED),
+  masterProvider: z.string().required(false),
+  masterModel: z.string().required(false),
 })
 
 /** Source stamped on review messages sent back to the parent agent. */
 const PLUGIN_SOURCE: Extract<MessageSource, { kind: 'plugin' }> = { kind: 'plugin', plugin: 'completion-checker' }
 
 /** Load with tools and system-prompt services; the review provider may appear later. */
-export const inject = ['subagents', 'tools', 'systemPrompt']
-
-/** Canonical result returned by the visible completion-check tool. */
-const COMPLETION_REVIEW_OUTPUT_SCHEMA: ObjectJsonSchema = {
-  type: 'object',
-  properties: {
-    review: { type: 'string' },
-  },
-  required: ['review'],
-  additionalProperties: false,
-}
+export const inject = ['subagents', 'commands']
 
 type CompletionReview = { review: string }
 
 const REVIEW_ACTION_MAX_CHARS = 600
-const OMITTED_TOOL_ARGUMENT_KEYS = new Set(['content', 'patch', 'body'])
 
 type TurnStoppingPayload = {
   agent: Agent
@@ -92,31 +93,12 @@ function textContent(blocks: readonly ContentBlock[]): string {
     .trim()
 }
 
-function toolArgumentsSummary(argumentsText: string): string {
-  try {
-    const parsed: unknown = JSON.parse(argumentsText)
-    if (typeof parsed !== 'object' || parsed === null || Array.isArray(parsed)) {
-      return clipReviewText(argumentsText, REVIEW_ACTION_MAX_CHARS)
-    }
-    const summary = Object.fromEntries(Object.entries(parsed).map(([key, value]) => {
-      if (OMITTED_TOOL_ARGUMENT_KEYS.has(key) && typeof value === 'string') {
-        return [key, `[${value.length} characters omitted]`]
-      }
-      if (typeof value === 'string') return [key, clipReviewText(value, 240)]
-      return [key, value]
-    }))
-    return clipReviewText(JSON.stringify(summary), REVIEW_ACTION_MAX_CHARS)
-  } catch {
-    return clipReviewText(argumentsText, REVIEW_ACTION_MAX_CHARS)
-  }
-}
-
 function currentTurnEvents(agent: Agent, turn: number): SessionEvent[] {
   const start = agent.session.events.findLastIndex(event => event.type === 'turn/start' && event.data.turn === turn)
   return agent.session.events.slice(start < 0 ? 0 : start)
 }
 
-/** Project every user-visible turn into a transcript without model or runtime internals. */
+/** Project the session in the same clean transcript format used by Auto Goal and Auto TODOs. */
 function cleanConversation(agent: Agent): string {
   const entries: string[] = []
   for (const event of agent.session.events) {
@@ -133,9 +115,7 @@ function cleanConversation(agent: Agent): string {
         break
       }
       case 'tool/call':
-        if (event.data.name !== 'completion_check') {
-          entries.push(`Agent used ${event.data.name}: ${toolArgumentsSummary(event.data.arguments)}`)
-        }
+        if (event.data.name !== 'completion_check') entries.push(`Agent used ${event.data.name}`)
         break
       case 'tool/result':
         if (event.data.error !== undefined) {
@@ -167,8 +147,21 @@ function isNestedAgent(agent: Agent): boolean {
 
 /** Prompt a fresh reviewer with the complete clean conversation transcript. */
 function reviewPrompt(agent: Agent): string {
+  const projectDirectory = agent.session.header.cwd ?? '[the current project directory]'
   return [
-    'Decide whether the agent has fulfilled the user requests in the complete conversation below.',
+    'You are the master model reviewing a student model after it finished a task.',
+    'You receive the same clean conversation transcript supplied to the Auto Goal and Auto TODO planners.',
+    'It contains the complete user-visible chat, tool activity, tool failures, and TODO state recorded in the parent session.',
+    'Review both the answer and the generated or modified files when present.',
+    `The project directory is: ${projectDirectory}`,
+    'Treat that directory as the only project root. Inspect files and run verification only inside this directory unless the user explicitly requested an external path.',
+    'Do not follow references, imports, links, or similarly named directories outside the project root. If evidence is unavailable inside the project root, report that limitation instead of searching elsewhere.',
+    'The parent agent is the implementer. You are only a reviewer: do not edit, create, delete, rename, or format files, and do not run commands that modify state.',
+    'Check for: (1) scope drift, where the student did more or less than requested without telling the user; (2) mistakes or goal drift; (3) hallucinations; and (4) inability to complete the task after exhausting reasonable attempts.',
+    'Do not make changes yourself. Do not fix files. If issues 1–3 exist, write a detailed instruction for the student as if it were the user saying what was actually wanted and what must be corrected.',
+    'If issue 4 applies, clearly say that the agent is less capable than the task and that execution must stop so the message can be shown to the user.',
+    'Start the response with exactly one verdict line: ACCEPT, REVISE, or STOP.',
+    'Use ACCEPT only when there are no issues. Use REVISE for issues 1–3. Use STOP only for issue 4.',
     'The transcript includes every user-visible turn and summarized tool activity, but excludes model reasoning, runtime context, and raw tool payloads/results.',
     'Use available tools only to verify the listed work. Do not make changes just to inspect it.',
     'Return your review as a normal final response. Do not call completion_check or any reporting tool, and do not use structured output.',
@@ -191,109 +184,82 @@ function reviewerText(result: SubagentResult): string {
   return `The reviewer returned no text (stop reason: ${result.stopReason}).`
 }
 
-/** Ask the parent to use the visible completion-check tool before replying. */
-function checkRequestMessage() {
-  return createUserMessage({
-    content: [{ type: 'text', text: 'Before replying to the user, call the `completion_check` tool. Read its feedback, address the requested changes, and call it again after making changes.' }],
-    source: { ...PLUGIN_SOURCE, form: 'notice', summary: 'completion check required' },
-  })
-}
-
-/** Render the completion-check tool result for the parent model and user UI. */
-function renderReview(review: CompletionReview): ContentBlock[] {
-  return [{ type: 'text', text: `Completion reviewer feedback:\n\n${review.review}\n\nRead this feedback, address any requested changes, and call completion_check again if you changed the work.` }]
-}
-
-/** Install the visible completion review and its terminal-call guard. */
+/** Install the automatic master review after completed student turns. */
 export function apply(ctx: Context, config: Config): void {
   const entry: CompletionCheckerSettings = {
     enabled: config.enabled ?? DEFAULT_COMPLETION_CHECKER_ENABLED,
   }
   let source: () => CompletionCheckerSettings = () => entry
+  let settingsScope: SettingsScope<CompletionCheckerSettings> | undefined
+  const disabledAgents = new WeakSet<Agent>()
 
   const reviewStates = new WeakMap<Agent, { turn: number; review: CompletionReview }>()
   const providerName = config.provider ?? DEFAULT_COMPLETION_CHECKER_PROVIDER
+  const configuredMaster = config.masterModel === undefined || config.masterProvider === undefined
+    ? undefined
+    : { provider: config.masterProvider, model: config.masterModel }
 
   // Provider plugins can register after this plugin. Mount the visible tool,
   // its prompt policy, and the terminal guard only while the checker is
   // enabled and the configured provider is available.
-  let disposeTool: (() => void) | undefined
-  let disposePrompt: (() => void) | undefined
   let disposeTurnStopping: (() => void) | undefined
-  const onTurnStopping = ({ agent, turn, reason }: TurnStoppingPayload) => {
+  const onTurnStopping = async ({ agent, turn, reason, signal }: TurnStoppingPayload) => {
+    const turnEvents = currentTurnEvents(agent, turn)
     if (reason.kind !== 'completed'
       || isNestedAgent(agent)
-      || !source().enabled) return
-    if (isLoopRecoveryTurn(currentTurnEvents(agent, turn))) return
+      || !source().enabled
+      || disabledAgents.has(agent)
+      || !turnEvents.some(event => event.type === 'tool/call')
+      || (source().masterModel === undefined || source().masterProvider === undefined) && configuredMaster === undefined) return
+    if (isLoopRecoveryTurn(turnEvents)) return
     const state = reviewStates.get(agent)
-    if (state?.turn === turn) {
-      return
+    if (state?.turn === turn) return
+    const current = source()
+    const master = current.masterProvider !== undefined && current.masterModel !== undefined
+      ? { provider: current.masterProvider, model: current.masterModel }
+      : configuredMaster
+    if (master === undefined) return
+    let run: SubagentRun | undefined
+    try {
+      run = await ctx.subagents.start(providerName, {
+        label: 'master-model', prompt: [{ type: 'text', text: reviewPrompt(agent) }], parent: agent, signal,
+        agentOptions: { ...master, loopDetection: { ...agent.options.loopDetection, enabled: true } },
+        toolFilter: { deny: ['completion_check'] },
+      })
+      const review = { review: reviewerText(await run.result) }
+      if (/^ACCEPT(?:\s|$)/i.test(review.review)) {
+        reviewStates.set(agent, { turn, review })
+        agent.steer(createUserMessage({
+          content: [{ type: 'text', text: 'Tell the user that the master model validated the response successfully. Do not perform any more work.' }],
+          source: { ...PLUGIN_SOURCE, form: 'notice', summary: 'master validated response' },
+        }))
+        return
+      }
+      const stop = /^STOP(?:\s|$)/i.test(review.review)
+      if (stop) reviewStates.set(agent, { turn, review })
+      agent.steer(createUserMessage({
+        content: [{ type: 'text', text: stop
+          ? `Stop working. Tell the user that the selected student model is less capable than this task. Master review:\n\n${review.review}`
+          : `The master model rejected the completed work. Treat the following as corrective user feedback, perform the requested corrections, and then finish again:\n\n${review.review}` }],
+        source: stop
+          ? { ...PLUGIN_SOURCE, form: 'notice', summary: 'master stopped task' }
+          : { kind: 'user' },
+      }))
+    } catch (error: unknown) {
+      if (signal.aborted) throw error
+      ctx.logger.warn(`master-model: review failed: ${String(error)}`)
+    } finally {
+      if (run !== undefined) await run.dispose()
     }
-    agent.steer(checkRequestMessage())
   }
 
   const unmount = () => {
-    disposeTool?.()
-    disposeTool = undefined
-    disposePrompt?.()
-    disposePrompt = undefined
     disposeTurnStopping?.()
     disposeTurnStopping = undefined
   }
 
   function mount(): void {
-    if (!source().enabled || disposeTool !== undefined || ctx.subagents.getProvider(providerName) === undefined) return
-    const tool: ToolDefinition = {
-      name: 'completion_check',
-      description: 'Validate the current task with an independent reviewer before giving the final answer. Call this after completing the work and call it again after addressing any requested changes.',
-      parameters: { type: 'object', properties: {}, additionalProperties: false },
-      output: {
-        schema: COMPLETION_REVIEW_OUTPUT_SCHEMA,
-        render: (_args, value) => renderReview(value as unknown as CompletionReview),
-      },
-      async execute(_args, exec) {
-        const parent = exec.agent
-        if (parent === undefined) throw new Error('completion_check requires a calling agent')
-        if (!source().enabled) throw new Error('completion checker is disabled')
-        if (isNestedAgent(parent)) throw new Error('completion_check is unavailable inside a reviewer subagent')
-        const turn = parent.session.events.findLast(event => event.type === 'turn/start')
-        if (turn === undefined) throw new Error('completion_check requires an active agent turn')
-        let run: SubagentRun | undefined
-        try {
-          run = await ctx.subagents.start(providerName, {
-            label: 'completion-checker',
-            prompt: [{ type: 'text', text: reviewPrompt(parent) }],
-            parent,
-            signal: exec.signal,
-            agentOptions: {
-              loopDetection: {
-                ...parent.options.loopDetection,
-                enabled: true,
-              },
-            },
-            toolFilter: { deny: ['completion_check'] },
-          })
-          const review = { review: reviewerText(await run.result) }
-          reviewStates.set(parent, { turn: turn.data.turn, review })
-          return review
-        } catch (error: unknown) {
-          if (exec.signal.aborted) throw error
-          const review = { review: `The reviewer failed before producing feedback: ${String(error)}\nProceed using your own judgment and do not claim that the review passed.` }
-          reviewStates.set(parent, { turn: turn.data.turn, review })
-          return review
-        } finally {
-          if (run !== undefined) await run.dispose()
-        }
-      },
-    }
-    disposeTool = ctx.tools.register(tool)
-    disposePrompt = ctx.systemPrompt.section({
-      name: 'tool:completion-check',
-      order: 197,
-      text: ({ agent }) => agent === undefined || isNestedAgent(agent)
-        ? ''
-        : 'Before giving a final answer, you MUST call the `completion_check` tool. Read the reviewer feedback, address every requested change, and call `completion_check` again after making changes.',
-    })
+    if (!source().enabled || disposeTurnStopping !== undefined || ctx.subagents.getProvider(providerName) === undefined) return
     disposeTurnStopping = ctx.on('agent/turn-stopping', onTurnStopping)
   }
 
@@ -303,8 +269,27 @@ export function apply(ctx: Context, config: Config): void {
   }
 
   installSettingsSection(ctx, COMPLETION_CHECKER_SETTINGS_NAMESPACE, COMPLETION_CHECKER_SETTINGS_SCHEMA, entry, {
+    setScope: (scope) => { settingsScope = scope },
     setSource: (current) => { source = current },
     onChange: syncRegistration,
+  })
+
+  ctx.commands.register({
+    name: 'master',
+    description: 'Toggle master-model review',
+    input: { hint: '[on|off]', images: false },
+    async handler({ agent, rawInput }) {
+      if (settingsScope === undefined) return { kind: 'error', text: 'Settings are not available.' }
+      const input = rawInput.trim().toLowerCase()
+      if (input === 'chat-off') {
+        disabledAgents.add(agent)
+        return { kind: 'success', text: 'Master disabled for this chat.' }
+      }
+      if (input !== '' && input !== 'on' && input !== 'off') return { kind: 'error', text: 'Usage: /master [on|off]' }
+      const enabled = input === '' ? !source().enabled : input === 'on'
+      await settingsScope.update({ enabled })
+      return { kind: 'success', text: enabled ? 'Master enabled.' : 'Master disabled.' }
+    },
   })
 
   ctx.on('subagent/provider-added', (provider) => {
