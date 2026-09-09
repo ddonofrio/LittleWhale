@@ -129,7 +129,7 @@ interface GoalValidation {
 type GoalValidationInterruption = 'edited' | 'paused' | 'cleared' | 'stopped'
 
 /** One auxiliary planner promise per agent and claimed request. */
-const inFlightPlans = new WeakMap<Agent, Map<GoalPlanKey, Promise<string>>>()
+const inFlightPlans = new WeakMap<Agent, Map<GoalPlanKey, Promise<string | undefined>>>()
 
 function clip(text: string, maxChars: number): string {
   return text.length <= maxChars ? text : `${text.slice(0, maxChars)}… [truncated]`
