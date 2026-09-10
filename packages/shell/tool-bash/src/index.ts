@@ -10,7 +10,7 @@
 
 import type { Context } from '@deepseek-ai/cordis'
 import z from '@deepseek-ai/schemastery'
-import { isAbsolute, resolve as resolvePath } from 'node:path'
+import { isAbsolute, relative, resolve as resolvePath, sep } from 'node:path'
 import { defineTool, TOOL_ABORTED } from '@deepseek-ai/dsh-tools'
 import type { GenericCallView, TerminalCallView, ToolExecution, ToolResult, ToolResultView } from '@deepseek-ai/dsh-tools'
 import { HarnessError } from '@deepseek-ai/dsh-llm'
@@ -150,9 +150,19 @@ function resolveWorkdir(
   const sessionCwd = policyWorkspaceRoot ?? (headerCwd === undefined ? undefined : canonicalPath(headerCwd))
   if (modelWorkdir === undefined) return sessionCwd
   if (sessionCwd !== undefined && !isAbsolute(modelWorkdir)) {
-    return resolvePath(sessionCwd, modelWorkdir)
+    return checkedWorkdir(resolvePath(sessionCwd, modelWorkdir), sessionCwd)
   }
-  return modelWorkdir
+  return checkedWorkdir(modelWorkdir, sessionCwd)
+}
+
+function checkedWorkdir(workdir: string, workspaceRoot?: string): string {
+  if (workspaceRoot !== undefined) {
+    const fromRoot = relative(canonicalPath(workspaceRoot), canonicalPath(workdir))
+    if (fromRoot === '..' || fromRoot.startsWith(`..${sep}`) || isAbsolute(fromRoot)) {
+      throw new Error(`cannot run tool outside the session workspace: workdir "${workdir}" is outside "${workspaceRoot}"`)
+    }
+  }
+  return workdir
 }
 
 /** Detach the executor DTO from readonly Service Definition types into plain JSON data. */

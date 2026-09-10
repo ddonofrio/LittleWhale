@@ -36,4 +36,9 @@ describe('writableRoots', () => {
     // Deduplicated after canonicalization (/tmp and os.tmpdir() may coincide).
     expect(new Set(roots).size).toBe(roots.length)
   })
+
+  it('danger-full-access grants only the session workspace for writes', () => {
+    const ws = mkdtempSync(join(tmpdir(), 'dsh-ws-full-'))
+    expect(writableRoots({ mode: 'danger-full-access', workspaceRoot: ws })).toEqual([realpathSync.native(ws)])
+  })
 })

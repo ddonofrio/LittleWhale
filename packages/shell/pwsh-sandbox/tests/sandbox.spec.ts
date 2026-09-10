@@ -189,11 +189,11 @@ describe.skipIf(!pwshAvailable())('SandboxPwshExecutor', () => {
     expect(calls[0]?.policy.mode).toBe('workspace-write')
   }, 30_000)
 
-  it('danger-full-access bypasses confine entirely and stamps full-access facts', async () => {
+  it('danger-full-access confines through the workspace boundary', async () => {
     const { executor, calls } = await setup()
     const result = await executor.run(executor.resolve({ command: 'echo full', sandboxPolicy: { mode: 'danger-full-access', workspaceRoot: '/ws' } }))
     expect(result.exitCode).toBe(0)
-    expect(calls).toHaveLength(0)
+    expect(calls).toHaveLength(1)
     expect(result.sandbox).toEqual({ mode: 'danger-full-access', denied: false })
   }, 30_000)
 
@@ -313,14 +313,14 @@ describe.skipIf(!pwshAvailable())('SandboxPwshExecutor', () => {
     expect(read.delta).toContain('spawn failed')
   }, 30_000)
 
-  it('danger-full-access background runs bypass confine and carry no facts', async () => {
+  it('danger-full-access background runs use the workspace boundary', async () => {
     const { executor, calls } = await setup()
     const proc = executor.start(executor.resolve({
       command: 'echo full-bg',
       sandboxPolicy: { mode: 'danger-full-access', workspaceRoot: '/ws' },
     }))
     await proc.done
-    expect(calls).toHaveLength(0)
+    expect(calls).toHaveLength(1)
     expect(proc.sandbox).toBeUndefined()
   }, 30_000)
 })

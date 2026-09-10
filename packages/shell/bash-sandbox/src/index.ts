@@ -88,11 +88,8 @@ export class SandboxBashExecutor extends LocalBashExecutor {
   override async run(spec: ShellExecSpec): Promise<ShellRunResult> {
     const policy = spec.sandboxPolicy as SandboxExecutionPolicy
     const { mode } = policy
-    if (mode === 'danger-full-access') {
-      const result = await super.run(spec)
-      return { ...result, sandbox: { mode, denied: false } }
-    }
-    const confined = this.confine(spec.command, { ...policy, mode })
+    const confinedMode: 'read-only' | 'workspace-write' = mode === 'danger-full-access' ? 'workspace-write' : mode
+    const confined = this.confine(spec.command, { ...policy, mode: confinedMode })
     let result: ShellRunResult
     try {
       result = await this.runArgv(spec, confined.argv)
@@ -100,7 +97,7 @@ export class SandboxBashExecutor extends LocalBashExecutor {
       // An upstream abort remains cancellation even when it prevents spawn.
       if (spec.signal?.aborted === true) spec.signal.throwIfAborted()
       if (isRunnerSpawnFailure(error, confined.argv[0], spec.workdir)) {
-        throw new SandboxUnavailableError(mode, String(error))
+        throw new SandboxUnavailableError(confinedMode, String(error))
       }
       throw error
     }
@@ -108,7 +105,7 @@ export class SandboxBashExecutor extends LocalBashExecutor {
     // the matched fatal line, not an informational line that preceded it.
     const runnerFailure = classifyRunnerFailure(result.exitCode, result.stderr.text, confined.runnerFailureRules)
     if (runnerFailure !== undefined) {
-      throw new SandboxUnavailableError(mode, runnerFailure.detail)
+      throw new SandboxUnavailableError(confinedMode, runnerFailure.detail)
     }
     return { ...result, sandbox: { mode, denied: classifyDenial(result, confined.denialSignatures), enforcement: confined.enforcement } }
   }
@@ -116,10 +113,10 @@ export class SandboxBashExecutor extends LocalBashExecutor {
   override start(spec: ShellExecSpec): ShellProcess {
     const policy = spec.sandboxPolicy as SandboxExecutionPolicy
     const { mode } = policy
-    if (mode === 'danger-full-access') return super.start(spec)
     // Once startArgv returns, install facts synchronously; promise settlement
     // cannot run before start() returns.
-    const confined = this.confine(spec.command, { ...policy, mode })
+    const confinedMode: 'read-only' | 'workspace-write' = mode === 'danger-full-access' ? 'workspace-write' : mode
+    const confined = this.confine(spec.command, { ...policy, mode: confinedMode })
     let proc: ShellProcess
     try {
       proc = this.startArgv(spec, confined.argv)
@@ -127,13 +124,13 @@ export class SandboxBashExecutor extends LocalBashExecutor {
       // LocalSubprocessRuntime reports ENOENT/EACCES with the failed executable path through async
       // `done` rejection; this covers alternatives that throw the same error synchronously.
       if (isRunnerSpawnFailure(error, confined.argv[0], spec.workdir)) {
-        throw new SandboxUnavailableError(mode, String(error))
+        throw new SandboxUnavailableError(confinedMode, String(error))
       }
       throw error
     }
     const { enforcement, denialSignatures, runnerFailureRules } = confined
     this.processFacts.set(proc, {
-      mode,
+      mode: confinedMode,
       enforcement,
       denialSignatures,
       runnerFailureRules,

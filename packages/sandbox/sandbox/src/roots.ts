@@ -50,6 +50,7 @@ export function canonicalPath(path: string): string {
  * @returns the canonical writable roots; empty exactly under `read-only`.
  */
 export function writableRoots(policy: SandboxExecutionPolicy): string[] {
-  if (policy.mode !== 'workspace-write') return []
+  if (policy.mode === 'read-only') return []
+  if (policy.mode === 'danger-full-access') return [canonicalPath(policy.workspaceRoot)]
   return [...new Set([policy.workspaceRoot, '/tmp', tmpdir()].map(canonicalPath))]
 }

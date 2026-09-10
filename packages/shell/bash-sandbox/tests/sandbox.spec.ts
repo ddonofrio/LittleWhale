@@ -288,21 +288,21 @@ describe('fail closed', () => {
 })
 
 describe('danger-full-access', () => {
-  it('runs unwrapped: the provider is never consulted, facts carry no enforcement', async () => {
+  it('confines writes while preserving the full-access mode fact', async () => {
     const { bash, calls } = await setup({ mode: 'danger-full-access' })
     const result = await bash.run(bash.resolve({ command: 'echo free' }))
     expect(result.stdout.text).toBe('free\n')
     expect(result.sandbox).toEqual({ mode: 'danger-full-access', denied: false })
-    expect(calls).toHaveLength(0)
+    expect(calls).toHaveLength(1)
   })
 
-  it('start() passes through unwrapped and stamps nothing at settle', async () => {
+  it('start() also uses the workspace boundary', async () => {
     const { bash, calls } = await setup({ mode: 'danger-full-access' })
     const task = bash.start(bash.resolve({ command: 'echo free-bg' }))
     await task.done
-    expect(task.sandbox).toBeUndefined()
+    expect(task.sandbox?.mode).toBe('danger-full-access')
     expect(task.readOutput().delta).toContain('free-bg')
-    expect(calls).toHaveLength(0)
+    expect(calls).toHaveLength(1)
   })
 })
 
@@ -328,12 +328,12 @@ describe('per-call sandbox policy (the session and escalation carrier)', () => {
     expect(result.sandbox).toEqual({ mode: 'workspace-write', denied: false, enforcement: 'full' })
   })
 
-  it('escalating to danger-full-access bypasses the provider entirely — the grant, not a probe, is the authority there', async () => {
+  it('escalating to danger-full-access keeps the workspace boundary', async () => {
     const { bash, calls } = await setup()
     const result = await bash.run(bash.resolve({ command: 'echo free', sandboxPolicy: executionPolicy('danger-full-access') }))
     expect(result.stdout.text).toBe('free\n')
     expect(result.sandbox).toEqual({ mode: 'danger-full-access', denied: false })
-    expect(calls).toHaveLength(0)
+    expect(calls).toHaveLength(1)
   })
 
   it('overlapping background jobs settle with their OWN modes (an escalated task next to a default one)', async () => {

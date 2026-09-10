@@ -19,7 +19,7 @@
  * @module @deepseek-ai/dsh-tool-pwsh
  */
 
-import { isAbsolute, resolve as resolvePath } from 'node:path'
+import { isAbsolute, relative, resolve as resolvePath, sep } from 'node:path'
 import type { Context } from '@deepseek-ai/cordis'
 import z from '@deepseek-ai/schemastery'
 import { defineTool, TOOL_ABORTED } from '@deepseek-ai/dsh-tools'
@@ -148,13 +148,24 @@ function pwshDescription(backgroundEnabled: boolean, escalationModes: readonly S
  * Resolve an explicit workdir first, making a relative one session-workspace-relative;
  * otherwise use the session header cwd and leave executor defaulting as the fallback.
  */
-function resolveWorkdir(modelWorkdir: string | undefined, exec: { agent?: Agent }): string | undefined {
+function resolveWorkdir(modelWorkdir: string | undefined, exec: { agent?: Agent }, policyWorkspaceRoot?: string): string | undefined {
   const headerCwd = exec.agent?.session.header.cwd
-  if (modelWorkdir === undefined) return headerCwd
-  if (headerCwd !== undefined && !isAbsolute(modelWorkdir)) {
-    return resolvePath(headerCwd, modelWorkdir)
+  const sessionCwd = policyWorkspaceRoot ?? headerCwd
+  if (modelWorkdir === undefined) return sessionCwd
+  if (sessionCwd !== undefined && !isAbsolute(modelWorkdir)) {
+    return checkedWorkdir(resolvePath(sessionCwd, modelWorkdir), sessionCwd)
   }
-  return modelWorkdir
+  return checkedWorkdir(modelWorkdir, sessionCwd)
+}
+
+function checkedWorkdir(workdir: string, workspaceRoot?: string): string {
+  if (workspaceRoot !== undefined) {
+    const fromRoot = relative(workspaceRoot, workdir)
+    if (fromRoot === '..' || fromRoot.startsWith(`..${sep}`) || isAbsolute(fromRoot)) {
+      throw new Error(`cannot run tool outside the session workspace: workdir "${workdir}" is outside "${workspaceRoot}"`)
+    }
+  }
+  return workdir
 }
 
 /** Detach the executor DTO from readonly Service Definition types into plain JSON data. */
@@ -355,7 +366,7 @@ export function apply(ctx: Context, config: Config = {}): void {
       const policy = approvedMode === undefined
         ? standingPolicy
         : { ...(standingPolicy as SandboxExecutionPolicy), mode: approvedMode }
-      const workdir = resolveWorkdir(args.workdir, exec)
+      const workdir = resolveWorkdir(args.workdir, exec, standingPolicy?.workspaceRoot)
       const request = {
         command: args.command,
         ...workdir !== undefined ? { workdir } : {},

@@ -126,7 +126,6 @@ export class SandboxedFileSystem extends LocalFileSystem {
   private async checkedTarget(target: FsTarget, sandboxPolicy?: SandboxExecutionPolicy): Promise<FsTarget> {
     const policy = sandboxPolicy ?? this.ctx.sandboxPolicy.resolve()
     const { mode } = policy
-    if (mode === 'danger-full-access') return target
     if (mode === 'read-only') {
       throw new FsError(`cannot write "${target.displayPath}": file access denied under read-only mode`, 'FS_SANDBOX_DENIED')
     }
@@ -142,7 +141,7 @@ export class SandboxedFileSystem extends LocalFileSystem {
       }
     }
     if (!contained) {
-      throw new FsError(`cannot write "${target.displayPath}": file access denied under workspace-write mode`, 'FS_SANDBOX_DENIED')
+      throw new FsError(`cannot write "${target.displayPath}": file access denied outside the session workspace (mode: ${mode})`, 'FS_SANDBOX_DENIED')
     }
     return fresh
   }

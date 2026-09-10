@@ -187,10 +187,12 @@ describe('workspace-write with the filesystem root as the workspace (a root endi
 describe('danger-full-access', () => {
   beforeEach(() => boot('danger-full-access'))
 
-  it('writes anywhere, unfenced', async () => {
+  it('rejects writes outside the session workspace with a clear error', async () => {
     const path = join(outside, 'free.txt')
-    await fs.writeText(await target(path), 'free')
-    expect(await readFile(path, 'utf8')).toBe('free')
+    await expect(fs.writeText(await target(path), 'free')).rejects.toMatchObject({
+      code: 'FS_SANDBOX_DENIED',
+      message: expect.stringContaining('outside the session workspace'),
+    })
   })
 })
 
@@ -206,11 +208,10 @@ describe('the per-call policy override (escalation)', () => {
       .rejects.toMatchObject({ code: 'FS_SANDBOX_DENIED' })
   })
 
-  it('a danger-full-access stamp bypasses the fence for that call', async () => {
+  it('a danger-full-access stamp still fences writes to its session workspace', async () => {
     await boot('read-only')
-    const path = join(outside, 'granted-full.txt')
-    await fs.writeText(await target(path), 'full', undefined, undefined, { mode: 'danger-full-access', workspaceRoot: workspace })
-    expect(await readFile(path, 'utf8')).toBe('full')
+    await expect(fs.writeText(await target(join(outside, 'granted-full.txt')), 'full', undefined, undefined, { mode: 'danger-full-access', workspaceRoot: workspace }))
+      .rejects.toMatchObject({ code: 'FS_SANDBOX_DENIED' })
   })
 })
 
