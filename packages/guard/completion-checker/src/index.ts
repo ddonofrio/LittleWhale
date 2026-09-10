@@ -37,6 +37,10 @@ export interface Config {
   masterProvider?: string
   /** Model identifier used for the master review. */
   masterModel?: string
+  /** Number of retries after a transient master-provider failure. */
+  maxRetries?: number
+  /** Initial retry delay; each subsequent retry doubles it. */
+  retryDelayMs?: number
 }
 
 /** Settings namespace exposed on the General settings surface. */
@@ -54,6 +58,8 @@ export const Config: z<Config> = z.object({
   provider: z.string().default(DEFAULT_COMPLETION_CHECKER_PROVIDER),
   masterProvider: z.string().required(false),
   masterModel: z.string().required(false),
+  maxRetries: z.number().step(1).min(0).max(10).default(3),
+  retryDelayMs: z.number().step(1).min(0).max(60_000).default(5_000),
 })
 
 /** Schema for the user-owned settings section. */
@@ -66,8 +72,8 @@ export const COMPLETION_CHECKER_SETTINGS_SCHEMA: z<CompletionCheckerSettings> = 
 /** Source stamped on review messages sent back to the parent agent. */
 const PLUGIN_SOURCE: Extract<MessageSource, { kind: 'plugin' }> = { kind: 'plugin', plugin: 'completion-checker' }
 
-/** Load with tools and system-prompt services; the review provider may appear later. */
-export const inject = ['subagents', 'commands']
+/** Load once review execution, commands, and the selected master settings are available. */
+export const inject = ['subagents', 'commands', 'settings']
 
 type CompletionReview = { status: 'OK' | 'KO'; instruction: string }
 
@@ -91,6 +97,34 @@ function textContent(blocks: readonly ContentBlock[]): string {
     .map(block => block.text)
     .join('\n')
     .trim()
+}
+
+function appendNotice(agent: Agent, text: string, summary: string): void {
+  agent.session.append('user/message', createUserMessage({
+    content: [{ type: 'text', text }],
+    source: { ...PLUGIN_SOURCE, form: 'notice', summary },
+  }), { surfaceOp: 'append' })
+}
+
+function isTransientReviewError(error: unknown): boolean {
+  const message = String(error)
+  return /\b429\b|rate.?limit|temporar(?:y|ily)|\b(?:500|502|503|504)\b|timeout|timed out|ECONNRESET|ETIMEDOUT/i.test(message)
+}
+
+async function waitForRetry(delayMs: number, signal: AbortSignal): Promise<void> {
+  const abortReason = () => signal.reason instanceof Error ? signal.reason : new Error('Master review retry cancelled')
+  if (signal.aborted) throw abortReason()
+  await new Promise<void>((resolve, reject) => {
+    const timer = setTimeout(() => {
+      signal.removeEventListener('abort', onAbort)
+      resolve()
+    }, delayMs)
+    const onAbort = () => {
+      clearTimeout(timer)
+      reject(abortReason())
+    }
+    signal.addEventListener('abort', onAbort, { once: true })
+  })
 }
 
 function currentTurnEvents(agent: Agent, turn: number): SessionEvent[] {
@@ -200,14 +234,12 @@ export function apply(ctx: Context, config: Config): void {
   const reviewStates = new WeakMap<Agent, { turn: number; review: CompletionReview }>()
   const pendingReviews = new WeakSet<Agent>()
   const providerName = config.provider ?? DEFAULT_COMPLETION_CHECKER_PROVIDER
+  const maxRetries = config.maxRetries ?? 3
+  const retryDelayMs = config.retryDelayMs ?? 5_000
   const configuredMaster = config.masterModel === undefined || config.masterProvider === undefined
     ? undefined
     : { provider: config.masterProvider, model: config.masterModel }
 
-  // Provider plugins can register after this plugin. Mount the visible tool,
-  // its prompt policy, and the terminal guard only while the checker is
-  // enabled and the configured provider is available.
-  let disposeTurnStopping: (() => void) | undefined
   const onTurnStopping = async ({ agent, turn, reason, signal }: TurnStoppingPayload) => {
     const turnEvents = currentTurnEvents(agent, turn)
     const hasToolCall = turnEvents.some(event => event.type === 'tool/call')
@@ -226,18 +258,35 @@ export function apply(ctx: Context, config: Config): void {
       : configuredMaster
     if (master === undefined) return
     ctx.logger.info(`master-model: reviewing completed turn ${turn} (${hasToolCall ? 'tool-using' : 'corrective'})`)
-    let run: SubagentRun | undefined
     try {
-      run = await ctx.subagents.start(providerName, {
-        label: 'master-model', prompt: [{ type: 'text', text: reviewPrompt(agent) }], parent: agent, signal,
-        outputSchema: {
-          type: 'object', properties: { status: { type: 'string', enum: ['OK', 'KO'] }, instruction: { type: 'string' } },
-          required: ['status', 'instruction'], additionalProperties: false,
-        },
-        agentOptions: { ...master, loopDetection: { ...agent.options.loopDetection, enabled: true } },
-        toolFilter: { deny: ['completion_check'] },
-      })
-      const review = reviewerResult(await run.result)
+      let review: CompletionReview | undefined
+      for (let attempt = 0; attempt <= maxRetries; attempt += 1) {
+        let run: SubagentRun | undefined
+        try {
+          run = await ctx.subagents.start(providerName, {
+            label: 'master-model', prompt: [{ type: 'text', text: reviewPrompt(agent) }], parent: agent, signal,
+            outputSchema: {
+              type: 'object', properties: { status: { type: 'string', enum: ['OK', 'KO'] }, instruction: { type: 'string' } },
+              required: ['status', 'instruction'], additionalProperties: false,
+            },
+            agentOptions: { ...master, loopDetection: { ...agent.options.loopDetection, enabled: true } },
+          })
+          review = reviewerResult(await run.result)
+          break
+        } catch (error: unknown) {
+          if (signal.aborted) throw error
+          if (!isTransientReviewError(error) || attempt === maxRetries) throw error
+          const delayMs = retryDelayMs * 2 ** attempt
+          const nextAttempt = attempt + 2
+          const totalAttempts = maxRetries + 1
+          ctx.logger.warn(`master-model: transient review failure; retrying attempt ${nextAttempt}/${totalAttempts} in ${delayMs} ms: ${String(error)}`)
+          appendNotice(agent, `Master review was temporarily unavailable. Retrying (${nextAttempt}/${totalAttempts}) in ${delayMs / 1_000} seconds.`, 'master review retrying')
+          await waitForRetry(delayMs, signal)
+        } finally {
+          if (run !== undefined) await run.dispose()
+        }
+      }
+      if (review === undefined) throw new Error('master reviewer exhausted retries without a result')
       if (review.status === 'OK') {
         pendingReviews.delete(agent)
         reviewStates.set(agent, { turn, review })
@@ -261,30 +310,17 @@ export function apply(ctx: Context, config: Config): void {
     } catch (error: unknown) {
       if (signal.aborted) throw error
       ctx.logger.warn(`master-model: review failed: ${String(error)}`)
-    } finally {
-      if (run !== undefined) await run.dispose()
+      appendNotice(agent, `Master review failed, so this response was not validated: ${String(error)}`, 'master review failed')
     }
   }
 
-  const unmount = () => {
-    disposeTurnStopping?.()
-    disposeTurnStopping = undefined
-  }
-
-  function mount(): void {
-    if (!source().enabled || disposeTurnStopping !== undefined) return
-    disposeTurnStopping = ctx.on('agent/turn-stopping', onTurnStopping)
-  }
-
-  function syncRegistration(): void {
-    if (source().enabled) mount()
-    else unmount()
-  }
+  const disposeTurnStopping = ctx.root.on('agent/turn-stopping', onTurnStopping, { global: true })
+  ctx.effect(() => disposeTurnStopping)
 
   installSettingsSection(ctx, COMPLETION_CHECKER_SETTINGS_NAMESPACE, COMPLETION_CHECKER_SETTINGS_SCHEMA, entry, {
     setScope: (scope) => { settingsScope = scope },
     setSource: (current) => { source = current },
-    onChange: syncRegistration,
+    onChange: () => {},
   })
 
   ctx.commands.register({
@@ -305,14 +341,6 @@ export function apply(ctx: Context, config: Config): void {
     },
   })
 
-  ctx.on('subagent/provider-added', (provider) => {
-    if (provider.name === providerName) syncRegistration()
-  })
-  ctx.on('subagent/provider-removed', (name) => {
-    if (name !== providerName) return
-    unmount()
-  })
-  mount()
 }
 
 export const name = 'completion-checker'

@@ -10,6 +10,8 @@ The completion checker provides an optional automatic master-model review after 
   config:
     enabled: true
     provider: spawn
+    maxRetries: 3
+    retryDelayMs: 5000
 ```
 
 The `enabled` field is also available in the `completion-checker` settings namespace. A master provider and model must be selected before the feature can be used. `/master` toggles the feature; `/master on` and `/master off` select an explicit state. The composer blocks submission until a valid master model different from the student model is selected.
@@ -24,7 +26,7 @@ The master returns structured output with `status: "OK"` or `status: "KO"`, plus
 
 The master is strictly read-only. It must not edit, create, delete, rename, format, or otherwise modify files. It must use the parent session's project directory as its only project root and must not inspect external directories unless the user explicitly requested one.
 
-The review runs only after a completed top-level student turn that used at least one tool. Nested reviewer agents and loop-recovery turns are excluded. Reviewer failures are logged and do not replace the student's response.
+The review runs only after a completed top-level student turn that used at least one tool. Nested reviewer agents and loop-recovery turns are excluded. Transient failures, including rate limits, server errors, and timeouts, are retried with exponential backoff. Each retry is shown in the parent conversation. `maxRetries` controls the number of retries after the initial attempt, and `retryDelayMs` controls the initial delay. A non-transient failure or an exhausted retry budget adds a notice that the response was not validated without replacing the student's response.
 
 ## Model Experience
 
@@ -32,11 +34,11 @@ The review runs only after a completed top-level student turn that used at least
 
 #### What the model sees
 
-The master receives a clean chronological transcript in the same format used by Auto Goal and Auto TODOs: direct user messages, assistant text, compact tool-activity entries, failed tool results, and TODO state. Runtime context, model reasoning, raw tool payloads, and raw tool results are excluded. The project directory is included separately so the master can verify files without drifting outside the workspace. The review is an additional model request after a tool-using student turn and is instructed to review without modifying files.
+The master receives a clean chronological transcript in the same format used by Auto Goal and Auto TODOs: direct `user/message` content, assistant text, compact `tool/call` activity, failed tool results, and TODO state. Runtime context, model reasoning, raw tool payloads, and raw tool results are excluded. The project directory is included separately so the master can verify files without drifting outside the workspace. The review is an additional model request after a tool-using student turn and is instructed to review without modifying files.
 
 #### Token effect
 
-The review adds one independent master request after the student's tool-using turn.
+The review adds one independent master request after the student's tool-using turn, plus any requests needed to recover from transient provider failures.
 
 #### KV Cache effect
 
@@ -44,4 +46,4 @@ The review request uses the master route's own cache and does not alter the stud
 
 ## Known Limitations and Deferred Work
 
-- The master review is best-effort: provider failures are logged and leave the student's response unchanged.
+- The master review is best-effort: an exhausted retry budget leaves the student's response unchanged and explicitly marks it as unvalidated.

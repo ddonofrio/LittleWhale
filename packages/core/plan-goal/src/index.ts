@@ -54,9 +54,19 @@ export const PLAN_GOAL_SETTINGS_SCHEMA: z<PlanGoalSettings> = z.object({
   enabled: z.boolean().default(DEFAULT_PLAN_GOAL_ENABLED),
 })
 
-export interface PlanTodoSettings { enabled: boolean }
+/** User-selectable automatic TODO planning settings. */
+export interface PlanTodoSettings {
+  /** Whether every direct user request receives a derived TODO list. */
+  enabled: boolean
+}
+
+/** Settings namespace for automatic TODO planning. */
 export const PLAN_TODO_SETTINGS_NAMESPACE = settingsNamespace('plan-todo')
+
+/** Shipped default for automatic TODO planning. */
 export const DEFAULT_PLAN_TODO_ENABLED = false
+
+/** Schema for the automatic TODO settings section. */
 export const PLAN_TODO_SETTINGS_SCHEMA: z<PlanTodoSettings> = z.object({
   enabled: z.boolean().default(DEFAULT_PLAN_TODO_ENABLED),
 })
@@ -84,8 +94,7 @@ const GOAL_RESULT_TOOL: ToolSchema = {
     properties: {
       goal: {
         type: 'string',
-        minLength: 1,
-        description: 'One user story, or the exact string NO_GOAL when the request needs only a direct response and no tracked work.',
+        description: 'One user story, or an empty string when the request needs only a direct response and no tracked work.',
       },
       source_excerpt: {
         type: 'string',
@@ -102,6 +111,9 @@ const TODO_PLANNER_SYSTEM = [
   'Read the complete clean conversation, the current goal when present, and the current TODO list.',
   'Always write every TODO title and description in English, regardless of the language used by the user or conversation.',
   'Always decompose the latest request into concrete implementation or investigation tasks when it is non-trivial.',
+  'Use only facts established by the user request, current goal, TODO list, and clean transcript. You cannot inspect the workspace or call discovery tools.',
+  'Never invent a file, feature, technology, design, implementation choice, or repository fact that is not established by that evidence.',
+  'When a choice depends on repository contents or other unavailable evidence, make inspection the first TODO. Keep later TODOs generic and conditional until the main agent performs that inspection; do not make the choice yourself.',
   'If uncertain whether the work has two or three parts, create the separate tasks; the main agent will review and complete them.',
   'Preserve already completed tasks and update existing tasks instead of duplicating them.',
   'A new task is always pending unless the transcript proves that the task was completed before this planning call.',
@@ -191,6 +203,10 @@ function isNestedAgent(agent: Agent): boolean {
   return agent.session.header.parentSession !== undefined
 }
 
+function isAborted(signal: AbortSignal): boolean {
+  return signal.aborted
+}
+
 function hasDirectUserInput(messages: readonly UserMessage[]): boolean {
   return messages.some(message => message.source.kind === 'user')
 }
@@ -214,7 +230,7 @@ function plannerSystemPrompt(): string {
     'Do not invent requirements, motivations, files, tools, architecture, or acceptance criteria that the user did not imply.',
     'If the user gives no explicit reason, use the neutral purpose “so that the requested outcome is achieved”.',
     'Correct spelling and improve clarity while preserving the user’s intent.',
-    'For greetings, acknowledgements, small talk, and requests that only need a reply, set goal to exactly NO_GOAL. Do not create a goal for a direct response, a courtesy message, or any request with no actionable work.',
+    'For greetings, acknowledgements, small talk, and requests that only need a reply, set goal to an empty string. Do not create a goal for a direct response, a courtesy message, or any request with no actionable work.',
     'The user story must be self-contained and understandable without the original request.',
     `Put the user story in the ${GOAL_RESULT_TOOL_NAME}.goal field and put one exact contiguous excerpt copied from the latest user request in the ${GOAL_RESULT_TOOL_NAME}.source_excerpt field.`,
     'Return no visible text. Do not add analysis, explanation, Markdown, quotation marks, alternatives, or additional fields.',
@@ -241,7 +257,7 @@ function plannerUserPrompt(
     ].join('\n')
   }
   const prompt = [
-    'Understand the latest user request and convert actionable work into exactly one user story. If no tracked work is needed, call the result tool with goal: NO_GOAL.',
+    'Understand the latest user request and convert actionable work into exactly one user story. If no tracked work is needed, call the result tool with goal: "".',
     'If an active goal is supplied below, treat it as the standing goal: preserve it when the new request is part of the same work, and refine it only when the request clearly changes the outcome. Never invent a second independent goal.',
     'Preserve the user’s intent, constraints, scope, and requested outcome. Correct spelling and improve clarity, but do not add requirements or invent motivation.',
     `Call ${GOAL_RESULT_TOOL_NAME} exactly once with two fields: goal and source_excerpt. The goal must use this exact structure: As <role>, I want <desired outcome>, so that <value or reason>. The source_excerpt must be copied verbatim from the latest user request.`,
@@ -315,7 +331,7 @@ function generatedGoal(blocks: readonly ContentBlock[], request: string): string
     throw new Error('plan-goal: source_excerpt must be an exact excerpt from the latest user request')
   }
   const goal = parsed.goal.replace(/\s+/gu, ' ').trim()
-  if (goal === 'NO_GOAL') return undefined
+  if (goal === '') return undefined
   if (/<\/?(?:SYSTEM PROMPT|goal_round|goal_complete|goal_blocked)\b|SYSTEM INSTRUCTION|REMEMBER:/iu.test(goal)) {
     throw new Error('plan-goal: goal contained a prompt wrapper')
   }
@@ -775,10 +791,11 @@ async function validateCompletedTurn(
   if (goal === undefined || goal.phase !== 'active' || goal.activation !== 'armed') return
 
   let validationController: AbortController | undefined
-  let interruption: GoalValidationInterruption | undefined
+  const interruption: { value: GoalValidationInterruption | undefined } = { value: undefined }
+  const currentInterruption = () => interruption.value
   const disposeGoalChanged = ctx.on('goal/changed', ({ agent: changedAgent, change }) => {
     if (changedAgent !== agent || validationController === undefined || change.ref.id !== goal?.id) return
-    interruption = change.operation === 'edit'
+    interruption.value = change.operation === 'edit'
       ? 'edited'
       : change.operation === 'pause'
         ? 'paused'
@@ -795,22 +812,22 @@ async function validateCompletedTurn(
 
       const controller = new AbortController()
       validationController = controller
-      interruption = undefined
+      interruption.value = undefined
       appendNotice(agent, GOAL_VALIDATION_NOTICE, 'validating response')
 
       let validation: GoalValidation | undefined
       try {
         validation = await validateGoal(ctx, state, agent, goal, AbortSignal.any([signal, controller.signal]))
       } catch (error: unknown) {
-        if (signal.aborted) throw error
+        if (isAborted(signal)) throw error
         if (controller.signal.aborted) {
-          if (interruption === 'edited') {
+          if (currentInterruption() === 'edited') {
             appendNotice(agent, 'Goal edited. Restarting response validation.', 'goal validation restarted')
             continue
           }
-          const reason = interruption === 'paused'
+          const reason = currentInterruption() === 'paused'
             ? 'because the goal was paused'
-            : interruption === 'cleared'
+            : currentInterruption() === 'cleared'
               ? 'because the goal was deleted'
               : 'because the goal changed'
           appendNotice(agent, `Goal validation cancelled ${reason}.`, 'goal validation cancelled')
@@ -821,12 +838,10 @@ async function validateCompletedTurn(
         if (validationController === controller) validationController = undefined
       }
 
-      if (interruption === 'edited') {
+      if (currentInterruption() === 'edited') {
         appendNotice(agent, 'Goal edited. Restarting response validation.', 'goal validation restarted')
         continue
       }
-      if (interruption === 'stopped' || validation === undefined) return
-
       const current = ctx.goals.get(agent)
       if (current === undefined || current.id !== goal.id || current.revision !== goal.revision
         || current.phase !== 'active' || current.activation !== 'armed') return
@@ -890,8 +905,8 @@ function deriveGoalOnce(
   const plan = deriveGoal(ctx, state, agent, messages, signal)
   plans.set(key, plan)
   void plan.then(
-    () => { if (plans?.get(key) === plan) plans.delete(key) },
-    () => { if (plans?.get(key) === plan) plans.delete(key) },
+    () => { if (plans.get(key) === plan) plans.delete(key) },
+    () => { if (plans.get(key) === plan) plans.delete(key) },
   )
   return plan
 }

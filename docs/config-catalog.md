@@ -622,7 +622,7 @@ Source: [`packages/compaction/compaction-tool-result-pruner/src/types.ts:4`](../
 
 ## `@deepseek-ai/dsh-completion-checker`
 
-Requires: `subagents` · `commands`
+Requires: `subagents` · `commands` · `settings`
 
 ```ts config-catalog
 /** Plugin configuration. */
@@ -635,6 +635,10 @@ export interface Config {
   masterProvider?: string
   /** Model identifier used for the master review. */
   masterModel?: string
+  /** Number of retries after a transient master-provider failure. */
+  maxRetries?: number
+  /** Initial retry delay; each subsequent retry doubles it. */
+  retryDelayMs?: number
 }
 ```
 

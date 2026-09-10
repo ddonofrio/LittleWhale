@@ -41,7 +41,7 @@ function noGoalPlannerResponse(options: GenerateOptions): StreamChunk[] {
   const start = prompt.lastIndexOf(marker)
   const end = prompt.indexOf('\n\n', start + marker.length)
   const request = prompt.slice(start + marker.length, end < 0 ? undefined : end).trim()
-  return toolCallResponse('goal-call', 'emit_goal', { goal: 'NO_GOAL', source_excerpt: request })
+  return toolCallResponse('goal-call', 'emit_goal', { goal: '', source_excerpt: request })
 }
 
 function goalValidationResponse(status: 'DONE' | 'UNCOMPLETE' | 'UNKNOWN', reason: string): StreamChunk[] {
@@ -196,7 +196,7 @@ describe('plan-goal', () => {
     const { ctx, agent, requests } = await harness('unused', 1, { enabled: true }, 'hang')
     start(agent, 'Show this immediately')
 
-    await vi.waitFor(() => expect(requests).toHaveLength(1))
+    await vi.waitFor(() => { expect(requests).toHaveLength(1) })
     const userMessage = agent.session.events.find(event => event.type === 'user/message'
       && event.data.source.kind === 'user')
     expect(userMessage?.type === 'user/message' && userMessage.data.content).toEqual([
@@ -276,7 +276,7 @@ describe('plan-goal', () => {
         'hang',
       ])
       start(agent, `Run ${operation} validation`)
-      await vi.waitFor(() => expect(requests).toHaveLength(3))
+      await vi.waitFor(() => { expect(requests).toHaveLength(3) })
 
       const current = ctx.goals.get(agent)
       if (current === undefined) throw new Error('expected a goal before mutation')
@@ -306,7 +306,7 @@ describe('plan-goal', () => {
       goalValidationResponse('DONE', 'The edited objective is satisfied.'),
     ])
     start(agent, 'Run validation')
-    await vi.waitFor(() => expect(requests).toHaveLength(3))
+    await vi.waitFor(() => { expect(requests).toHaveLength(3) })
 
     const current = ctx.goals.get(agent)
     if (current === undefined) throw new Error('expected a goal before editing')
@@ -412,6 +412,9 @@ describe('plan-goal', () => {
     const todoRequest = requests.find(request => request.tools?.some(tool => tool.name === 'todo_write'))
     const todoPrompt = (todoRequest?.messages[0]?.content[0] as { type: 'text'; text: string }).text
     expect(todoRequest?.system).toContain('Always write every TODO title and description in English, regardless of the language used by the user or conversation.')
+    expect(todoRequest?.system).toContain('You cannot inspect the workspace or call discovery tools.')
+    expect(todoRequest?.system).toContain('make inspection the first TODO')
+    expect(todoRequest?.system).toContain('do not make the choice yourself')
     expect(todoPrompt).toContain('Current goal: As the user, I want the issue investigated, so that the cause is known.')
     expect(agent.session.events.findLast(event => event.type === 'todo/write')?.data.todos).toEqual(todos)
   })

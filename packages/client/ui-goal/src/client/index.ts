@@ -106,7 +106,7 @@ export function apply(ctx: ClientContext): void {
     const disabledTodo = new Set<SessionId>()
     ctx.slots.inject('conversation.input.left', () => ctx.slots.register({
       name: 'conversation.input.left', id: 'auto-goal', order: 5, locale: NS,
-      inject: sessionId => ({ sessionId, scope: goalSettings, disabledSessions: disabledGoal, label: 'Auto Goal', tone: 'orange' as const, onDisable: (id: SessionId) => { disabledGoal.add(id); return Promise.resolve() } }),
+      inject: sessionId => ({ sessionId, scope: goalSettings, disabledSessions: disabledGoal, label: 'Auto Goal', tone: 'blue' as const, onDisable: (id: SessionId) => { disabledGoal.add(id); return Promise.resolve() } }),
     }, AutomationChip))
     ctx.slots.inject('conversation.input.left', () => ctx.slots.register({
       name: 'conversation.input.left', id: 'auto-todos', order: 6, locale: NS,
