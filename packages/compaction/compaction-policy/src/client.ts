@@ -4,7 +4,7 @@
 export const COMPACTION_POLICY_SETTINGS_NAMESPACE = 'compaction-policy'
 
 /** Default automatic-compaction position as a fraction of the full context window. */
-export const DEFAULT_COMPACT_AT_RATIO = 0.75
+export const DEFAULT_COMPACT_AT_RATIO = 0.5
 
 /** Exact provider/model route whose override is being edited. */
 export interface CompactionPolicyTarget {

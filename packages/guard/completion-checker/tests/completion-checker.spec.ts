@@ -53,6 +53,10 @@ function idle(ctx: Context, agent: Agent): Promise<void> {
 }
 
 describe('automatic master review', () => {
+  it('defaults the master model review to enabled', () => {
+    expect(CompletionChecker.DEFAULT_COMPLETION_CHECKER_ENABLED).toBe(true)
+  })
+
   it('does not review a completed turn that used no tools', async () => {
     const ctx = new Context(); contexts.push(ctx)
     await mountAgentLoopTestDependencies(ctx)

@@ -20,13 +20,13 @@ When `plan-todo` is enabled, the same pre-step also sends the clean transcript, 
 - id: plan-goal
   name: '@ddonofrio/littlewhale-plan-goal'
   config:
-    enabled: false
+    enabled: true
     timeoutMs: 300000
 ```
 
-The `enabled` value is also exposed as the `plan-goal` General setting. It defaults to `false` and applies live to direct user requests. The timeout applies to both the planner and the mandatory active-goal validator.
+The `enabled` value is also exposed as the `plan-goal` General setting. It defaults to `true` and applies live to direct user requests. The timeout applies to both the planner and the mandatory active-goal validator.
 
-Automatic TODO assignment uses the `plan-todo` General setting and defaults to `false`. It shares the plan-goal auxiliary model route and runs only for direct user requests.
+Automatic TODO assignment uses the `plan-todo` General setting and defaults to `true`. It shares the plan-goal auxiliary model route and runs only for direct user requests.
 
 ## Model Experience
 

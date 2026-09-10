@@ -34,7 +34,7 @@ async function boot() {
 }
 
 describe('CompactionPolicy', () => {
-  it('defaults every route to 75 percent', async () => {
+  it('defaults every route to 50 percent', async () => {
     const bench = await boot()
     expect(bench.ctx.compactionPolicy.ratioFor({ provider: 'p', model: 'm' }))
       .toBe(DEFAULT_COMPACT_AT_RATIO)
@@ -58,7 +58,7 @@ describe('CompactionPolicy', () => {
       overrides: [{ provider: 'p', model: 'm', compactAtRatio: 0.9 }],
     })
     await bench.settings.ctx.settings.update(POLICY_NAMESPACE, { overrides: [] })
-    expect(bench.ctx.compactionPolicy.ratioFor({ provider: 'p', model: 'm' })).toBe(0.75)
+    expect(bench.ctx.compactionPolicy.ratioFor({ provider: 'p', model: 'm' })).toBe(0.5)
     await bench.ctx.fiber.dispose()
   })
 

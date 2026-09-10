@@ -35,12 +35,16 @@ export const DEFAULT_PLAN_GOAL_TIMEOUT_MS = 300000
 export const PLAN_GOAL_SETTINGS_NAMESPACE = settingsNamespace('plan-goal')
 
 /** Whether automatic goal assignment is enabled when no user override exists. */
-export const DEFAULT_PLAN_GOAL_ENABLED = false
+export const DEFAULT_PLAN_GOAL_ENABLED = true
+
+/** Shipped default for automatic TODO planning. */
+export const DEFAULT_PLAN_TODO_ENABLED = true
 
 /** Schema for the plugin's composition configuration. */
 export const Config: z<Config> = z.object({
   enabled: z.boolean().default(DEFAULT_PLAN_GOAL_ENABLED),
   timeoutMs: z.number().step(1).min(1).max(MAX_TIMER_DELAY_MS).default(DEFAULT_PLAN_GOAL_TIMEOUT_MS),
+  todoEnabled: z.boolean().default(DEFAULT_PLAN_TODO_ENABLED),
 })
 
 /** User-selectable automatic goal assignment settings. */
@@ -62,9 +66,6 @@ export interface PlanTodoSettings {
 
 /** Settings namespace for automatic TODO planning. */
 export const PLAN_TODO_SETTINGS_NAMESPACE = settingsNamespace('plan-todo')
-
-/** Shipped default for automatic TODO planning. */
-export const DEFAULT_PLAN_TODO_ENABLED = false
 
 /** Schema for the automatic TODO settings section. */
 export const PLAN_TODO_SETTINGS_SCHEMA: z<PlanTodoSettings> = z.object({

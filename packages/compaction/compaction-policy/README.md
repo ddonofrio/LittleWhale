@@ -1,6 +1,6 @@
 # @deepseek-ai/dsh-compaction-policy
 
-The compaction policy owns the durable automatic-compaction threshold. Its global default is `75%` of the complete context window. Each exact `provider/model` route may store an override; routes without one inherit the global value.
+The compaction policy owns the durable automatic-compaction threshold. Its global default is `50%` of the complete context window. Each exact `provider/model` route may store an override; routes without one inherit the global value.
 
 The Host registers the `compaction-policy` settings namespace and exposes `ctx.compactionPolicy`. The browser binds the same namespace through the settings scope, so General and the current chat edit one durable document and observe one another's committed changes.
 
