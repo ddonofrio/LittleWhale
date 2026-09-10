@@ -1,6 +1,8 @@
 .root { position: relative; display: inline-flex; }
 .trigger, .chip { display: inline-flex; align-items: center; gap: 4px; height: 28px; padding: 2px 8px; border: 0; border-radius: 999px; background: #151515; color: #c8afe8; font: inherit; font-size: 13px; white-space: nowrap; cursor: pointer; }
 .trigger { max-width: 230px; font-weight: 600; }
+.trigger:hover:not(:disabled) { color: var(--dsw-alias-label-primary); }
+.trigger:hover:not(:disabled) .chevron { color: var(--dsw-alias-label-primary); }
 .trigger:disabled { cursor: default; opacity: .55; }
 .triggerLabel { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .chevron { flex: none; transition: transform 120ms ease; }
